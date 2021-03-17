@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'Todo.dart';
+part of 'todo.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -8,11 +8,14 @@ part of 'Todo.dart';
 
 Todo _$TodoFromJson(Map<String, dynamic> json) {
   return Todo(
+    id: json['id'] as int?,
     content: json['content'] as String?,
-  )..id = json['id'] as int;
+    done: json['done'] as bool,
+  );
 }
 
 Map<String, dynamic> _$TodoToJson(Todo instance) => <String, dynamic>{
       'id': instance.id,
+      'done': instance.done,
       'content': instance.content,
     };
