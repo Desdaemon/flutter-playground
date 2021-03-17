@@ -105,16 +105,19 @@ class MemoizedMath extends HookWidget {
   const MemoizedMath({Key? key, required this.tex, this.scale = 1}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return useMemoized(() {
-      return Math.tex(
-        tex,
-        textScaleFactor: scale,
-        onErrorFallback: (_) => Text(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: useMemoized(() {
+        return Math.tex(
           tex,
-          style: TextStyle(color: Theme.of(context).errorColor),
-        ),
-      );
-    }, [tex, scale]);
+          textScaleFactor: scale,
+          onErrorFallback: (_) => Text(
+            tex,
+            style: TextStyle(color: Theme.of(context).errorColor),
+          ),
+        );
+      }, [tex, scale]),
+    );
   }
 }
 

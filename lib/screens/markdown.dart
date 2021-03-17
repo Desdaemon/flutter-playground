@@ -63,14 +63,15 @@ class MathMarkdown extends StatefulWidget {
 class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
   static const sIndent = '  ';
   static const blocks = <String, String?>{"(": ")", "[": "]", "{": "}"};
-  static final word = RegExp(r'\w');
+  static final newline = '\n'.characters;
+  static final letter = RegExp(r'\w');
+  static final ul = RegExp(r'([-*] )(\[[x ]\] )?');
+  static final ol = RegExp(r'([0-9]+)\. ');
   static const animDur = Duration(milliseconds: 200);
 
   final ctl = RestorableTextEditingController();
   final sc = ScrollController();
 
-  int indent = 0;
-  bool mayIndent = false;
   bool mathMode = false;
 
   @override
@@ -106,13 +107,13 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
     final sel = val.selection;
     final pre = val.text.substring(0, sel.start);
     final post = val.text.substring(sel.end);
-
     final ctrl = event.isControlPressed;
+
     if (ctrl && event.isKeyPressed(LogicalKeyboardKey.backspace)) {
       // Ctrl + Backspace
       if (sel.isCollapsed) {
         final iter = pre.characters.iteratorAtEnd..moveBack();
-        while (word.hasMatch(iter.current)) {
+        while (letter.hasMatch(iter.current)) {
           iter.moveBack();
         }
         if (iter.stringAfterLength > 2) iter.moveNext();
@@ -124,19 +125,39 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
       return true;
     } else if (event.isKeyPressed(LogicalKeyboardKey.tab)) {
       // Tab
-      indent++;
       setValue('$pre$sIndent$post', sel.start + sIndent.length);
       return true;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.enter) && indent > 0) {
+    } else if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
       // Enter
-      final indents = List.filled(indent, sIndent).join();
-      setValue('$pre\n$indents$post', sel.start + indents.length + 1);
-      return true;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.backspace) && indent > 0 && pre.endsWith(sIndent)) {
-      // Backspace
-      final preOut = pre.substring(0, pre.length - sIndent.length);
-      indent--;
-      setValue('$preOut$post', preOut.length);
+      final preIter = pre.characters.iteratorAtEnd;
+      final preThis = preIter.moveBackTo(newline) ? preIter.stringAfter : pre;
+      final trimmed = preThis.trimLeft();
+      RegExpMatch? isUl, isOl;
+      String? header, thisheader;
+      int? parsed;
+      if ((isUl = ul.firstMatch(trimmed)) != null) {
+        final headerkind = isUl!.group(1);
+        header = isUl.group(2) == null ? headerkind : '$headerkind[ ] ';
+        thisheader = isUl.group(0);
+      } else if ((isOl = ol.firstMatch(trimmed)) != null) {
+        if ((parsed = int.tryParse(isOl!.group(1)!)) != null) {
+          header = '${parsed! + 1}. ';
+          thisheader = isOl.group(0);
+        }
+      }
+
+      if (thisheader != null && preThis.replaceFirst(thisheader, '').isEmpty) {
+        final preOut = (pre.characters.iteratorAtEnd..moveBack(preThis.length)).stringBefore;
+        setValue('$preOut\n$post', preOut.length + 1);
+        return true;
+      } else if (header == null && blocks.containsKey(pre.characters.last)) {
+        setValue('$pre\n$sIndent\n$post', sel.start + 1 + sIndent.length);
+        return true;
+      }
+
+      header ??= '';
+      final indents = List.filled(sIndent.allMatches(preThis).length, sIndent).join();
+      setValue('$pre\n$indents$header$post', sel.start + indents.length + 1 + header.length);
       return true;
     } else if (ctrl && (event.isKeyPressed(LogicalKeyboardKey.equal) || event.isKeyPressed(LogicalKeyboardKey.minus))) {
       if (event.isKeyPressed(LogicalKeyboardKey.equal)) {
@@ -156,11 +177,12 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
     } else if (blocks.containsKey(event.character)) {
       // A character in blocks
       final close = blocks[event.character]!;
-      mayIndent = true;
       setValue('$pre${event.character}$close$post', sel.start + 1);
       return true;
+    } else if (blocks.containsValue(event.character) && post.characters.first == event.character) {
+      ctl.value.selection = TextSelection.collapsed(offset: sel.start + 1);
+      return true;
     }
-    mayIndent = false;
     return false;
   }
 

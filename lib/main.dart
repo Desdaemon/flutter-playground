@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.from(colorScheme: const ColorScheme.light()),
       darkTheme: ThemeData.from(colorScheme: const ColorScheme.dark()),
       themeMode: dark ? ThemeMode.dark : ThemeMode.light,
-      home: const MathMarkdown(restorationId: 'math_markdown'),
+      home: const MathMarkdown(),
     );
   }
 }
