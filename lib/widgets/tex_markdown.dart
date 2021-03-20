@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -26,18 +27,19 @@ class MarkdownPreview extends HookWidget {
           data: expr,
           extensionSet: md.ExtensionSet.gitHubWeb,
           inlineSyntaxes: [MathSyntax()],
-          builders: {
-            'math': MathBuilder(scale: scale),
-            'code': CodeBuilder(scale: scale),
-          },
-          checkboxBuilder: (val) => val ? const Icon(Icons.check_box) : const Icon(Icons.check_box_outline_blank),
+          builders: {'math': MathBuilder(scale: scale)},
+          checkboxBuilder: (val) =>
+              val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
           selectable: true,
-          styleSheet: MarkdownStyleSheet(
-            blockquoteDecoration: BoxDecoration(color: Theme.of(context).focusColor),
+          styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+            blockquoteDecoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(left: BorderSide(color: Theme.of(context).accentColor, width: 0)),
+            ),
             textScaleFactor: scale,
             blockSpacing: 12 * scale,
             listBullet: TextStyle(fontSize: Theme.of(context).textTheme.bodyText2!.fontSize! * scale),
-            code: const TextStyle(fontFamily: 'JetBrains Mono'),
+            code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
           ),
           onTapLink: (text, href, title) async {
             if (href == null) return;
@@ -54,6 +56,13 @@ class MarkdownPreview extends HookWidget {
                     SimpleDialogOption(
                       onPressed: () => Navigator.pop(bc, false),
                       child: const Text('No! Take me back!'),
+                    ),
+                    SimpleDialogOption(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: href));
+                        Navigator.pop(bc, false);
+                      },
+                      child: const Text('Copy link to clipboard'),
                     )
                   ],
                 ),
@@ -68,7 +77,7 @@ class MarkdownPreview extends HookWidget {
             }
           },
         );
-      }, [expr, scale]),
+      }, [expr, scale, Theme.of(context).hashCode]),
     );
   }
 }
@@ -81,7 +90,8 @@ class MathBuilder extends MarkdownElementBuilder {
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
-    return MemoizedMath(tex: tex, scale: scale);
+    final textMode = element.attributes.containsKey('text');
+    return MemoizedMath(tex: tex, scale: scale, style: textMode ? MathStyle.text : MathStyle.display);
   }
 }
 
@@ -89,7 +99,9 @@ class MathSyntax extends md.InlineSyntax {
   MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
   @override
   bool onMatch(md.InlineParser parser, Match match) {
+    final textMode = match[2]?.isEmpty ?? true;
     final elem = md.Element.text('math', match[1]!);
+    if (textMode) elem.attributes['text'] = '';
     if (match[2]?.isEmpty ?? true) {
       parser.addNode(elem);
     } else {
@@ -102,22 +114,24 @@ class MathSyntax extends md.InlineSyntax {
 class MemoizedMath extends HookWidget {
   final String tex;
   final double scale;
-  const MemoizedMath({Key? key, required this.tex, this.scale = 1}) : super(key: key);
+  final MathStyle style;
+  const MemoizedMath({Key? key, required this.tex, this.scale = 1, required this.style}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: useMemoized(() {
-        return Math.tex(
+    return useMemoized(() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Math.tex(
           tex,
+          mathStyle: style,
           textScaleFactor: scale,
           onErrorFallback: (_) => Text(
             tex,
             style: TextStyle(color: Theme.of(context).errorColor),
           ),
-        );
-      }, [tex, scale]),
-    );
+        ),
+      );
+    }, [tex, scale, Theme.of(context).hashCode]);
   }
 }
 

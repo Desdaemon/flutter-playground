@@ -1,56 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show LogicalKeyboardKey, rootBundle;
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
+import 'package:filesystem_picker/filesystem_picker.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yata_flutter/main.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:markdown/markdown.dart' as md;
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
+import '../state/dark.dart';
+import '../state/markdown.dart';
+import '../utils.dart';
+import '../widgets/editor.dart';
 import '../widgets/tex_markdown.dart';
-
-final expr = StateProvider<String?>((_) => null);
-final screenMode = StateProvider((_) => ScreenMode.sbs);
-final lockstep = StateProvider((_) => true);
-final scale = StateProvider((_) => 1.0);
-
-/// Scalable fontsize.
-final fontsize = Provider.family((ref, double size) => ref.watch(scale).state * size);
-
-enum ScreenMode { edit, preview, sbs }
-
-extension ScreenModeX on ScreenMode {
-  ScreenMode get next {
-    final idx = ScreenMode.values.indexOf(this);
-    return ScreenMode.values[(idx + 1) % 3];
-  }
-
-  bool get editing => this == ScreenMode.edit || this == ScreenMode.sbs;
-  bool get previewing => this == ScreenMode.preview || this == ScreenMode.sbs;
-  Icon get icon {
-    switch (this) {
-      case ScreenMode.edit:
-        return const Icon(Icons.edit, key: ValueKey('edit'));
-      case ScreenMode.preview:
-        return const Icon(
-          Icons.visibility,
-          key: ValueKey('preview'),
-        );
-      case ScreenMode.sbs:
-        return const Icon(
-          Icons.vertical_split,
-          key: ValueKey('sbs'),
-        );
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case ScreenMode.edit:
-        return 'Edit';
-      case ScreenMode.preview:
-        return 'Preview';
-      case ScreenMode.sbs:
-        return 'Side-by-side';
-    }
-  }
-}
 
 class MathMarkdown extends StatefulWidget {
   const MathMarkdown({Key? key, this.restorationId}) : super(key: key);
@@ -61,26 +30,14 @@ class MathMarkdown extends StatefulWidget {
 }
 
 class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
-  static const sIndent = '  ';
-  static const blocks = <String, String?>{"(": ")", "[": "]", "{": "}"};
-  static final newline = '\n'.characters;
-  static final letter = RegExp(r'\w');
-  static final ul = RegExp(r'([-*] )(\[[x ]\] )?');
-  static final ol = RegExp(r'([0-9]+)\. ');
   static const animDur = Duration(milliseconds: 200);
+  static const scaleStep = 0.1;
 
   final ctl = RestorableTextEditingController();
   final sc = ScrollController();
-
-  bool mathMode = false;
-
-  @override
-  void initState() {
-    super.initState();
-    rootBundle.loadString('assets/markdown_reference.md').then((value) => setState(() {
-          ctl.value.text = value;
-        }));
-  }
+  final editorSc = ScrollController();
+  static const untitled = 'Untitled';
+  int untitledIdx = 1;
 
   @override
   String? get restorationId => widget.restorationId;
@@ -88,102 +45,23 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     registerForRestoration(ctl, 'ctl');
+    final expr = context.read(activeFile);
+    if (expr.isNotEmpty) ctl.value.text = expr;
   }
 
   @override
   void dispose() {
     ctl.dispose();
     sc.dispose();
+    editorSc.dispose();
     super.dispose();
   }
 
-  void setValue(String text, int curpos) {
-    ctl.value.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: curpos));
-    context.read(expr).state = text;
-  }
-
-  bool handleKey(FocusNode fn, RawKeyEvent event) {
-    final val = ctl.value;
-    final sel = val.selection;
-    final pre = val.text.substring(0, sel.start);
-    final post = val.text.substring(sel.end);
-    final ctrl = event.isControlPressed;
-
-    if (ctrl && event.isKeyPressed(LogicalKeyboardKey.backspace)) {
-      // Ctrl + Backspace
-      if (sel.isCollapsed) {
-        final iter = pre.characters.iteratorAtEnd..moveBack();
-        while (letter.hasMatch(iter.current)) {
-          iter.moveBack();
-        }
-        if (iter.stringAfterLength > 2) iter.moveNext();
-        final output = iter.stringBefore;
-        setValue('$output$post', output.length);
-      } else {
-        setValue('$pre$post', sel.start);
-      }
-      return true;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.tab)) {
-      // Tab
-      setValue('$pre$sIndent$post', sel.start + sIndent.length);
-      return true;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
-      // Enter
-      final preIter = pre.characters.iteratorAtEnd;
-      final preThis = preIter.moveBackTo(newline) ? preIter.stringAfter : pre;
-      final trimmed = preThis.trimLeft();
-      RegExpMatch? isUl, isOl;
-      String? header, thisheader;
-      int? parsed;
-      if ((isUl = ul.firstMatch(trimmed)) != null) {
-        final headerkind = isUl!.group(1);
-        header = isUl.group(2) == null ? headerkind : '$headerkind[ ] ';
-        thisheader = isUl.group(0);
-      } else if ((isOl = ol.firstMatch(trimmed)) != null) {
-        if ((parsed = int.tryParse(isOl!.group(1)!)) != null) {
-          header = '${parsed! + 1}. ';
-          thisheader = isOl.group(0);
-        }
-      }
-
-      if (thisheader != null && preThis.replaceFirst(thisheader, '').isEmpty) {
-        final preOut = (pre.characters.iteratorAtEnd..moveBack(preThis.length)).stringBefore;
-        setValue('$preOut\n$post', preOut.length + 1);
-        return true;
-      } else if (header == null && blocks.containsKey(pre.characters.last)) {
-        setValue('$pre\n$sIndent\n$post', sel.start + 1 + sIndent.length);
-        return true;
-      }
-
-      header ??= '';
-      final indents = List.filled(sIndent.allMatches(preThis).length, sIndent).join();
-      setValue('$pre\n$indents$header$post', sel.start + indents.length + 1 + header.length);
-      return true;
-    } else if (ctrl && (event.isKeyPressed(LogicalKeyboardKey.equal) || event.isKeyPressed(LogicalKeyboardKey.minus))) {
-      if (event.isKeyPressed(LogicalKeyboardKey.equal)) {
-        fontSizeUp();
-      } else {
-        fontSizeDown();
-      }
-      return true;
-    } else if (ctrl && event.isKeyPressed(LogicalKeyboardKey.keyM)) {
-      if (!mathMode) {
-        setValue('$pre\$\$$post', sel.start + 1);
-        mathMode = true;
-      } else if (post.startsWith(r'$')) {
-        ctl.value.selection = TextSelection.collapsed(offset: sel.end + 1);
-        mathMode = false;
-      }
-    } else if (blocks.containsKey(event.character)) {
-      // A character in blocks
-      final close = blocks[event.character]!;
-      setValue('$pre${event.character}$close$post', sel.start + 1);
-      return true;
-    } else if (blocks.containsValue(event.character) && post.characters.first == event.character) {
-      ctl.value.selection = TextSelection.collapsed(offset: sel.start + 1);
-      return true;
-    }
-    return false;
+  void fontSizeUp() => context.read(scale).state += scaleStep;
+  void fontSizeDown() => context.read(scale).state -= scaleStep;
+  void indentUp() => context.read(indents).state++;
+  void indentDown() {
+    if (context.read(indents).state > 0) context.read(indents).state--;
   }
 
   bool handleScroll(ScrollNotification noti) {
@@ -198,8 +76,199 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
     return true;
   }
 
-  void fontSizeUp() => context.read(scale).state += 0.1;
-  void fontSizeDown() => context.read(scale).state -= 0.1;
+  void newFile() {
+    ctl.value.clear();
+    final newpath = '${untitled}_(${untitledIdx++}).md';
+    context.read(files)[newpath] = '';
+    context.read(activePath).state = newpath;
+  }
+
+  Future<void> openFile() async {
+    String contents, path;
+    if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['md', 'txt']);
+      if (result == null) return;
+      final file = result.files.single;
+      path = file.path ?? file.name!;
+      contents = kIsWeb ? String.fromCharCodes(result.files.single.bytes!) : await File(path).readAsString();
+    } else {
+      // Linux
+      final result = await FilesystemPicker.open(
+        context: context,
+        rootDirectory: Directory.current,
+        fileTileSelectMode: FileTileSelectMode.wholeTile,
+      );
+      if (result == null) return;
+      path = result;
+      contents = await File(path).readAsString();
+    }
+    ctl.value.text = contents;
+    context.read(files)[path] = contents;
+    context.read(activePath).state = path;
+  }
+
+  Future<void> saveFile(BuildContext bc) async {
+    var path = bc.read(activePath).state;
+    final contents = Uint8List.fromList(bc.read(activeFile).codeUnits);
+    if (path.startsWith(untitled)) {
+      final String? filename = await showDialog(
+        context: bc,
+        builder: (bc) => Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text('File Name', style: Theme.of(bc).textTheme.headline6),
+              ),
+              TextFormField(
+                initialValue: 'Unknown',
+                onFieldSubmitted: (val) => Navigator.pop(bc, val),
+                autofocus: true,
+                decoration: const InputDecoration(filled: true, suffixText: '.md'),
+                textInputAction: TextInputAction.next,
+              )
+            ]),
+          ),
+        ),
+      );
+      if (filename == null) return;
+      path = filename;
+      if (kIsWeb || Platform.isIOS) {
+        // TODO: Properly handle saving on iOS when I finally have a debugging device
+        await FileSaver.instance.saveFile(p.basenameWithoutExtension(path), contents, 'md', mimeType: MimeType.TEXT);
+        return;
+      }
+      String? dir;
+      if (Platform.isAndroid) {
+        dir = await FilePicker.platform.getDirectoryPath();
+      } else {
+        // Linux, Windows, MacOS
+        dir = await FilesystemPicker.open(context: bc, rootDirectory: await getApplicationDocumentsDirectory());
+      }
+      if (dir == null) return;
+      path = p.join(dir, p.basename(p.setExtension(path, '.md')));
+    }
+    await File(path).writeAsBytes(contents, flush: true);
+  }
+
+  Future<void> export() async {
+    final content = context.read(activeFile);
+    if (content.isEmpty) return;
+
+    final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
+    final appdir = await getApplicationSupportDirectory();
+    final outpath = '${appdir.path}/out.html';
+    final file = File(outpath);
+    await file.create();
+    final markdown =
+        md.markdownToHtml(content, extensionSet: md.ExtensionSet.gitHubWeb, inlineSyntaxes: [TaskListSyntax()]);
+    await file.writeAsString(template
+        .replaceFirst('{{ body }}', markdown)
+        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath).state)));
+    OpenFile.open(outpath);
+  }
+
+  Future<void> changeIndent() async {
+    final int? result = await showDialog(
+      context: context,
+      builder: (bc) => SimpleDialog(
+        title: const Text('Indent size (in spaces)'),
+        children: List.generate(
+          7,
+          (index) => SimpleDialogOption(
+            onPressed: () => Navigator.pop(bc, index + 1),
+            child: Text(index.toString()),
+          ),
+          growable: false,
+        ),
+      ),
+    );
+    if (result != null) {
+      context.read(indents).state = result;
+    }
+  }
+
+  Widget buildBottomSheet(BuildContext bc) {
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Consumer(
+        builder: (bc, watch, _) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+          child: Text(shortenPath(watch(activePath).state), maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+      const Divider(),
+      Row(children: [
+        IconButton(icon: const Icon(Icons.insert_drive_file_outlined), tooltip: 'New', onPressed: newFile),
+        IconButton(icon: const Icon(Icons.folder_open), tooltip: 'Open', onPressed: openFile),
+        IconButton(icon: const Icon(Icons.save), tooltip: 'Save', onPressed: () => saveFile(bc)),
+        IconButton(icon: const Icon(Icons.print), onPressed: export, tooltip: 'Export to HTML'),
+        const Spacer(),
+        IconButton(
+          onPressed: () async {
+            final contents = await rootBundle.loadString('assets/markdown_reference.md');
+            bc.read(files)['markdown_reference'] = contents;
+            bc.read(activePath).state = 'markdown_reference';
+            bc.read(screenMode).state = ScreenMode.preview;
+          },
+          icon: const Icon(Icons.help),
+          tooltip: 'Cheat Sheet',
+        ),
+        Consumer(
+          builder: (bc, watch, _) => IconButton(
+            onPressed: bc.read(darkTheme).next,
+            icon: iconOf(watch(darkTheme.state)),
+          ),
+        ),
+      ]),
+      const Divider(),
+      Consumer(
+        builder: (bc, watch, _) => Container(
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Text('Files (${watch(fileList).length})', style: Theme.of(bc).textTheme.caption),
+        ),
+      ),
+      Flexible(
+        child: Scrollbar(
+          child: Consumer(builder: (bc, watch, _) {
+            final list = watch(fileList);
+            final active = watch(activePath).state;
+            return ListView.builder(
+              shrinkWrap: true,
+              itemCount: list.length,
+              itemBuilder: (bc, i) {
+                final file = list.elementAt(i);
+                return ListTile(
+                  dense: true,
+                  title: Text(p.basename(file)),
+                  selected: active == file,
+                  trailing: IconButton(
+                    onPressed: () {
+                      bc.read(files).remove(file);
+                      final list = bc.read(fileList);
+                      if (list.isEmpty) {
+                        bc.read(activePath).state = untitled;
+                        ctl.value.clear();
+                      } else {
+                        bc.read(activePath).state = list.last;
+                      }
+                    },
+                    icon: const Icon(Icons.cancel),
+                  ),
+                  onTap: () {
+                    ctl.value.text = bc.read(files.state)[file]!;
+                    bc.read(activePath).state = file;
+                  },
+                );
+              },
+            );
+          }),
+        ),
+      ),
+      const SizedBox(height: 16)
+    ]);
+  }
 
   @override
   Widget build(BuildContext bc) {
@@ -214,42 +283,48 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
           );
         },
       ),
-      bottomNavigationBar: Consumer(
-        builder: (bc, watch, _) {
-          final sm = watch(screenMode).state;
-          final ls = watch(lockstep).state;
-          final dark = Theme.of(bc).brightness == Brightness.dark;
-          return Material(
-            elevation: 10,
-            child: Row(children: [
-              AnimatedSwitcher(
-                duration: animDur,
-                transitionBuilder: (child, anim) => SizeTransition(sizeFactor: anim, child: child),
-                child: Visibility(
-                  visible: sm == ScreenMode.sbs,
-                  key: ValueKey(sm.hashCode + ls.hashCode),
-                  child: IconButton(
-                    icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
-                    onPressed: () => bc.read(lockstep).state = !ls,
-                    tooltip: 'Lockstep',
-                  ),
+      bottomNavigationBar: Consumer(builder: (bc, watch, _) {
+        final sm = watch(screenMode).state;
+        final ls = watch(lockstep).state;
+        return BottomAppBar(
+          child: Row(children: [
+            AnimatedSwitcher(
+              duration: animDur,
+              transitionBuilder: (child, anim) => SizeTransition(sizeFactor: anim, child: child),
+              child: Visibility(
+                visible: sm == ScreenMode.sbs,
+                key: ValueKey(sm.hashCode + ls.hashCode),
+                child: IconButton(
+                  icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
+                  onPressed: () => bc.read(lockstep).state = !ls,
+                  tooltip: 'Lockstep',
                 ),
               ),
-              IconButton(icon: const Icon(Icons.add), onPressed: fontSizeUp, tooltip: 'Increase Font Size'),
-              IconButton(icon: const Icon(Icons.remove), onPressed: fontSizeDown, tooltip: 'Decrease Font Size'),
-              Text('${watch(scale).state.toStringAsFixed(1)}x'),
-              const Spacer(),
-              IconButton(
-                icon: dark ? const Icon(Icons.brightness_2) : const Icon(Icons.brightness_7),
-                tooltip: 'Toggle Dark Theme',
-                onPressed: () => Navigator.of(bc).pushReplacement(
-                  MaterialPageRoute(builder: (_) => MyApp(dark: !dark)),
+            ),
+            IconButton(icon: const Icon(Icons.add), onPressed: fontSizeUp, tooltip: 'Increase Font Size'),
+            IconButton(icon: const Icon(Icons.remove), onPressed: fontSizeDown, tooltip: 'Decrease Font Size'),
+            const Spacer(),
+            Tooltip(
+              message: 'Indent',
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: changeIndent,
+                  child: Row(children: [
+                    const Icon(Icons.format_indent_increase),
+                    Text(watch(indents).state.toString()),
+                  ]),
                 ),
-              )
-            ]),
-          );
-        },
-      ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => showModalBottomSheet(enableDrag: true, context: bc, builder: buildBottomSheet),
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menu',
+            )
+          ]),
+        );
+      }),
       body: SafeArea(
         child: Consumer(builder: (bc, watch, _) {
           final sm = watch(screenMode).state;
@@ -260,21 +335,32 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
                 Expanded(
                   child: Scrollbar(
                     notificationPredicate: handleScroll,
-                    child: FocusScope(
-                      onKey: handleKey,
-                      child: Consumer(
-                        builder: (bc, watch, _) => TextField(
-                          maxLines: null,
-                          expands: true,
+                    child: Padding(
+                      padding: vertical
+                          ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
+                          : const EdgeInsets.fromLTRB(16, 16, 8, 16),
+                      child: Consumer(builder: (bc, watch, _) {
+                        final indent = watch(indents).state;
+                        return Editor(
+                          key: ValueKey(indent),
+                          scrollController: editorSc,
                           controller: ctl.value,
-                          decoration: const InputDecoration.collapsed(hintText: null),
-                          style: TextStyle(
-                            fontFamily: 'JetBrains Mono',
-                            fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
-                          ),
-                          onChanged: (val) => bc.read(expr).state = val,
-                        ),
-                      ),
+                          onChange: (val) => setFileContent(bc, val),
+                          fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
+                          fontFamily: 'JetBrains Mono',
+                          indent: indent,
+                          handlers: [
+                            PlusMinusHandler(
+                              onMinus: fontSizeDown,
+                              onPlus: fontSizeUp,
+                              ctrl: true,
+                              plusKey: LogicalKeyboardKey.equal,
+                              minusKey: LogicalKeyboardKey.minus,
+                            ),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: openFile)
+                          ],
+                        );
+                      }),
                     ),
                   ),
                 ),
@@ -285,23 +371,22 @@ class _MathMarkdownState extends State<MathMarkdown> with RestorationMixin {
               Flexible(
                 flex: sm.previewing ? 1 : 0,
                 fit: FlexFit.tight,
-                child: Visibility(
-                  visible: sm.previewing,
-                  maintainState: true,
-                  child: Scrollbar(
-                    child: Consumer(
-                      builder: (bc, watch, __) {
-                        final ls = watch(lockstep).state;
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Visibility(
+                    visible: sm.previewing,
+                    maintainState: true,
+                    child: Scrollbar(
+                      child: Consumer(builder: (bc, watch, __) {
                         return MarkdownPreview(
                           sc: sc,
                           padding: vertical
                               ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
                               : const EdgeInsets.fromLTRB(8, 16, 16, 16),
-                          // only listen for keystrokes when in lockstep, reduces the amount of updates
-                          expr: (ls ? watch(expr).state : bc.read(expr).state) ?? ctl.value.text,
+                          expr: watch(activeFile),
                           scale: watch(scale).state,
                         );
-                      },
+                      }),
                     ),
                   ),
                 ),

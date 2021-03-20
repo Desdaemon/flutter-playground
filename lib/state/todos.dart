@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../types/todo.dart';
 
 class ListStore<T> extends StateNotifier<List<T>> {
-  ListStore([List<T>? seed]) : super(seed ?? []);
+  ListStore([List<T>? seed]) : super(seed ?? const []);
 
   int lastidx = 0;
 

@@ -66,6 +66,5 @@ $$
 3. $\vec{r_1}(s)=\vec{r}(g^{-1}(s))$
 
 Note that this is sometimes non-trivial to perform.
-
 - [ ] asd
 - [ ] qwe

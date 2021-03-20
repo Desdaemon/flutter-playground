@@ -1,23 +1,40 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:yata_flutter/main.dart' show boxname;
 
-final darkTheme = StateNotifierProvider((_) => Dark());
+final darkTheme = StateNotifierProvider((_) => Dark(boxname: boxname));
 
-class Dark extends StateNotifier<bool> {
+class Dark extends StateNotifier<ThemeMode> {
   final String boxname;
   bool firstrun = true;
-  Dark({this.boxname = 'todo'}) : super(false);
+  Dark({this.boxname = 'todo'}) : super(ThemeMode.system);
 
   @override
-  set state(bool dark) {
+  set state(ThemeMode dark) {
     super.state = dark;
-    box.put('dark', dark);
+    box.put('dark', dark.index);
+  }
+
+  void next() {
+    switch (state) {
+      case ThemeMode.system:
+        state = ThemeMode.light;
+        break;
+      case ThemeMode.light:
+        state = ThemeMode.dark;
+        break;
+      case ThemeMode.dark:
+        state = ThemeMode.system;
+        break;
+    }
   }
 
   @override
-  bool get state {
+  ThemeMode get state {
     if (firstrun) {
-      super.state = box.get('dark', defaultValue: false) as bool;
+      final idx = box.get('dark', defaultValue: ThemeMode.system.index) as int;
+      super.state = ThemeMode.values[idx];
       firstrun = false;
     }
     return super.state;
