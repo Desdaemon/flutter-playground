@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'handlers.dart';
-export 'handlers.dart';
+import '../../helpers/handlers.dart';
+export '../../helpers/handlers.dart';
 
 /// A [TextField] that expands to its parent's size and handles some common
 /// hotkeys unless `noBuiltins` is passed, (in order of processing):
@@ -44,7 +44,7 @@ class Editor extends StatelessWidget {
   /// these handlers will take precedence.
   final List<KeyHandler>? handlers;
 
-  /// If true, skips calling [builtins] when handling keystrokes.
+  /// If true, skips calling [allHandlers] when handling keystrokes.
   final bool noBuiltins;
   final int indent;
   final ScrollController? scrollController;
@@ -61,7 +61,7 @@ class Editor extends StatelessWidget {
     yield IndentHandler(indent: indent);
     yield PairRemoverHandler(pairs: pairs);
     if (indent > 1) yield DedentHandler(indent: indent);
-    yield const PairLeftHandler(pairs: pairs);
+    // yield const PairLeftHandler(pairs: pairs);
     yield PairRightHandler(pairs: pairs, updateSelection: updateSelection);
     yield MathHandler(updateSelection: updateSelection);
   }
@@ -94,7 +94,46 @@ class Editor extends StatelessWidget {
         decoration: const InputDecoration.collapsed(hintText: null),
         style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
         onChanged: onChange,
+        inputFormatters: [/* LastKey(),  */ PairAdder()],
       ),
     );
+  }
+}
+
+class LastKey extends TextInputFormatter {
+  /// The signed length of [lastValue], negative if removal.
+  static int delta = 0;
+  static String lastValue = '';
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final old = oldValue.text.length;
+    final neo = newValue.text.length;
+    delta = neo - old;
+    lastValue = delta > 0 ? newValue.text.substring(old) : oldValue.text.substring(neo);
+    print('$runtimeType(delta: $delta lastValue: $lastValue)');
+    return newValue;
+  }
+}
+
+class PairAdder extends TextInputFormatter {
+  static const pairs = {'(': ')', '{': '}', '[': ']', '\$': '\$'};
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final old = oldValue.text.length;
+    final neo = newValue.text.length;
+    if (neo - old != 1) {
+      print('oldValue: $oldValue\nnewValue: $newValue');
+      return newValue;
+    }
+
+    final maybePos = newValue.selection.start - 1;
+    final inserted = maybePos < neo ? newValue.text.characters.elementAt(maybePos) : newValue.text.characters.last;
+    final pair = pairs[inserted];
+    if (pair == null) return newValue;
+    return newValue.copyWith(text: '${newValue.text}$pair');
   }
 }

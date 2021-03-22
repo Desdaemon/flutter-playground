@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yata_flutter/state/dark.dart';
 
-import '../utils.dart';
+import '../helpers/utils.dart';
 
 PreferredSizeWidget commonAppBar(BuildContext bc, {String title = 'Widgets Funhouse', List<Widget>? actions}) {
   return AppBar(
