@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yata_flutter/helpers/utils.dart';
 
 import '../../helpers/handlers.dart';
 export '../../helpers/handlers.dart';
@@ -111,13 +112,13 @@ class LastKey extends TextInputFormatter {
     final neo = newValue.text.length;
     delta = neo - old;
     lastValue = delta > 0 ? newValue.text.substring(old) : oldValue.text.substring(neo);
-    print('$runtimeType(delta: $delta lastValue: $lastValue)');
+    // print('LastKey(delta: $delta lastValue: $lastValue)');
     return newValue;
   }
 }
 
 class PairAdder extends TextInputFormatter {
-  static const pairs = {'(': ')', '{': '}', '[': ']', '\$': '\$'};
+  static const pairs = {'(': ')', '{': '}', '[': ']'};
 
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
@@ -126,7 +127,7 @@ class PairAdder extends TextInputFormatter {
     final old = oldValue.text.length;
     final neo = newValue.text.length;
     if (neo - old != 1) {
-      print('oldValue: $oldValue\nnewValue: $newValue');
+      // print('oldValue: $oldValue\nnewValue: $newValue');
       return newValue;
     }
 

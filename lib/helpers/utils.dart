@@ -23,3 +23,12 @@ String shortenPath(String input, [int at = 50]) {
   }
   return input;
 }
+
+String blanks(int length) {
+  if (length < 1) return '';
+  final bf = StringBuffer();
+  for (var i = 0; i < length; i++) {
+    bf.writeCharCode(32 /* space */);
+  }
+  return bf.toString();
+}

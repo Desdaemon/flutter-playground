@@ -8,8 +8,6 @@ import 'package:path/path.dart' as p;
 class MarkdownBottomSheet extends StatelessWidget {
   const MarkdownBottomSheet({
     Key? key,
-    required this.untitled,
-    required this.ctl,
     this.onNew,
     this.onOpen,
     this.onSave,
@@ -19,8 +17,6 @@ class MarkdownBottomSheet extends StatelessWidget {
     this.onDelete,
   }) : super(key: key);
 
-  final String untitled;
-  final RestorableTextEditingController ctl;
   final VoidCallback? onNew;
   final VoidCallback? onOpen;
   final VoidCallback? onSave;
@@ -35,7 +31,7 @@ class MarkdownBottomSheet extends StatelessWidget {
       Consumer(
         builder: (bc, watch, _) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: Text(shortenPath(watch(activePath).state), maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(shortenPath(watch(activePath)), maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
       ),
       const Divider(),
@@ -67,7 +63,7 @@ class MarkdownBottomSheet extends StatelessWidget {
         child: Scrollbar(
           child: Consumer(builder: (bc, watch, _) {
             final list = watch(fileList);
-            final active = watch(activePath).state;
+            final active = watch(activePath);
             return ListView.builder(
               shrinkWrap: true,
               itemCount: list.length,

@@ -23,8 +23,8 @@ class MarkdownPreview extends HookWidget {
       padding: padding,
       child: useMemoized(() {
         return MarkdownBody(
-          shrinkWrap: false,
           data: expr,
+          shrinkWrap: false,
           extensionSet: md.ExtensionSet.gitHubWeb,
           inlineSyntaxes: [MathSyntax()],
           builders: {'math': MathBuilder(scale: scale)},
@@ -34,7 +34,7 @@ class MarkdownPreview extends HookWidget {
           styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
             blockquoteDecoration: BoxDecoration(
               color: Theme.of(context).cardColor,
-              border: Border(left: BorderSide(color: Theme.of(context).accentColor, width: 0)),
+              border: Border(left: BorderSide(color: Theme.of(context).accentColor, width: 4)),
             ),
             textScaleFactor: scale,
             blockSpacing: 12 * scale,
@@ -91,7 +91,8 @@ class MathBuilder extends MarkdownElementBuilder {
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
     final textMode = element.attributes.containsKey('text');
-    return MemoizedMath(tex: tex, scale: scale, style: textMode ? MathStyle.text : MathStyle.display);
+    final child = MathBlock(tex: tex, scale: scale, style: textMode ? MathStyle.text : MathStyle.display);
+    return textMode ? child : Align(child: child);
   }
 }
 
@@ -99,10 +100,10 @@ class MathSyntax extends md.InlineSyntax {
   MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
   @override
   bool onMatch(md.InlineParser parser, Match match) {
-    final textMode = match[2]?.isEmpty ?? true;
     final elem = md.Element.text('math', match[1]!);
-    if (textMode) elem.attributes['text'] = '';
-    if (match[2]?.isEmpty ?? true) {
+    final textMode = match[2]?.isEmpty ?? true;
+    if (textMode) {
+      elem.attributes['text'] = '';
       parser.addNode(elem);
     } else {
       parser.addNode(md.Element('p', [elem]));
@@ -111,11 +112,11 @@ class MathSyntax extends md.InlineSyntax {
   }
 }
 
-class MemoizedMath extends HookWidget {
+class MathBlock extends HookWidget {
   final String tex;
   final double scale;
   final MathStyle style;
-  const MemoizedMath({Key? key, required this.tex, this.scale = 1, required this.style}) : super(key: key);
+  const MathBlock({Key? key, required this.tex, this.scale = 1, required this.style}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return useMemoized(() {
@@ -125,35 +126,15 @@ class MemoizedMath extends HookWidget {
           tex,
           mathStyle: style,
           textScaleFactor: scale,
-          onErrorFallback: (_) => Text(
-            tex,
-            style: TextStyle(color: Theme.of(context).errorColor),
+          onErrorFallback: (ex) => Tooltip(
+            message: ex.message,
+            child: Text(
+              tex,
+              style: TextStyle(color: Theme.of(context).errorColor),
+            ),
           ),
         ),
       );
-    }, [tex, scale, Theme.of(context).hashCode]);
-  }
-}
-
-class CodeBuilder extends MarkdownElementBuilder {
-  CodeBuilder({this.scale = 1});
-  final double scale;
-
-  @override
-  Widget? visitElementAfter(md.Element el, TextStyle? ts) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        color: Colors.white12,
-        child: Text(
-          el.textContent,
-          style: ts!.copyWith(
-            fontSize: ts.fontSize! * scale,
-            backgroundColor: Colors.transparent,
-          ),
-        ),
-      ),
-    );
+    }, [tex, scale, Theme.of(context)]);
   }
 }

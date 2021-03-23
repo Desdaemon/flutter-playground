@@ -6,15 +6,6 @@ typedef TextValueSetter = void Function(String text, int base, [int? extent]);
 /// Usually calls `controller.selection=`.
 typedef OffsetCallback = void Function(int offset);
 
-String blanks(int length) {
-  if (length < 1) return '';
-  final bf = StringBuffer();
-  for (var i = 0; i < length; i++) {
-    bf.writeCharCode(32 /* space */);
-  }
-  return bf.toString();
-}
-
 abstract class KeyHandler {
   const KeyHandler();
   static final newline = '\n'.characters;

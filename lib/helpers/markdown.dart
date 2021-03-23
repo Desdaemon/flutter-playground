@@ -14,8 +14,9 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:yata_flutter/screens/markdown.dart' show MathMarkdown;
+import 'package:url_launcher/url_launcher.dart';
 
+import '../screens/markdown.dart' show MathMarkdown;
 import '../state/markdown.dart';
 
 /// The logic part of [MathMarkdown], i.e. anything that relates to state, providers
@@ -23,6 +24,7 @@ import '../state/markdown.dart';
 abstract class IMathMarkdownState extends State<MathMarkdown> {
   RestorableTextEditingController get ctl;
   ScrollController get sc;
+
   static const scaleStep = 0.1;
   String get untitled;
   int untitledIdx = 1;
@@ -47,28 +49,20 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   }
 
   /// Sets the active file to be [path] and populates its [contents].
-  void setFile(String path, [String? contents]) {
-    final _contents = contents ?? context.read(files.state)[path] ?? '';
-    ctl.value.text = _contents;
-    context.read(activePath).state = path;
-    if (contents == null) context.read(files)[path] = _contents;
+  void activate(String path, String contents) {
+    ctl.value.text = contents;
+    context.read(files).activate(path, contents);
   }
 
-  void delete(String file) {
-    context.read(files).remove(file);
-    final list = context.read(fileList);
-    if (list.isEmpty) {
-      context.read(activePath).state = untitled;
-      ctl.value.clear();
-    } else {
-      context.read(activePath).state = list.last;
-    }
+  void remove(String file) {
+    final contents = context.read(files).remove(file);
+    ctl.value.text = contents;
   }
 
   void create() {
     ctl.value.clear();
     final newpath = '${untitled}_(${untitledIdx++}).md';
-    setFile(newpath, '');
+    activate(newpath, '');
   }
 
   Future<void> open() async {
@@ -91,12 +85,13 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       contents = await File(path).readAsString();
     }
     ctl.value.text = contents;
-    setFile(path, contents);
+    activate(path, contents);
   }
 
   Future<void> save() async {
-    var path = context.read(activePath).state;
-    final contents = Uint8List.fromList(ctl.value.text.codeUnits);
+    assert(ctl.value.text == context.read(activeFile), 'Controller text desynced with store');
+    final contents = ctl.value.text;
+    var path = context.read(activePath);
     if (path.startsWith(untitled)) {
       final String? filename = await showDialog(
         context: context,
@@ -110,7 +105,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
               ),
               TextFormField(
                 initialValue: untitled,
-                onFieldSubmitted: (val) => Navigator.pop(bc, val),
+                onFieldSubmitted: Navigator.of(bc).pop,
                 autofocus: true,
                 decoration: const InputDecoration(filled: true, suffixText: '.md'),
                 textInputAction: TextInputAction.next,
@@ -123,7 +118,12 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       var newpath = filename;
       if (kIsWeb || Platform.isIOS) {
         // TODO: Properly handle saving on iOS when I finally have a debugging device
-        await FileSaver.instance.saveFile(p.basenameWithoutExtension(newpath), contents, 'md', mimeType: MimeType.TEXT);
+        await FileSaver.instance.saveFile(
+          p.basenameWithoutExtension(newpath),
+          Uint8List.fromList(contents.codeUnits),
+          'md',
+          mimeType: MimeType.TEXT,
+        );
         return;
       }
       final dir = Platform.isAndroid
@@ -135,11 +135,11 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
             );
       if (dir == null) return;
       newpath = p.join(dir, p.basename(p.setExtension(newpath, '.md')));
-      setFile(newpath, ctl.value.text);
+      activate(newpath, contents);
       context.read(files).remove(path);
       path = newpath;
     }
-    await File(path).writeAsBytes(contents, flush: true);
+    await File(path).writeAsString(contents);
   }
 
   Future<void> export() async {
@@ -151,12 +151,20 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     final outpath = '${appdir.path}/out.html';
     final file = File(outpath);
     await file.create();
-    final markdown =
-        md.markdownToHtml(content, extensionSet: md.ExtensionSet.gitHubWeb, inlineSyntaxes: [TaskListSyntax()]);
-    await file.writeAsString(template
+    final markdown = md.markdownToHtml(
+      content,
+      extensionSet: md.ExtensionSet.gitHubWeb,
+      inlineSyntaxes: [TaskListSyntax(), md.TextSyntax(r'\\')],
+    );
+    final output = template
         .replaceFirst('{{ body }}', markdown)
-        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath).state)));
-    OpenFile.open(outpath);
+        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
+    await file.writeAsString(output);
+    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+      launch('file://$outpath');
+    } else {
+      OpenFile.open(outpath);
+    }
   }
 
   Future<void> changeIndent() async {
@@ -181,7 +189,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   Future<void> openCheatsheet() async {
     final contents = await rootBundle.loadString('assets/markdown_reference.md');
-    setFile('markdown_reference.md', contents);
+    activate('markdown_reference.md', contents);
     context.read(screenMode).state = ScreenMode.preview;
   }
 }

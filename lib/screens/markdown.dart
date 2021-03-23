@@ -48,15 +48,16 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
   }
 
   Widget get bottomSheet => MarkdownBottomSheet(
-      untitled: untitled,
-      ctl: ctl,
       onExport: export,
       onNew: create,
       onOpen: open,
       onOpenCheatsheet: openCheatsheet,
       onSave: save,
-      onSetActive: setFile,
-      onDelete: delete);
+      onDelete: remove,
+      onSetActive: (val) {
+        context.read(files).focus(val);
+        ctl.value.text = context.read(activeFile);
+      });
 
   /// Makes [path] the active file and sets its [contents].
   void showMenu() {
@@ -161,7 +162,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           key: ValueKey(indent),
                           scrollController: editorSc,
                           controller: ctl.value,
-                          onChange: (val) => setFileContent(bc, val),
+                          onChange: bc.read(files).updateActive,
                           fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
                           fontFamily: 'JetBrains Mono',
                           indent: indent,
@@ -184,9 +185,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
               if (sm.previewing && !vertical) const VerticalDivider(width: 1),
               // A caching technique: Flexible as top-level child,
               // Visibility with maintainState set to true.
-              Flexible(
+              Expanded(
                 flex: sm.previewing ? 1 : 0,
-                fit: FlexFit.tight,
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Visibility(
