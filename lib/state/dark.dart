@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-import 'package:yata_flutter/main.dart' show boxname;
 
-final darkTheme = StateNotifierProvider((_) => Dark(boxname: boxname));
+final darkTheme = StateNotifierProvider((_) => Dark(boxname: 'prefs'));
 
 class Dark extends StateNotifier<ThemeMode> {
   final String boxname;

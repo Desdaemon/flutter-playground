@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
+import 'package:yata_flutter/main.dart' show boxname, prefname;
+
 final screenMode = StateProvider((_) => ScreenMode.sbs);
 final lockstep = StateProvider((_) => true);
 final scale = StateProvider((_) => 1.0);
 final indents = StateProvider((_) => 2);
 
 /// The directory of files and its interim contents.
-final files = StateNotifierProvider((_) => MarkdownStore());
+final files = StateNotifierProvider<MarkdownStore>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
 
 /// The path to the file being edited.
 final activePath = Provider((ref) => ref.watch(files.state).active);
@@ -19,34 +21,45 @@ final fileList = Provider((ref) => ref.watch(files.state).files.keys);
 
 @immutable
 class MarkdownState {
-  final Map<String, String> files;
+  final Map<String, String?> files;
   final String active;
   const MarkdownState(this.files, this.active);
-  MarkdownState copyWith({Map<String, String>? files, String? active}) =>
+  MarkdownState copyWith({Map<String, String?>? files, String? active}) =>
       MarkdownState(files ?? this.files, active ?? this.active);
 }
 
 class MarkdownStore extends StateNotifier<MarkdownState> {
-  MarkdownStore({this.boxname = 'markdown', this.boxid = 'mapnoti', this.untitled = 'Untitled'})
+  MarkdownStore(
+      {this.boxname = 'markdown', this.boxid = 'markdown', this.untitled = 'Untitled', this.prefname = 'prefs'})
       : super(const MarkdownState({}, 'Untitled'));
   final String boxname;
   final String boxid;
+  final String prefname;
   final String untitled;
   bool firstrun = true;
 
-  Box get box => Hive.box(boxname);
-  String get mapid => 'left_$boxid';
   String get activepathid => 'right_$boxid';
 
   @override
   MarkdownState get state {
     if (firstrun) {
       firstrun = false;
-      final left = box.get(mapid) as Map<String, String>?;
-      final right = box.get(activepathid) as String?;
-      super.state = MarkdownState(left ?? super.state.files, right ?? super.state.active);
+      // Since we only store String? in this box, it is safe to perform this cast.
+      final left = Hive.box(boxname).toMap().cast<String, String?>();
+      final right = Hive.box('prefs').get(activepathid) as String?;
+      super.state = MarkdownState(left, right ?? super.state.active);
     }
     return super.state;
+  }
+
+  @override
+  set state(MarkdownState s) {
+    super.state = s;
+    Hive.box(prefname).put(activepathid, s.active);
+  }
+
+  void persist(String path) {
+    Hive.box(boxname).put(path, state.files[path]);
   }
 
   /// Sets the [path] for [contents] without making it active.
@@ -56,6 +69,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
         if (en.key == path) path: contents else en.key: en.value,
       if (!state.files.containsKey(path)) path: contents
     });
+    persist(path);
   }
 
   /// Sets the [contents] of [path] and makes it the active file.
@@ -65,6 +79,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
         if (en.key == path) path: contents else en.key: en.value,
       if (!state.files.containsKey(path)) path: contents
     }, path);
+    persist(path);
   }
 
   /// Returns the contents of the current active file, after removing [file].
@@ -81,11 +96,14 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
       for (final en in state.files.entries)
         if (en.key != file) en.key: en.value
     }, newpath);
+    Hive.box(boxname).delete(file);
     return state.files[state.active] ?? '';
   }
 
   /// Sets [path] to be the active file.
-  void focus(String path) => state = state.copyWith(active: path);
+  void focus(String path) {
+    state = state.copyWith(active: path);
+  }
 
   /// Sets the contents of the current active file.
   void updateActive(String contents) {
@@ -95,13 +113,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
         if (en.key == active) active: contents else en.key: en.value,
       if (!state.files.containsKey(active)) active: contents
     });
-  }
-
-  @override
-  void dispose() {
-    box.put(mapid, state.files);
-    box.put(activepathid, state.active);
-    super.dispose();
+    persist(active);
   }
 }
 

@@ -69,7 +69,11 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   void create() {
     ctl.value.clear();
-    final newpath = '${untitled}_(${untitledIdx++}).md';
+    final _files = context.read(files.state).files;
+    String newpath;
+    do {
+      newpath = '${untitled}_(${untitledIdx++}).md';
+    } while (_files.containsKey(newpath));
     activate(newpath, '');
   }
 
