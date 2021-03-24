@@ -15,6 +15,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../screens/markdown.dart' show MathMarkdown;
 import '../state/markdown.dart';
@@ -27,6 +28,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   static const scaleStep = 0.1;
   String get untitled;
+  String contentkey = '';
   int untitledIdx = 1;
   Characters indent = ''.characters;
 
@@ -73,18 +75,36 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   Future<void> open() async {
     String contents, path;
-    if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+    if (kIsWeb) {
       final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['md', 'txt']);
       if (result == null) return;
       final file = result.files.single;
-      path = file.path ?? file.name!;
-      contents = kIsWeb ? String.fromCharCodes(result.files.single.bytes!) : await File(path).readAsString();
+      path = file.name!;
+      contents = String.fromCharCodes(file.bytes!);
     } else {
-      // Linux
+      final Directory root;
+      if (Platform.isAndroid) {
+        root = Directory('/storage/emulated/0');
+      } else if (Platform.isWindows) {
+        root = Directory(r'C:\Users');
+      } else if (Platform.isLinux) {
+        root = Directory('/home');
+      } else if (Platform.isMacOS) {
+        root = Directory('/Users');
+      } else {
+        root = await getApplicationDocumentsDirectory();
+      }
       final result = await FilesystemPicker.open(
         context: context,
-        rootDirectory: Directory.current,
+        rootDirectory: root,
+        fsType: FilesystemType.file,
         fileTileSelectMode: FileTileSelectMode.wholeTile,
+        allowedExtensions: const ['.md', '.txt'],
+        requestPermission: () async {
+          if (!(Platform.isAndroid || Platform.isIOS)) return true;
+          final status = await Permission.storage.request();
+          return status.isGranted;
+        },
       );
       if (result == null) return;
       path = result;
@@ -95,7 +115,6 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   }
 
   Future<void> save() async {
-    assert(ctl.value.text == context.read(activeFile), 'Controller text desynced with store');
     final contents = ctl.value.text;
     var path = context.read(activePath);
     if (path.startsWith(untitled)) {
@@ -135,10 +154,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       final dir = Platform.isAndroid
           ? await FilePicker.platform.getDirectoryPath()
           : await FilesystemPicker.open(
-              context: context,
-              fsType: FilesystemType.folder,
-              rootDirectory: Directory.current,
-            );
+              context: context, fsType: FilesystemType.folder, rootDirectory: Directory.current);
       if (dir == null) return;
       newpath = p.join(dir, p.basename(p.setExtension(newpath, '.md')));
       activate(newpath, contents);
@@ -148,29 +164,36 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     await File(path).writeAsString(contents);
   }
 
-  Future<void> export() async {
-    final content = ctl.value.text;
-    if (content.isEmpty) return;
-
-    final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
+  Future<void> _export(String content, [String? key]) async {
     final appdir = await getApplicationSupportDirectory();
-    final outpath = '${appdir.path}/out.html';
+    final outpath = '${appdir.path}/${key ?? 'out'}.html';
+    // TODO: Find a replacement for String.hashCode
     final file = File(outpath);
-    await file.create();
-    final markdown = md.markdownToHtml(
-      content,
-      extensionSet: md.ExtensionSet.gitHubWeb,
-      inlineSyntaxes: [TaskListSyntax(), md.TextSyntax(r'\\')],
-    );
-    final output = template
-        .replaceFirst('{{ body }}', markdown)
-        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
-    await file.writeAsString(output);
+    if (key == null || contentkey != key || !(await file.exists())) {
+      await file.create();
+      contentkey = key ?? content.hashCode.toString();
+      final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
+      final markdown = md.markdownToHtml(
+        content,
+        extensionSet: md.ExtensionSet.gitHubWeb,
+        inlineSyntaxes: [TaskListSyntax(), md.TextSyntax(r'\\')],
+      );
+      final output = template
+          .replaceFirst('{{ body }}', markdown)
+          .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
+      await file.writeAsString(output);
+    }
     if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
       launch('file://$outpath');
     } else {
       OpenFile.open(outpath);
     }
+  }
+
+  Future<void> export() async {
+    final content = ctl.value.text;
+    if (content.isEmpty) return;
+    await _export(content);
   }
 
   Future<void> changeIndent() async {
@@ -194,9 +217,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   }
 
   Future<void> openCheatsheet() async {
-    final contents = await rootBundle.loadString('assets/markdown_reference.md');
-    activate('markdown_reference.md', contents);
-    context.read(screenMode).state = ScreenMode.preview;
+    _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
   }
 
   /// Initializes and/or updates [indent] only if their lengths mismatch.

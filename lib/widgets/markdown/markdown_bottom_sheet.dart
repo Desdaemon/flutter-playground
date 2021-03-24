@@ -32,12 +32,13 @@ class MarkdownBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.min, children: [
-      Consumer(
-        builder: (bc, watch, _) => Padding(
+      Consumer(builder: (bc, watch, _) {
+        final path = watch(activePath);
+        return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: Text(shortenPath(watch(activePath)), maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-      ),
+          child: Tooltip(message: path, child: Text(shortenPath(path), maxLines: 1, overflow: TextOverflow.ellipsis)),
+        );
+      }),
       const Divider(),
       Consumer(
         builder: (bc, watch, _) => Container(
