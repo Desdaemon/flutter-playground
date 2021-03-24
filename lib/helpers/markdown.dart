@@ -28,11 +28,17 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   static const scaleStep = 0.1;
   String get untitled;
   int untitledIdx = 1;
+  Characters indent = ''.characters;
+
+  late TextSelection sel;
+  late CharacterRange iter;
+
+  final newline = '\n'.characters;
 
   void upfont() => context.read(scale).state += scaleStep;
   void downfont() => context.read(scale).state -= scaleStep;
-  void indent() => context.read(indents).state++;
-  void dedent() {
+  void upindent() => context.read(indents).state++;
+  void downindent() {
     if (context.read(indents).state > 0) context.read(indents).state--;
   }
 
@@ -192,4 +198,87 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     activate('markdown_reference.md', contents);
     context.read(screenMode).state = ScreenMode.preview;
   }
+
+  /// Initializes and/or updates [indent] only if their lengths mismatch.
+  /// Returns the current indent size.
+  int _setindent() {
+    final size = context.read(indents).state;
+    if (indent.length != size) {
+      indent = List.filled(size, ' ', growable: false).join().characters;
+    }
+    return size;
+  }
+
+  /// Setups for [iter.current] to contain the lines covered by [sel].
+  void _setline() {
+    sel = ctl.value.selection;
+    iter = ctl.value.text.characters.iterator
+      ..moveNext(sel.start)
+      ..collapseToEnd()
+      ..expandNext(sel.isCollapsed ? 0 : sel.end - sel.start)
+      ..expandBackUntil(newline)
+      ..expandUntil(newline);
+  }
+
+  void _updateActive(String output, int start, int end) {
+    ctl.value.value = TextEditingValue(
+        text: output,
+        selection: sel.isNormalized
+            ? TextSelection(baseOffset: start, extentOffset: end)
+            : TextSelection(baseOffset: end, extentOffset: start));
+    context.read(files).updateActive(output);
+  }
+
+  void doIndent() {
+    final nIndents = _setindent();
+    _setline();
+    final inner = iter.currentCharacters.split(newline).map((e) => indent.followedBy(e).join());
+    final lines = inner.length;
+    final innerOut = inner.join('\n');
+    _updateActive('${iter.stringBefore}$innerOut${iter.stringAfter}', sel.start + nIndents, sel.end + nIndents * lines);
+  }
+
+  void doDedent() {
+    final nIndents = _setindent();
+    _setline();
+    int? firstlineback;
+    int combinedback = 0;
+    final inner = iter.currentCharacters.split(newline).map((line) {
+      if (line.startsWith(indent)) {
+        firstlineback ??= -nIndents;
+        combinedback -= nIndents;
+        return line.skip(nIndents).join();
+      } else if (line.startsWith(' '.characters)) {
+        firstlineback ??= -1;
+        combinedback--;
+        return line.skip(1).join();
+      } else {
+        firstlineback ??= 0;
+        return line.join();
+      }
+    }).join('\n');
+    _updateActive('${iter.stringBefore}$inner${iter.stringAfter}', sel.start + firstlineback!, sel.end + combinedback);
+  }
+
+  bool wrap(String left, {String? right, bool unwrap = true, bool dryRun = false}) {
+    right ??= left;
+    sel = ctl.value.selection;
+    final txt = ctl.value.text;
+    final post = sel.textAfter(txt);
+    final mayUnwrap = post.startsWith(right);
+    if (unwrap && mayUnwrap) {
+      ctl.value.selection = TextSelection.collapsed(offset: sel.end + right.length);
+      return true;
+    }
+    if (dryRun) return mayUnwrap;
+    final pre = sel.textBefore(txt);
+    final inner = sel.textInside(txt);
+    _updateActive('$pre$left$inner$right$post', sel.start + left.length, sel.end + left.length);
+    return false;
+  }
+
+  void bold() => wrap('**');
+  void italic() => wrap('*');
+  void strikethrough() => wrap('~~');
+  void math() => wrap(r'$');
 }

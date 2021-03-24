@@ -135,6 +135,11 @@ class PairAdder extends TextInputFormatter {
     final inserted = maybePos < neo ? newValue.text.characters.elementAt(maybePos) : newValue.text.characters.last;
     final pair = pairs[inserted];
     if (pair == null) return newValue;
-    return newValue.copyWith(text: '${newValue.text}$pair');
+
+    final sel = newValue.selection;
+    final pre = newValue.text.substring(0, sel.start);
+    final inner = newValue.text.substring(sel.start, sel.end);
+    final post = newValue.text.substring(sel.end);
+    return newValue.copyWith(text: '$pre$inner$pair$post');
   }
 }

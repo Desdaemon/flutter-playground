@@ -23,12 +23,30 @@
     - [Text Links](#text-links)
     - [Picture Links](#picture-links)
   - [Emojis](#emojis)
-- [TeX Cheat Sheet :building_construction:](#tex-cheat-sheet-building_construction)
+- [TeX Cheat Sheet](#tex-cheat-sheet)
   - [Inline Math and Math Block](#inline-math-and-math-block)
   - [Accents](#accents)
   - [Delimiters](#delimiters)
     - [Delimiter Sizing](#delimiter-sizing)
   - [Environments](#environments)
+  - [Letters and Unicode](#letters-and-unicode)
+    - [Greek Letters](#greek-letters)
+    - [Other Letters](#other-letters)
+  - [Layout](#layout)
+    - [Vertical Layout](#vertical-layout)
+    - [Overlap and Spacing](#overlap-and-spacing)
+      - [Spacing](#spacing)
+  - [Logic and Set Theory](#logic-and-set-theory)
+  - [Operators](#operators)
+    - [Big Operators](#big-operators)
+    - [Binary Operators](#binary-operators)
+    - [Fractions and Binomials](#fractions-and-binomials)
+    - [Math Operators](#math-operators)
+    - [\sqrt](#sqrt)
+  - [Relations :building_construction:](#relations-building_construction)
+  - [Special Notation :building_construction:](#special-notation-building_construction)
+  - [Symbols and Punctuation :building_construction:](#symbols-and-punctuation-building_construction)
+  - [Units :building_construction:](#units-building_construction)
 - [Appendix](#appendix)
 # Markdown Cheat Sheet
 ## Headings
@@ -164,7 +182,7 @@ https://www.google.com
 ```
 ## Emojis
 :smile:
-# TeX Cheat Sheet :building_construction:
+# TeX Cheat Sheet
 ## Inline Math and Math Block
 The result of $1+1$ is $2$.
 $$a^2+b^2=c^2$$
@@ -174,61 +192,38 @@ The result of $1+1$ is $2$.
 $$a^2+b^2=c^2$$
 ```
 ## Accents
-| Content                    | Syntax                     |
-| -------------------------- | -------------------------- |
-| $a'$                       | `a'`                       |
-| $a''$                      | `a''`                      |
-| $a^{\prime}$               | `a^{\prime}`               |
-| $\acute{a}$                | `\acute{a}`                |
-| $\bar{y}$                  | `\bar{y}`                  |
-| $\breve{a}$                | `\breve{a}`                |
-| $\check{a}$                | `\check{a}`                |
-| $\dot{a}$                  | `\dot{a}`                  |
-| $\ddot{a}$                 | `\ddot{a}`                 |
-| $\grave{a}$                | `\grave{a}`                |
-| $\hat{\theta}$             | `\hat{\theta}`             |
-| $\widehat{ac}$             | `\widehat{ac}`             |
-| $\tilde{a}$                | `\tilde{a}`                |
-| $\widetilde{ac}$           | `\widetilde{ac}`           |
-| $\utilde{AB}$              | `\utilde{AB}`              |
-| $\vec{F}$                  | `\vec{F}`                  |
-| $\overleftarrow{AB}$       | `\overleftarrow{AB}`       |
-| $\underleftarrow{AB}$      | `\underleftarrow{AB}`      |
-| $\overleftharpoon{ac}$     | `\overleftharpoon{ac}`     |
-| $\overleftrightarrow{AB}$  | `\overleftrightarrow{AB}`  |
-| $\underleftrightarrow{AB}$ | `\underleftrightarrow{AB}` |
-| $\overline{AB}$            | `\overline{AB}`            |
-| $\underline{AB}$           | `\underline{AB}`           |
-| $\widecheck{ac}$           | `\widecheck{ac}`           |
+| Content        | Syntax         | Content                    | Syntax                     |
+| -------------- | -------------- | -------------------------- | -------------------------- |
+| $a'$           | `a'`           | $\tilde{a}$                | `\tilde{a}`                |
+| $a''$          | `a''`          | $\widetilde{ac}$           | `\widetilde{ac}`           |
+| $a^{\prime}$   | `a^{\prime}`   | $\utilde{AB}$              | `\utilde{AB}`              |
+| $\acute{a}$    | `\acute{a}`    | $\vec{F}$                  | `\vec{F}`                  |
+| $\bar{y}$      | `\bar{y}`      | $\overleftarrow{AB}$       | `\overleftarrow{AB}`       |
+| $\breve{a}$    | `\breve{a}`    | $\underleftarrow{AB}$      | `\underleftarrow{AB}`      |
+| $\check{a}$    | `\check{a}`    | $\overleftharpoon{ac}$     | `\overleftharpoon{ac}`     |
+| $\dot{a}$      | `\dot{a}`      | $\overleftrightarrow{AB}$  | `\overleftrightarrow{AB}`  |
+| $\ddot{a}$     | `\ddot{a}`     | $\underleftrightarrow{AB}$ | `\underleftrightarrow{AB}` |
+| $\grave{a}$    | `\grave{a}`    | $\overline{AB}$            | `\overline{AB}`            |
+| $\hat{\theta}$ | `\hat{\theta}` | $\underline{AB}$           | `\underline{AB}`           |
+| $\widehat{ac}$ | `\widehat{ac}` | $\widecheck{ac}$           | `\widecheck{ac}`           |
+
 ## Delimiters
-| Content                  | Syntax                   |
-| ------------------------ | ------------------------ |
-| $\lparen\rparen$         | `\lparen\rparen`         |
-| $\lbrack\rbrack$         | `\lbrack\rbrack`         |
-| $\lbrace\rbrace$         | `\lbrace\rbrace`         |
-| $\langle\rangle$         | `\langle\rangle`         |
-| $\lang\rang$             | `\lang\rang`             |
-| $\vert$                  | `\vert`                  |
-| $\lvert\rvert$           | `\lvert\rvert`           |
-| $\Vert$                  | `\Vert`                  |
-| $\lVert\rVert$           | `\lVert\rVert`           |
-| $\lt\gt$                 | `\lt\gt`                 |
-| $\lceil\rceil$           | `\lceil\rceil`           |
-| $\lfloor\rfloor$         | `\lfloor\rfloor`         |
-| $\lmoustache\rmoustache$ | `\lmoustache\rmoustache` |
-| $\lgroup\rgroup$         | `\lgroup\rgroup`         |
-| $\ulcorner\urcorner$     | `\ulcorner\urcorner`     |
-| $\llcorner\lrcorner$     | `\llcorner\lrcorner`     |
-| $\llbracket$             | `\llbracket`             |
-| $\rrbracket$             | `\rrbracket`             |
-| $\uparrow$               | `\uparrow`               |
-| $\downarrow$             | `\downarrow`             |
-| $\updownarrow$           | `\updownarrow`           |
-| $\Uparrow$               | `\Uparrow`               |
-| $\Downarrow$             | `\Downarrow`             |
-| $\Updownarrow$           | `\Updownarrow`           |
-| $\backslash$             | `\backslash`             |
-| $\lBrace\rBrace$         | `\lBrace\rBrace`         |
+| Content                  | Syntax                   | Content              | Syntax               |
+| ------------------------ | ------------------------ | -------------------- | -------------------- |
+| $\lparen\rparen$         | `\lparen\rparen`         | $\lgroup\rgroup$     | `\lgroup\rgroup`     |
+| $\lbrack\rbrack$         | `\lbrack\rbrack`         | $\ulcorner\urcorner$ | `\ulcorner\urcorner` |
+| $\lbrace\rbrace$         | `\lbrace\rbrace`         | $\llcorner\lrcorner$ | `\llcorner\lrcorner` |
+| $\langle\rangle$         | `\langle\rangle`         | $\llbracket$         | `\llbracket`         |
+| $\lang\rang$             | `\lang\rang`             | $\rrbracket$         | `\rrbracket`         |
+| $\vert$                  | `\vert`                  | $\uparrow$           | `\uparrow`           |
+| $\lvert\rvert$           | `\lvert\rvert`           | $\downarrow$         | `\downarrow`         |
+| $\Vert$                  | `\Vert`                  | $\updownarrow$       | `\updownarrow`       |
+| $\lVert\rVert$           | `\lVert\rVert`           | $\Uparrow$           | `\Uparrow`           |
+| $\lt\gt$                 | `\lt\gt`                 | $\Downarrow$         | `\Downarrow`         |
+| $\lceil\rceil$           | `\lceil\rceil`           | $\Updownarrow$       | `\Updownarrow`       |
+| $\lfloor\rfloor$         | `\lfloor\rfloor`         | $\backslash$         | `\backslash`         |
+| $\lmoustache\rmoustache$ | `\lmoustache\rmoustache` | $\lBrace\rBrace$     | `\lBrace\rBrace`     |
+
 ### Delimiter Sizing
 $\left(\LARGE{AB}\right)$ `\left(\LARGE{AB}\right)`
 
@@ -241,51 +236,298 @@ $( \big( \Big( \bigg( \Bigg($ `( \big( \Big( \bigg( \Bigg(`
 | `\right` | `\bigg` | `\biggl` | `\biggm` | `\biggr` |
 |          | `\Bigg` | `\Biggl` | `\Biggm` | `\Biggr` |
 ## Environments
+*Usage*:
+```t
+\begin{environment}{options}
+  ...
+\end{environment}
+```
+For the alignment environments, `&` denotes an anchor position.
+
+| Content                                                                   | Environment   |
+| ------------------------------------------------------------------------- | ------------- |
+| $\begin{matrix}a&b\\c&d\end{matrix}$                                      | `matrix`      |
+| $\begin{array}{cc}a&b\\c&d\end{array}$                                    | `array`       |
+| $\begin{pmatrix}a&b\\c&d\end{pmatrix}$                                    | `pmatrix`     |
+| $\begin{bmatrix}a&b\\c&d\end{bmatrix}$                                    | `bmatrix`     |
+| $\begin{vmatrix}a&b\\c&d\end{vmatrix}$                                    | `vmatrix`     |
+| $\begin{Vmatrix}a&b\\c&d\end{Vmatrix}$                                    | `Vmatrix`     |
+| $\begin{Bmatrix}a&b\\c&d\end{Bmatrix}$                                    | `Bmatrix`     |
+| $x=\begin{cases}a&\text{if }b\\c&\text{if }d\end{cases}$                  | `cases`       |
+| $\begin{smallmatrix}a&b\\c&d\end{smallmatrix}$                            | `smallmatrix` |
+| $\displaystyle\sum_{\begin{subarray}{l}i\in\Lambda\\0<j<n\end{subarray}}$ | `subarray`    |
+| $\begin{aligned} a&=b+c\\ d+e&=f \end{aligned}$                           | `aligned`     |
+| $\begin{gathered} a=b\\ e=b+c \end{gathered}$                             | `gathered`    |
+| $\begin{alignedat}{2} 10&x+&3&y=2\\ 3&x+&13&y=4 \end{alignedat}$          | `alignedat`   |
+## Letters and Unicode
+### Greek Letters
+| Content       | Syntax        | Content       | Syntax        |
+| ------------- | ------------- | ------------- | ------------- |
+| $\Alpha$      | `\Alpha`      | $\alpha$      | `\alpha`      |
+| $\Beta$       | `\Beta`       | $\beta$       | `\beta`       |
+| $\Gamma$      | `\Gamma`      | $\gamma$      | `\gamma`      |
+| $\Epsilon$    | `\Epsilon`    | $\epsilon$    | `\epsilon`    |
+| $\Zeta$       | `\Zeta`       | $\zeta$       | `\zeta`       |
+| $\Eta$        | `\Eta`        | $\eta$        | `\eta`        |
+| $\Theta$      | `\Theta`      | $\theta$      | `\theta`      |
+| $\Iota$       | `\Iota`       | $\iota$       | `\iota`       |
+| $\Kappa$      | `\Kappa`      | $\kappa$      | `\kappa`      |
+| $\Lambda$     | `\Lambda`     | $\lambda$     | `\lambda`     |
+| $\Mu$         | `\Mu`         | $\mu$         | `\mu`         |
+| $\Nu$         | `\Nu`         | $\nu$         | `\nu`         |
+| $\Xi$         | `\Xi`         | $\xi$         | `\xi`         |
+| $\Omicron$    | `\Omicron`    | $\omicron$    | `\omicron`    |
+| $\Pi$         | `\Pi`         | $\pi$         | `\pi`         |
+| $\Rho$        | `\Rho`        | $\rho$        | `\rho`        |
+| $\Sigma$      | `\Sigma`      | $\sigma$      | `\sigma`      |
+| $\Tau$        | `\Tau`        | $\tau$        | `\tau`        |
+| $\Upsilon$    | `\Upsilon`    | $\upsilon$    | `\upsilon`    |
+| $\Phi$        | `\Phi`        | $\phi$        | `\phi`        |
+| $\Chi$        | `\Chi`        | $\chi$        | `\chi`        |
+| $\Psi$        | `\Psi`        | $\psi$        | `\psi`        |
+| $\Omega$      | `\Omega`      | $\omega$      | `\omega`      |
+| $\varGamma$   | `\varGamma`   | $\varepsilon$ | `\varepsilon` |
+| $\varTheta$   | `\varTheta`   | $\varkappa$   | `\varkappa`   |
+| $\varLambda$  | `\varLambda`  | $\vartheta$   | `\vartheta`   |
+| $\varXi$      | `\varXi`      | $\thetasym$   | `\thetasym`   |
+| $\varPi$      | `\varPi`      | $\varpi$      | `\varpi`      |
+| $\varSigma$   | `\varSigma`   | $\varrho$     | `\varrho`     |
+| $\varUpsilon$ | `\varUpsilon` | $\varsigma$   | `\varsigma`   |
+| $\varPhi$     | `\varPhi`     | $\varphi$     | `\varphi`     |
+| $\varPsi$     | `\varPsi`     | $\digamma$    | `\digamma`    |
+| $\varOmega$   | `\varOmega`   |
+
+### Other Letters
+| Content      | Syntax       | Content      | Syntax       |
+| ------------ | ------------ | ------------ | ------------ |
+| $\imath$     | `\imath`     | $\jmath$     | `\jmath`     |
+| $\aleph$     | `\aleph`     | $\alef$      | `\alef`      |
+| $\alefsym$   | `\alefsym`   | $\beth$      | `\beth`      |
+| $\gimel$     | `\gimel`     | $\daleth$    | `\daleth`    |
+| $\eth$       | `\eth`       | $\nabla$     | `\nabla`     |
+| $\partial$   | `\partial`   | $\Game$      | `\Game`      |
+| $\Finv$      | `\Finv`      | $\cnums$     | `\cnums`     |
+| $\Complex$   | `\Complex`   | $\ell$       | `\ell`       |
+| $\hbar$      | `\hbar`      | $\hslash$    | `\hslash`    |
+| $\Im$        | `\Im`        | $\image$     | `\image`     |
+| $\Bbbk$      | `\Bbbk`      | $\N$         | `\N`         |
+| $\natnums$   | `\natnums`   | $\R$         | `\R`         |
+| $\Re$        | `\Re`        | $\real$      | `\real`      |
+| $\reals$     | `\reals`     | $\Reals$     | `\Reals`     |
+| $\wp$        | `\wp`        | $\weierp$    | `\weierp`    |
+| $\Z$         | `\Z`         | $\text{\aa}$ | `\text{\aa}` |
+| $\text{\AA}$ | `\text{\AA}` | $\text{\ae}$ | `\text{\ae}` |
+| $\text{\AE}$ | `\text{\AE}` | $\text{\oe}$ | `\text{\oe}` |
+| $\text{\OE}$ | `\text{\OE}` | $\text{\o}$  | `\text{\o}`  |
+| $\text{\O}$  | `\text{\O}`  | $\text{\ss}$ | `\text{\ss}` |
+| $\text{\i}$  | `\text{\i}`  | $\text{\j}$  | `\text{\j}`  |
+## Layout
+| Content                          | Syntax                           |
+| -------------------------------- | -------------------------------- |
+| $\cancel{5}$                     | `\cancel{5}`                     |
+| $\bcancel{5}$                    | `\bcancel{5}`                    |
+| $\xcancel{ABC}$                  | `\xcancel{ABC}`                  |
+| $\sout{abc}$                     | `\sout{abc}`                     |
+| $\overbrace{a+b+c}^\text{note}$  | `\overbrace{a+b+c}^\text{note}`  |
+| $\underbrace{a+b+c}_\text{note}$ | `\underbrace{a+b+c}_\text{note}` |
+| $\not =$                         | `\not =`                         |
+| $\boxed{\pi=\frac c d}$          | `\boxed{\pi=\frac c d}`          |
+
 $$
-\begin{matrix}
-    a&b\\c&d
-\end{matrix}
+\tag{hi} x+y^{2x}
 $$
 ```t
-\begin{matrix}
-    a & b \\
-    c & d
-\end{matrix}
+\tag{hi} x+y^{2x}
 ```
 $$
-\begin{pmatrix}
-    a&b\\c&d
-\end{pmatrix}
+\tag*{hi} x+y^{2x}
 $$
 ```t
-\begin{pmatrix}
-    a & b \\
-    c & d
-\end{pmatrix}
+\tag*{hi} x+y^{2x}
 ```
-$$
-\begin{Bmatrix}
-    a&b\\c&d
-\end{Bmatrix}
-$$
-```t
-\begin{Bmatrix}
-    a & b \\
-    c & d
-\end{Bmatrix}
-```
-$$
-x = \begin{cases}
-    a &\text{if } b \\
-    c &\text{if } d
-\end{cases}
-$$
-```t
-x = \begin{cases}
-    a &\text{if } b \\
-    c &\text{if } d
-\end{cases}
-```
+### Vertical Layout
+| Content                          | Syntax                           |
+| -------------------------------- | -------------------------------- |
+| $x_n$                            | `x_n`                            |
+| $e^x$                            | `e^x`                            |
+| $_u^o$                           | `_u^o`                           |
+| $\stackrel{!}{=}$                | `\stackrel{!}{=}`                |
+| $\overset{!}{=}$                 | `\overset{!}{=}`                 |
+| $\underset{!}{=}$                | `\underset{!}{=}`                |
+| $a \atop b$                      | `a \atop b`                      |
+| $a\raisebox{0.25em}{b}c$         | `a\raisebox{0.25em}{b}c`         |
+| $\sum_{\substack{0<i<m\\0<j<n}}$ | `\sum_{\substack{0<i<m\\0<j<n}}` |
+### Overlap and Spacing
+| Content                                                  | Syntax                                      |
+| -------------------------------------------------------- | ------------------------------------------- |
+| ${=}\mathllap{/\,}$                                      | `{=}\mathllap{/\,}`                         |
+| $\mathrlap{\,/}{=}$                                      | `\mathrlap{\,/}{=}`                         |
+| $\left(x^{\smash{2}}\right)$                             | `\left(x^{\smash{2}}\right)`                |
+| $\sqrt{\smash[b]{y}}$                                    | `\sqrt{\smash[b]{y}}`                       |
+| $\displaystyle\sum_{\mathclap{1\le i\le j\le n}} x_{ij}$ | `\sum_{\mathclap{1\le i\le j\le n}} x_{ij}` |
+#### Spacing
+| Function             | Produces                              |
+| -------------------- | ------------------------------------- |
+| `\,`                 | ³∕₁₈ em space                         |
+| `\thinspace`         | ³∕₁₈ em space                         |
+| `\>`                 | ⁴∕₁₈ em space                         |
+| `\:`                 | ⁴∕₁₈ em space                         |
+| `\medspace`          | ⁴∕₁₈ em space                         |
+| `\;`                 | ⁵∕₁₈ em space                         |
+| `\thickspace`        | ⁵∕₁₈ em space                         |
+| `\enspace`           | ½ em space                            |
+| `\quad`              | 1 em space                            |
+| `\qquad`             | 2 em space                            |
+| `~`                  | non-breaking space                    |
+| `\<space>`           | space                                 |
+| `\nobreakspace`      | non-breaking space                    |
+| `\space`             | space                                 |
+| `\kern{distance}`    | space, width = distance               |
+| `\mkern{distance}`   | space, width = distance               |
+| `\mskip{distance}`   | space, width = distance               |
+| `\hskip{distance}`   | space, width = distance               |
+| `\hspace{distance}`  | space, width = distance               |
+| `\hspace*{distance}` | space, width = distance               |
+| `\phantom{content}`  | space the width and height of content |
+| `\hphantom{content}` | space the width of content            |
+| `\vphantom{content}` | a strut the height of content         |
+| `\!`                 | –³∕₁₈ em space                        |
+| `\negthinspace`      | –³∕₁₈ em space                        |
+| `\negmedspace`       | -⁴∕₁₈ em space                        |
+| `\negthickspace`     | -⁵∕₁₈ em space                        |
+| `\mathstrut`         | `\vphantom{(}`                        |
+
+**Notes:**
+
+`distance` will accept any of the [KaTeX units](#units).
+
+`\kern`, `\mkern`, `\mskip`, and `\hspace` accept unbraced distances, as in: `\kern1m`.
+## Logic and Set Theory
+| Content       | Syntax        | Content           | Syntax            |
+| ------------- | ------------- | ----------------- | ----------------- |
+| $\forall$     | `\forall`     | $\therefore$      | `\therefore`      |
+| $\exists$     | `\exists`     | $\because$        | `\because`        |
+| $\exist$      | `\exist`      | $\mapsto$         | `\mapsto`         |
+| $\nexists$    | `\nexists`    | $\to$             | `\to`             |
+| $\in$         | `\in`         | $\gets$           | `\gets`           |
+| $\isin$       | `\isin`       | $\leftrightarrow$ | `\leftrightarrow` |
+| $\notin$      | `\notin`      | $\notni$          | `\notni`          |
+| $\complement$ | `\complement` | $\emptyset$       | `\emptyset`       |
+| $\subset$     | `\subset`     | $\empty$          | `\empty`          |
+| $\supset$     | `\supset`     | $\varnothing$     | `\varnothing`     |
+| $\mid$        | `\mid`        | $\implies$        | `\implies`        |
+| $\land$       | `\land`       | $\impliedby$      | `\impliedby`      |
+| $\lor$        | `\lor`        | $\iff$            | `\iff`            |
+| $\ni$         | `\ni`         | $\neg$            | `\neg`            |
+| $\lnot$       | `\lnot`       |
+## Operators
+### Big Operators
+| Content     | Syntax      | Content      | Syntax       |
+| ----------- | ----------- | ------------ | ------------ |
+| $\sum$      | `\sum`      | $\bigotimes$ | `\bigotimes` |
+| $\int$      | `\int`      | $\bigoplus$  | `\bigoplus`  |
+| $\iint$     | `\iint`     | $\bigodot$   | `\bigodot`   |
+| $\iiint$    | `\iiint`    | $\biguplus$  | `\biguplus`  |
+| $\oint$     | `\oint`     | $\oiiint$    | `\oiiint`    |
+| $\prod$     | `\prod`     | $\bigvee$    | `\bigvee`    |
+| $\coprod$   | `\coprod`   | $\bigwedge$  | `\bigwedge`  |
+| $\intop$    | `\intop`    | $\bigcap$    | `\bigcap`    |
+| $\smallint$ | `\smallint` | $\bigcup$    | `\bigcup`    |
+| $\oiint$    | `\oiint`    | $\bigsqcup$  | `\bigsqcup`  |
+
+### Binary Operators
+| Content           | Syntax            | Content            | Syntax             |
+| ----------------- | ----------------- | ------------------ | ------------------ |
+| $+$               | `+`               | $\gtrdot$          | `\gtrdot`          |
+| $-$               | `-`               | $\intercal$        | `\intercal`        |
+| $*$               | `*`               | $\land$            | `\land`            |
+| $/$               | `/`               | $\leftthreetimes$  | `\leftthreetimes`  |
+| $\amalg$          | `\amalg`          | $\ldotp$           | `\ldotp`           |
+| $\And$            | `\And`            | $\lor$             | `\lor`             |
+| $\ast$            | `\ast`            | $\lessdot$         | `\lessdot`         |
+| $\barwedge$       | `\barwedge`       | $\lhd$             | `\lhd`             |
+| $\bigcirc$        | `\bigcirc`        | $\ltimes$          | `\ltimes`          |
+| $\bmod$           | `\bmod`           | $x\mod a$          | `x\mod a`          |
+| $\boxdot$         | `\boxdot`         | $\mp$              | `\mp`              |
+| $\boxminus$       | `\boxminus`       | $\odot$            | `\odot`            |
+| $\boxplus$        | `\boxplus`        | $\ominus$          | `\ominus`          |
+| $\boxtimes$       | `\boxtimes`       | $\oplus$           | `\oplus`           |
+| $\bullet$         | `\bullet`         | $\otimes$          | `\otimes`          |
+| $\Cap$            | `\Cap`            | $\oslash$          | `\oslash`          |
+| $\cap$            | `\cap`            | $\pm$              | `\pm`              |
+| $\cdot$           | `\cdot`           | $\plusmn$          | `\plusmn`          |
+| $\cdotp$          | `\cdotp`          | $x\pmod a$         | `x\pmod a`         |
+| $\centerdot$      | `\centerdot`      | $x\pod a$          | `x\pod a`          |
+| $\circ$           | `\circ`           | $\rhd$             | `\rhd`             |
+| $\circledast$     | `\circledast`     | $\rightthreetimes$ | `\rightthreetimes` |
+| $\circledcirc$    | `\circledcirc`    | $\rtimes$          | `\rtimes`          |
+| $\circleddash$    | `\circleddash`    | $\setminus$        | `\setminus`        |
+| $\Cup$            | `\Cup`            | $\smallsetminus$   | `\smallsetminus`   |
+| $\cup$            | `\cup`            | $\sqcap$           | `\sqcap`           |
+| $\curlyvee$       | `\curlyvee`       | $\sqcup$           | `\sqcup`           |
+| $\curlywedge$     | `\curlywedge`     | $\times$           | `\times`           |
+| $\div$            | `\div`            | $\unlhd$           | `\unlhd`           |
+| $\divideontimes$  | `\divideontimes`  | $\unrhd$           | `\unrhd`           |
+| $\dotplus$        | `\dotplus`        | $\uplus$           | `\uplus`           |
+| $\doublebarwedge$ | `\doublebarwedge` | $\vee$             | `\vee`             |
+| $\doublecap$      | `\doublecap`      | $\veebar$          | `\veebar`          |
+| $\doublecup$      | `\doublecup`      | $\wedge$           | `\wedge`           |
+| $\wr$             | `\wr`             |
+### Fractions and Binomials
+| Content                       | Syntax                        |
+| ----------------------------- | ----------------------------- |
+| $\frac{a}{b}$                 | `\frac{a}{b}`                 |
+| $a\over b$                    | `a\over b`                    |
+| $a/b$                         | `a/b`                         |
+| $\tfrac{a}{b}$                | `\tfrac{a}{b}`                |
+| $\dfrac{a}{b}$                | `\dfrac{a}{b}`                |
+| $\genfrac ( ] {2pt}{1}a{a+1}$ | `\genfrac ( ] {2pt}{1}a{a+1}` |
+| $a\above{2pt} b+1$            | `a\above{2pt} b+1`            |
+| $\cfrac{a}{1 + \cfrac{1}{b}}$ | `\cfrac{a}{1 + \cfrac{1}{b}}` |
+| $\binom{n}{k}$                | `\binom{n}{k}`                |
+| $n\choose k$                  | `n\choose k`                  |
+| $\dbinom{n}{k}$               | `\dbinom{n}{k}`               |
+| $\tbinom{n}{k}$               | `\tbinom{n}{k}`               |
+| $n\brace k$                   | `n\brace k`                   |
+| $n\brack k$                   | `n\brack k`                   |
+### Math Operators
+| Content   | Syntax    | Content             | Syntax              |
+| --------- | --------- | ------------------- | ------------------- |
+| $\arcsin$ | `\arcsin` | $\sec$              | `\sec`              |
+| $\arccos$ | `\arccos` | $\sin$              | `\sin`              |
+| $\arctan$ | `\arctan` | $\sinh$             | `\sinh`             |
+| $\arctg$  | `\arctg`  | $\sh$               | `\sh`               |
+| $\arcctg$ | `\arcctg` | $\tan$              | `\tan`              |
+| $\arg$    | `\arg`    | $\tanh$             | `\tanh`             |
+| $\ch$     | `\ch`     | $\tg$               | `\tg`               |
+| $\cos$    | `\cos`    | $\th$               | `\th`               |
+| $\cosec$  | `\cosec`  | $\operatorname{f}$  | `\operatorname{f}`  |
+| $\cosh$   | `\cosh`   | $\argmax$           | `\argmax`           |
+| $\cot$    | `\cot`    | $\argmin$           | `\argmin`           |
+| $\cotg$   | `\cotg`   | $\det$              | `\det`              |
+| $\coth$   | `\coth`   | $\gcd$              | `\gcd`              |
+| $\csc$    | `\csc`    | $\inf$              | `\inf`              |
+| $\ctg$    | `\ctg`    | $\lim$              | `\lim`              |
+| $\cth$    | `\cth`    | $\liminf$           | `\liminf`           |
+| $\deg$    | `\deg`    | $\limsup$           | `\limsup`           |
+| $\dim$    | `\dim`    | $\max$              | `\max`              |
+| $\exp$    | `\exp`    | $\min$              | `\min`              |
+| $\hom$    | `\hom`    | $\plim$             | `\plim`             |
+| $\ker$    | `\ker`    | $\Pr$               | `\Pr`               |
+| $\lg$     | `\lg`     | $\sup$              | `\sup`              |
+| $\ln$     | `\ln`     | $\operatorname*{f}$ | `\operatorname*{f}` |
+| $\log$    | `\log`    |
+
+Functions below `\operatorname` can take `\limits`.
+### \sqrt
+| Content       | Syntax        |
+| ------------- | ------------- |
+| $\sqrt{x}$    | `\sqrt{x}`    |
+| $\sqrt[3]{x}$ | `\sqrt[3]{x}` |
+## Relations :building_construction:
+## Special Notation :building_construction:
+## Symbols and Punctuation :building_construction:
+## Units :building_construction:
 # Appendix
 - [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
 - [KaTeX Supported Functions](https://katex.org/docs/supported.html)

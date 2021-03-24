@@ -8,22 +8,26 @@ import 'package:path/path.dart' as p;
 class MarkdownBottomSheet extends StatelessWidget {
   const MarkdownBottomSheet({
     Key? key,
-    this.onNew,
+    this.onCreate,
     this.onOpen,
     this.onSave,
     this.onExport,
     this.onOpenCheatsheet,
-    this.onSetActive,
-    this.onDelete,
+    this.onActivate,
+    this.onRemove,
+    this.onUpfont,
+    this.onDownfont,
   }) : super(key: key);
 
-  final VoidCallback? onNew;
+  final VoidCallback? onCreate;
   final VoidCallback? onOpen;
   final VoidCallback? onSave;
   final VoidCallback? onExport;
   final VoidCallback? onOpenCheatsheet;
-  final void Function(String)? onSetActive;
-  final void Function(String)? onDelete;
+  final VoidCallback? onUpfont;
+  final VoidCallback? onDownfont;
+  final void Function(String)? onActivate;
+  final void Function(String)? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -33,23 +37,6 @@ class MarkdownBottomSheet extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
           child: Text(shortenPath(watch(activePath)), maxLines: 1, overflow: TextOverflow.ellipsis),
         ),
-      ),
-      const Divider(),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(children: [
-          IconButton(icon: const Icon(Icons.insert_drive_file_outlined), tooltip: 'New', onPressed: onNew),
-          IconButton(icon: const Icon(Icons.folder_open), tooltip: 'Open', onPressed: onOpen),
-          IconButton(icon: const Icon(Icons.save), tooltip: 'Save', onPressed: onSave),
-          IconButton(icon: const Icon(Icons.print), onPressed: onExport, tooltip: 'Export to HTML'),
-          IconButton(icon: const Icon(Icons.help), tooltip: 'Cheat Sheet', onPressed: onOpenCheatsheet),
-          Consumer(
-            builder: (bc, watch, _) => IconButton(
-              onPressed: bc.read(darkTheme).next,
-              icon: iconOf(watch(darkTheme.state)),
-            ),
-          ),
-        ]),
       ),
       const Divider(),
       Consumer(
@@ -73,15 +60,42 @@ class MarkdownBottomSheet extends StatelessWidget {
                   dense: true,
                   title: Text(p.basename(file), maxLines: 1),
                   selected: active == file,
-                  trailing: IconButton(onPressed: () => onDelete?.call(file), icon: const Icon(Icons.cancel)),
-                  onTap: () => onSetActive?.call(file),
+                  trailing: IconButton(onPressed: () => onRemove?.call(file), icon: const Icon(Icons.cancel)),
+                  onTap: () => onActivate?.call(file),
                 );
               },
             );
           }),
         ),
       ),
-      const SizedBox(height: 16)
+      const Divider(),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: [
+          IconButton(icon: const Icon(Icons.insert_drive_file_outlined), tooltip: 'New', onPressed: onCreate),
+          IconButton(icon: const Icon(Icons.folder_open), tooltip: 'Open', onPressed: onOpen),
+          IconButton(icon: const Icon(Icons.save), tooltip: 'Save', onPressed: onSave),
+          IconButton(icon: const Icon(Icons.print), onPressed: onExport, tooltip: 'Export to HTML'),
+          Consumer(builder: (bc, watch, _) {
+            final ls = watch(lockstep).state;
+            return IconButton(
+              icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
+              onPressed: () => bc.read(lockstep).state = !ls,
+              tooltip: 'Lockstep',
+            );
+          }),
+          IconButton(icon: const Icon(Icons.add), onPressed: onUpfont, tooltip: 'Increase Font Size'),
+          IconButton(icon: const Icon(Icons.remove), onPressed: onDownfont, tooltip: 'Decrease Font Size'),
+          IconButton(icon: const Icon(Icons.help), tooltip: 'Cheat Sheet', onPressed: onOpenCheatsheet),
+          Consumer(
+            builder: (bc, watch, _) => IconButton(
+              onPressed: bc.read(darkTheme).next,
+              icon: iconOf(watch(darkTheme.state)),
+            ),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 8)
     ]);
   }
 }

@@ -9,7 +9,10 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
 class MarkdownPreview extends HookWidget {
-  const MarkdownPreview({Key? key, this.sc, required this.expr, this.scale = 1, this.padding}) : super(key: key);
+  const MarkdownPreview(
+      {Key? key, ScrollController? scrollController, required this.expr, this.scale = 1, this.padding})
+      : sc = scrollController,
+        super(key: key);
 
   final ScrollController? sc;
   final String expr;

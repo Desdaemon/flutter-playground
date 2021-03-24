@@ -12,7 +12,7 @@ Widget iconOf(ThemeMode dark) {
   }
 }
 
-String shortenPath(String input, [int at = 50]) {
+String shortenPath(String input, [int at = 40]) {
   if (input.length > at) {
     final segments = p.split(input);
     final end = segments.length - 1;

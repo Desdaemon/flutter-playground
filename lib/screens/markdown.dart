@@ -49,17 +49,18 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
 
   Widget get bottomSheet => MarkdownBottomSheet(
       onExport: export,
-      onNew: create,
+      onCreate: create,
       onOpen: open,
       onOpenCheatsheet: openCheatsheet,
       onSave: save,
-      onDelete: remove,
-      onSetActive: (val) {
+      onRemove: remove,
+      onUpfont: upfont,
+      onDownfont: downfont,
+      onActivate: (val) {
         context.read(files).focus(val);
         ctl.value.text = context.read(activeFile);
       });
 
-  /// Makes [path] the active file and sets its [contents].
   void showMenu() {
     if (MediaQuery.of(context).size.width < 1000) {
       showModalBottomSheet(
@@ -75,7 +76,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
 
   Widget buildRightDrawer(BuildContext context) {
     return Container(
-      alignment: Alignment.centerRight,
+      alignment: Alignment.bottomRight,
       padding: const EdgeInsets.all(16),
       child: TweenAnimationBuilder(
         tween: Tween(begin: 30.0, end: 300.0),
@@ -104,44 +105,34 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
           );
         },
       ),
-      bottomNavigationBar: Consumer(builder: (bc, watch, _) {
-        final sm = watch(screenMode).state;
-        final ls = watch(lockstep).state;
-        return BottomAppBar(
-          child: Row(children: [
-            AnimatedSwitcher(
-              duration: animDur,
-              transitionBuilder: (child, anim) => SizeTransition(sizeFactor: anim, child: child),
-              child: Visibility(
-                visible: sm == ScreenMode.sbs,
-                key: ValueKey(sm.hashCode + ls.hashCode),
-                child: IconButton(
-                  icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
-                  onPressed: () => bc.read(lockstep).state = !ls,
-                  tooltip: 'Lockstep',
+      bottomNavigationBar: BottomAppBar(
+        child: Row(children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                IconButton(icon: const Icon(Icons.format_bold), onPressed: bold, tooltip: 'Bold'),
+                IconButton(icon: const Icon(Icons.format_italic), onPressed: italic, tooltip: 'Italic'),
+                IconButton(
+                    icon: const Icon(Icons.format_strikethrough), onPressed: strikethrough, tooltip: 'Strikethrough'),
+                IconButton(icon: const Icon(Icons.functions), onPressed: math, tooltip: 'Math'),
+                IconButton(icon: const Icon(Icons.format_indent_increase), onPressed: doIndent, tooltip: 'Indent'),
+                IconButton(icon: const Icon(Icons.format_indent_decrease), onPressed: doDedent, tooltip: 'Dedent'),
+                Consumer(
+                  builder: (bc, watch, _) => Tooltip(
+                    message: 'Spaces',
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(onTap: changeIndent, child: Text('Spaces: ${watch(indents).state}')),
+                    ),
+                  ),
                 ),
-              ),
+              ]),
             ),
-            IconButton(icon: const Icon(Icons.add), onPressed: upfont, tooltip: 'Increase Font Size'),
-            IconButton(icon: const Icon(Icons.remove), onPressed: downfont, tooltip: 'Decrease Font Size'),
-            const Spacer(),
-            Tooltip(
-              message: 'Indent',
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: changeIndent,
-                  child: Row(children: [
-                    const Icon(Icons.format_indent_increase),
-                    Text(watch(indents).state.toString()),
-                  ]),
-                ),
-              ),
-            ),
-            IconButton(onPressed: showMenu, icon: const Icon(Icons.menu), tooltip: 'Menu'),
-          ]),
-        );
-      }),
+          ),
+          IconButton(onPressed: showMenu, icon: const Icon(Icons.menu), tooltip: 'Menu'),
+        ]),
+      ),
       body: SafeArea(
         child: Consumer(builder: (bc, watch, _) {
           final sm = watch(screenMode).state;
@@ -166,13 +157,25 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
                           fontFamily: 'JetBrains Mono',
                           indent: indent,
+                          noBuiltins: true,
                           handlers: [
                             PlusMinusHandler(
-                              onMinus: downfont,
-                              onPlus: upfont,
+                              plusKey: LogicalKeyboardKey.bracketRight,
+                              minusKey: LogicalKeyboardKey.bracketLeft,
                               ctrl: true,
+                              onPlus: doIndent,
+                              onMinus: doDedent,
+                            ),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
+                            PlusMinusHandler(
                               plusKey: LogicalKeyboardKey.equal,
                               minusKey: LogicalKeyboardKey.minus,
+                              ctrl: true,
+                              onPlus: upfont,
+                              onMinus: downfont,
                             ),
                             SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
                           ],
@@ -195,7 +198,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     child: Scrollbar(
                       child: Consumer(builder: (bc, watch, __) {
                         return MarkdownPreview(
-                          sc: sc,
+                          scrollController: sc,
                           padding: vertical
                               ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
                               : const EdgeInsets.fromLTRB(8, 16, 16, 16),
