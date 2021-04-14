@@ -14,7 +14,7 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../screens/markdown.dart' show MathMarkdown;
@@ -187,11 +187,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
           .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
       await file.writeAsString(output);
     }
-    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
-      launch('file://$outpath');
-    } else {
-      OpenFile.open(outpath);
-    }
+    OpenFile.open(outpath);
   }
 
   Future<void> export() async {
