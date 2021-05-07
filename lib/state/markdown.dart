@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
@@ -18,6 +20,7 @@ final activePath = Provider((ref) => ref.watch(files.state).active);
 /// The contents of the active file.
 final activeFile = Provider((ref) => ref.watch(files.state).files[ref.watch(activePath)] ?? '');
 final fileList = Provider((ref) => ref.watch(files.state).files.keys);
+final isPreviewing = Provider((ref) => ref.watch(screenMode).state.previewing);
 
 @immutable
 class MarkdownState {
@@ -36,6 +39,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   final String boxid;
   final String prefname;
   final String untitled;
+  Timer? timer;
   bool firstrun = true;
 
   String get activepathid => 'right_$boxid';
@@ -107,11 +111,14 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
 
   /// Sets the contents of the current active file.
   void updateActive(String contents) {
+    timer?.cancel();
     final active = state.active;
-    state = state.copyWith(files: {
-      for (final en in state.files.entries)
-        if (en.key == active) active: contents else en.key: en.value,
-      if (!state.files.containsKey(active)) active: contents
+    timer = Timer(const Duration(milliseconds: 300), () {
+      state = state.copyWith(files: {
+        for (final en in state.files.entries)
+          if (en.key == active) active: contents else en.key: en.value,
+        if (!state.files.containsKey(active)) active: contents
+      });
     });
     persist(active);
   }

@@ -10,7 +10,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MarkdownPreview extends HookWidget {
   const MarkdownPreview(
-      {Key? key, ScrollController? scrollController, required this.expr, this.scale = 1, this.padding})
+      {Key? key,
+      ScrollController? scrollController,
+      required this.expr,
+      this.scale = 1,
+      this.padding,
+      this.selectable = false})
       : sc = scrollController,
         super(key: key);
 
@@ -19,13 +24,18 @@ class MarkdownPreview extends HookWidget {
   final double scale;
   final EdgeInsets? padding;
 
+  /// Disabled by default due to high performance impact
+  final bool selectable;
+
+  /// [Markdown] is buggy so we manually insert a scroll view here and use [MarkdownBody] instead.
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      controller: sc,
-      padding: padding,
-      child: useMemoized(() {
-        return MarkdownBody(
+    final theme = Theme.of(context);
+    return useMemoized(() {
+      return SingleChildScrollView(
+        controller: sc,
+        padding: padding,
+        child: MarkdownBody(
           data: expr,
           shrinkWrap: false,
           extensionSet: md.ExtensionSet.gitHubWeb,
@@ -33,15 +43,15 @@ class MarkdownPreview extends HookWidget {
           builders: {'math': MathBuilder(scale: scale)},
           checkboxBuilder: (val) =>
               val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
-          selectable: true,
-          styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+          selectable: selectable,
+          styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
             blockquoteDecoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              border: Border(left: BorderSide(color: Theme.of(context).accentColor, width: 4)),
+              color: theme.cardColor,
+              border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
             ),
             textScaleFactor: scale,
             blockSpacing: 12 * scale,
-            listBullet: TextStyle(fontSize: Theme.of(context).textTheme.bodyText2!.fontSize! * scale),
+            listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
             code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
           ),
           onTapLink: (text, href, title) async {
@@ -75,13 +85,13 @@ class MarkdownPreview extends HookWidget {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text('$text could not be opened'),
                 behavior: SnackBarBehavior.floating,
-                backgroundColor: Theme.of(context).errorColor,
+                backgroundColor: theme.errorColor,
               ));
             }
           },
-        );
-      }, [expr, scale, Theme.of(context).hashCode]),
-    );
+        ),
+      );
+    }, [expr, scale, theme.hashCode]);
   }
 }
 

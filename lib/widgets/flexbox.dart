@@ -30,18 +30,16 @@ class Flexbox extends StatelessWidget {
     if (children.isEmpty) return Container();
 
     return LayoutBuilder(builder: (bc, cons) {
-      final double cur;
-      if (cons.maxWidth < xs) {
-        cur = 2;
-      } else if (cons.maxWidth < sm) {
-        cur = 3;
-      } else if (cons.maxWidth < md) {
-        cur = 4;
-      } else if (cons.maxWidth < lg) {
-        cur = 6;
-      } else {
-        cur = 12;
-      }
+      final maxwidth = cons.maxWidth;
+      final double cur = maxwidth < xs
+          ? 2
+          : maxwidth < sm
+              ? 3
+              : maxwidth < md
+                  ? 4
+                  : maxwidth < lg
+                      ? 6
+                      : 12;
       final rows = <List<Flexible>>[];
       var row = <Flexible>[];
       int buffer = 0;

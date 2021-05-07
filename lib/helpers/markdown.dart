@@ -28,7 +28,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   static const scaleStep = 0.1;
   String get untitled;
-  String contentkey = '';
+  // String contentkey = '';
   int untitledIdx = 1;
   Characters indent = ''.characters;
 
@@ -173,20 +173,20 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     final outpath = '${appdir.path}/${key ?? 'out'}.html';
     // TODO: Find a replacement for String.hashCode
     final file = File(outpath);
-    if (key == null || contentkey != key || !(await file.exists())) {
-      await file.create();
-      contentkey = key ?? content.hashCode.toString();
-      final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
-      final markdown = md.markdownToHtml(
-        content,
-        extensionSet: md.ExtensionSet.gitHubWeb,
-        inlineSyntaxes: [TaskListSyntax(), md.TextSyntax(r'\\')],
-      );
-      final output = template
-          .replaceFirst('{{ body }}', markdown)
-          .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
-      await file.writeAsString(output);
-    }
+    // if (key == null || contentkey != key || !(await file.exists())) {
+    await file.create();
+    // contentkey = key ?? content.hashCode.toString();
+    final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
+    final markdown = md.markdownToHtml(
+      content,
+      extensionSet: md.ExtensionSet.gitHubWeb,
+      inlineSyntaxes: [TaskListSyntax(), md.TextSyntax(r'\\')],
+    );
+    final output = template
+        .replaceFirst('{{ body }}', markdown)
+        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
+    await file.writeAsString(output);
+    // }
     OpenFile.open(outpath);
   }
 
@@ -217,7 +217,9 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   }
 
   Future<void> openCheatsheet() async {
-    _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
+    // _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
+    context.read(files).activate(
+        'markdown_reference.md', await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode));
   }
 
   /// Initializes and/or updates [indent] only if their lengths mismatch.

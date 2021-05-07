@@ -19,15 +19,8 @@ class MarkdownBottomSheet extends StatelessWidget {
     this.onDownfont,
   }) : super(key: key);
 
-  final VoidCallback? onCreate;
-  final VoidCallback? onOpen;
-  final VoidCallback? onSave;
-  final VoidCallback? onExport;
-  final VoidCallback? onOpenCheatsheet;
-  final VoidCallback? onUpfont;
-  final VoidCallback? onDownfont;
-  final void Function(String)? onActivate;
-  final void Function(String)? onRemove;
+  final VoidCallback? onCreate, onOpen, onSave, onExport, onOpenCheatsheet, onUpfont, onDownfont;
+  final void Function(String)? onActivate, onRemove;
 
   @override
   Widget build(BuildContext context) {
