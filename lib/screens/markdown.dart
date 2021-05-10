@@ -1,3 +1,4 @@
+// import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     registerForRestoration(ctl, 'ctl');
     final expr = context.read(activeFile);
-    if (expr.isNotEmpty) ctl.value.text = expr;
+    if (expr.isNotEmpty) ctl.value.text = expr.join('\n\n');
   }
 
   @override
@@ -58,7 +59,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       onDownfont: downfont,
       onActivate: (val) {
         context.read(files).focus(val);
-        ctl.value.text = context.read(activeFile);
+        ctl.value.text = context.read(activeFile).join('\n\n');
       });
 
   void showMenu() {
@@ -94,94 +95,92 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
 
   @override
   Widget build(BuildContext bc) {
-    return Scaffold(
-      floatingActionButton: Consumer(
-        builder: (bc, watch, _) {
-          final sm = watch(screenMode).state;
-          return FloatingActionButton(
-            onPressed: () => bc.read(screenMode).state = sm.next,
-            tooltip: sm.description,
-            child: AnimatedSwitcher(duration: animDur, child: sm.icon),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                IconButton(icon: const Icon(Icons.format_bold), onPressed: bold, tooltip: 'Bold'),
-                IconButton(icon: const Icon(Icons.format_italic), onPressed: italic, tooltip: 'Italic'),
-                IconButton(
-                    icon: const Icon(Icons.format_strikethrough), onPressed: strikethrough, tooltip: 'Strikethrough'),
-                IconButton(icon: const Icon(Icons.functions), onPressed: math, tooltip: 'Math'),
-                IconButton(icon: const Icon(Icons.format_indent_increase), onPressed: doIndent, tooltip: 'Indent'),
-                IconButton(icon: const Icon(Icons.format_indent_decrease), onPressed: doDedent, tooltip: 'Dedent'),
-                Consumer(
-                  builder: (bc, watch, _) => Tooltip(
-                    message: 'Spaces',
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(onTap: changeIndent, child: Text('Spaces: ${watch(indents).state}')),
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-          IconButton(onPressed: showMenu, icon: const Icon(Icons.menu), tooltip: 'Menu'),
-        ]),
-      ),
-      body: SafeArea(
-        child: Consumer(builder: (bc, watch, _) {
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        body: Consumer(builder: (bc, watch, _) {
           final sm = watch(screenMode).state;
           return LayoutBuilder(builder: (bc, cons) {
             final vertical = cons.maxWidth < 1000;
-            final children = [
+            final bottomBar = Material(
+              color: Theme.of(context).bottomAppBarColor,
+              child: Row(children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(children: [
+                      IconButton(
+                        onPressed: () => bc.read(screenMode).state = sm.next,
+                        tooltip: sm.description,
+                        icon: AnimatedSwitcher(duration: animDur, child: sm.icon),
+                      ),
+                      IconButton(icon: const Icon(Icons.format_bold), onPressed: bold, tooltip: 'Bold'),
+                      IconButton(icon: const Icon(Icons.format_italic), onPressed: italic, tooltip: 'Italic'),
+                      IconButton(
+                          icon: const Icon(Icons.format_strikethrough),
+                          onPressed: strikethrough,
+                          tooltip: 'Strikethrough'),
+                      IconButton(icon: const Icon(Icons.functions), onPressed: math, tooltip: 'Math'),
+                      IconButton(
+                          icon: const Icon(Icons.format_indent_increase), onPressed: doIndent, tooltip: 'Indent'),
+                      IconButton(
+                          icon: const Icon(Icons.format_indent_decrease), onPressed: doDedent, tooltip: 'Dedent'),
+                      Consumer(
+                        builder: (bc, watch, _) => Tooltip(
+                          message: 'Spaces',
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(onTap: changeIndent, child: Text('Spaces: ${watch(indents).state}')),
+                          ),
+                        ),
+                      ),
+                    ]),
+                  ),
+                ),
+                IconButton(onPressed: showMenu, icon: const Icon(Icons.menu), tooltip: 'Menu'),
+              ]),
+            );
+            final children = <Widget>[
               if (sm.editing)
                 Expanded(
                   child: Scrollbar(
                     notificationPredicate: handleScroll,
-                    child: Padding(
-                      padding: vertical
-                          ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
-                          : const EdgeInsets.fromLTRB(16, 16, 8, 16),
-                      child: Consumer(builder: (bc, watch, _) {
-                        final indent = watch(indents).state;
-                        return Editor(
-                          key: ValueKey(indent),
-                          scrollController: editorSc,
-                          controller: ctl.value,
-                          onChange: bc.read(files).updateActive,
-                          fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
-                          fontFamily: 'JetBrains Mono',
-                          indent: indent,
-                          noBuiltins: true,
-                          handlers: [
-                            PlusMinusHandler(
-                              plusKey: LogicalKeyboardKey.bracketRight,
-                              minusKey: LogicalKeyboardKey.bracketLeft,
-                              ctrl: true,
-                              onPlus: doIndent,
-                              onMinus: doDedent,
-                            ),
-                            SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
-                            SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
-                            SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
-                            SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
-                            PlusMinusHandler(
-                              plusKey: LogicalKeyboardKey.equal,
-                              minusKey: LogicalKeyboardKey.minus,
-                              ctrl: true,
-                              onPlus: upfont,
-                              onMinus: downfont,
-                            ),
-                            SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
-                          ],
-                        );
-                      }),
-                    ),
+                    child: Consumer(builder: (bc, watch, _) {
+                      final indent = watch(indents).state;
+                      return Editor(
+                        scrollPadding: vertical
+                            ? const EdgeInsets.fromLTRB(16, 0, 16, 0)
+                            : const EdgeInsets.fromLTRB(0, 16, 0, 16),
+                        scrollController: editorSc,
+                        controller: ctl.value,
+                        onChange: bc.read(files).updateActive,
+                        fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
+                        fontFamily: 'JetBrains Mono',
+                        indent: indent,
+                        noBuiltins: true,
+                        handlers: [
+                          PlusMinusHandler(
+                            plusKey: LogicalKeyboardKey.bracketRight,
+                            minusKey: LogicalKeyboardKey.bracketLeft,
+                            ctrl: true,
+                            onPlus: doIndent,
+                            onMinus: doDedent,
+                          ),
+                          SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
+                          SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
+                          SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
+                          SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
+                          PlusMinusHandler(
+                            plusKey: LogicalKeyboardKey.equal,
+                            minusKey: LogicalKeyboardKey.minus,
+                            ctrl: true,
+                            onPlus: upfont,
+                            onMinus: downfont,
+                          ),
+                          SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
+                        ],
+                      );
+                    }),
                   ),
                 ),
               if (sm.previewing && vertical) const Divider(height: 1),
@@ -197,23 +196,28 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     maintainState: true,
                     child: Scrollbar(
                       child: Consumer(builder: (bc, watch, __) {
-                        return MarkdownPreview(
-                          scrollController: sc,
+                        final lines = watch(activeFile);
+                        final _scale = watch(scale).state;
+                        return ListView.builder(
+                          controller: sc,
+                          itemCount: lines.length,
                           padding: vertical
-                              ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
-                              : const EdgeInsets.fromLTRB(8, 16, 16, 16),
-                          expr: watch(activeFile),
-                          scale: watch(scale).state,
+                              ? const EdgeInsets.fromLTRB(16, 40, 16, 8)
+                              : const EdgeInsets.fromLTRB(8, 32, 8, 8),
+                          itemBuilder: (_, i) => MarkdownPreview(expr: lines[i], scale: _scale),
                         );
                       }),
                     ),
                   ),
                 ),
-              )
+              ),
             ];
             return vertical
-                ? Column(children: children.reversed.toList())
-                : Row(crossAxisAlignment: CrossAxisAlignment.start, children: children);
+                ? Column(children: children.reversed.followedBy([bottomBar]).toList())
+                : Column(children: [
+                    Expanded(child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: children)),
+                    bottomBar
+                  ]);
           });
         }),
       ),

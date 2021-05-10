@@ -10,19 +10,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MarkdownPreview extends HookWidget {
   const MarkdownPreview(
-      {Key? key,
-      ScrollController? scrollController,
-      required this.expr,
-      this.scale = 1,
-      this.padding,
-      this.selectable = false})
+      {Key? key, ScrollController? scrollController, required this.expr, this.scale = 1, this.selectable = false})
       : sc = scrollController,
         super(key: key);
 
   final ScrollController? sc;
   final String expr;
   final double scale;
-  final EdgeInsets? padding;
 
   /// Disabled by default due to high performance impact
   final bool selectable;
@@ -32,64 +26,68 @@ class MarkdownPreview extends HookWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return useMemoized(() {
-      return SingleChildScrollView(
-        controller: sc,
-        padding: padding,
-        child: MarkdownBody(
-          data: expr,
-          shrinkWrap: false,
-          extensionSet: md.ExtensionSet.gitHubWeb,
-          inlineSyntaxes: [MathSyntax()],
-          builders: {'math': MathBuilder(scale: scale)},
-          checkboxBuilder: (val) =>
-              val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
-          selectable: selectable,
-          styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-            blockquoteDecoration: BoxDecoration(
-              color: theme.cardColor,
-              border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
-            ),
-            textScaleFactor: scale,
-            blockSpacing: 12 * scale,
-            listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
-            code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
+      return MarkdownBody(
+        data: expr,
+        shrinkWrap: false,
+        extensionSet: md.ExtensionSet.gitHubWeb,
+        inlineSyntaxes: [MathSyntax.instance],
+        builders: {'math': MathBuilder(scale: scale)},
+        checkboxBuilder: (val) =>
+            val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
+        selectable: selectable,
+        styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+          blockquoteDecoration: BoxDecoration(
+            color: theme.cardColor,
+            border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
           ),
-          onTapLink: (text, href, title) async {
-            if (href == null) return;
-            if (await canLaunch(href)) {
-              final answer = await showDialog<bool>(
-                context: context,
-                builder: (bc) => SimpleDialog(
-                  title: Text('Open $text?'),
-                  children: [
-                    SimpleDialogOption(
-                      onPressed: () => Navigator.pop(bc, true),
-                      child: const Text('Yes!'),
-                    ),
-                    SimpleDialogOption(
-                      onPressed: () => Navigator.pop(bc, false),
-                      child: const Text('No! Take me back!'),
-                    ),
-                    SimpleDialogOption(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: href));
-                        Navigator.pop(bc, false);
-                      },
-                      child: const Text('Copy link to clipboard'),
-                    )
-                  ],
-                ),
-              );
-              if (answer ?? false) launch(href);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('$text could not be opened'),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: theme.errorColor,
-              ));
-            }
-          },
+          textScaleFactor: scale,
+          blockSpacing: 12 * scale,
+          listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
+          code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
         ),
+        onTapLink: (text, href, title) async {
+          if (href == null) return;
+          if (href.startsWith('#')) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Header links are not supported'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.orangeAccent,
+            ));
+            return;
+          }
+          if (await canLaunch(href)) {
+            final answer = await showDialog<bool>(
+              context: context,
+              builder: (bc) => SimpleDialog(
+                title: Text('Open $text?'),
+                children: [
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.pop(bc, true),
+                    child: const Text('Yes!'),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.pop(bc, false),
+                    child: const Text('No! Take me back!'),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: href));
+                      Navigator.pop(bc, false);
+                    },
+                    child: const Text('Copy link to clipboard'),
+                  )
+                ],
+              ),
+            );
+            if (answer ?? false) launch(href);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('$text could not be opened'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: theme.errorColor,
+            ));
+          }
+        },
       );
     }, [expr, scale, theme.hashCode]);
   }
@@ -111,6 +109,7 @@ class MathBuilder extends MarkdownElementBuilder {
 
 class MathSyntax extends md.InlineSyntax {
   MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
+  static final instance = MathSyntax();
   @override
   bool onMatch(md.InlineParser parser, Match match) {
     final elem = md.Element.text('math', match[1]!);
