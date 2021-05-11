@@ -30,7 +30,6 @@ class Editor extends StatelessWidget {
     this.noBuiltins = false,
     this.indent = 2,
     this.scrollController,
-    this.scrollPadding = const EdgeInsets.all(20),
   })  : ctl = controller,
         super(key: key);
 
@@ -50,8 +49,6 @@ class Editor extends StatelessWidget {
   final bool noBuiltins;
   final int indent;
   final ScrollController? scrollController;
-
-  final EdgeInsets scrollPadding;
 
   static const pairs = <String, String?>{'(': ')', '[': ']', '{': '}'};
 
@@ -92,19 +89,10 @@ class Editor extends StatelessWidget {
       onKey: handleKey,
       child: TextField(
         maxLines: null,
-        // onAppPrivateCommand: (command, args) {
-        //   showDialog(
-        //       context: bc,
-        //       builder: (bc) => SimpleDialog(
-        //             title: Text(command),
-        //             children: [Text(args.toString())],
-        //           ));
-        // },
-        scrollPadding: scrollPadding,
-        scrollController: scrollController,
         expands: true,
-        controller: ctl,
+        scrollController: scrollController,
         decoration: const InputDecoration.collapsed(hintText: null),
+        controller: ctl,
         style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
         onChanged: onChange,
         inputFormatters: [/* LastKey(),  */ PairAdder()],

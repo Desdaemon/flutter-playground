@@ -37,7 +37,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     registerForRestoration(ctl, 'ctl');
     final expr = context.read(activeFile);
-    if (expr.isNotEmpty) ctl.value.text = expr.join('\n\n');
+    if (expr.isNotEmpty) ctl.value.text = expr;
   }
 
   @override
@@ -59,7 +59,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       onDownfont: downfont,
       onActivate: (val) {
         context.read(files).focus(val);
-        ctl.value.text = context.read(activeFile).join('\n\n');
+        ctl.value.text = context.read(activeFile);
       });
 
   void showMenu() {
@@ -147,38 +147,38 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     notificationPredicate: handleScroll,
                     child: Consumer(builder: (bc, watch, _) {
                       final indent = watch(indents).state;
-                      return Editor(
-                        scrollPadding: vertical
-                            ? const EdgeInsets.fromLTRB(16, 0, 16, 0)
-                            : const EdgeInsets.fromLTRB(0, 16, 0, 16),
-                        scrollController: editorSc,
-                        controller: ctl.value,
-                        onChange: bc.read(files).updateActive,
-                        fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
-                        fontFamily: 'JetBrains Mono',
-                        indent: indent,
-                        noBuiltins: true,
-                        handlers: [
-                          PlusMinusHandler(
-                            plusKey: LogicalKeyboardKey.bracketRight,
-                            minusKey: LogicalKeyboardKey.bracketLeft,
-                            ctrl: true,
-                            onPlus: doIndent,
-                            onMinus: doDedent,
-                          ),
-                          SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
-                          SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
-                          SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
-                          SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
-                          PlusMinusHandler(
-                            plusKey: LogicalKeyboardKey.equal,
-                            minusKey: LogicalKeyboardKey.minus,
-                            ctrl: true,
-                            onPlus: upfont,
-                            onMinus: downfont,
-                          ),
-                          SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
-                        ],
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+                        child: Editor(
+                          scrollController: editorSc,
+                          controller: ctl.value,
+                          onChange: bc.read(files).updateActive,
+                          fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
+                          fontFamily: 'JetBrains Mono',
+                          indent: indent,
+                          noBuiltins: true,
+                          handlers: [
+                            PlusMinusHandler(
+                              plusKey: LogicalKeyboardKey.bracketRight,
+                              minusKey: LogicalKeyboardKey.bracketLeft,
+                              ctrl: true,
+                              onPlus: doIndent,
+                              onMinus: doDedent,
+                            ),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
+                            PlusMinusHandler(
+                              plusKey: LogicalKeyboardKey.equal,
+                              minusKey: LogicalKeyboardKey.minus,
+                              ctrl: true,
+                              onPlus: upfont,
+                              onMinus: downfont,
+                            ),
+                            SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
+                          ],
+                        ),
                       );
                     }),
                   ),
@@ -198,26 +198,27 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                       child: Consumer(builder: (bc, watch, __) {
                         final lines = watch(activeFile);
                         final _scale = watch(scale).state;
-                        return ListView.builder(
-                          controller: sc,
-                          itemCount: lines.length,
-                          padding: vertical
-                              ? const EdgeInsets.fromLTRB(16, 40, 16, 8)
-                              : const EdgeInsets.fromLTRB(8, 32, 8, 8),
-                          itemBuilder: (_, i) => MarkdownPreview(expr: lines[i], scale: _scale),
-                        );
+                        // Q: Most peculiar: Without changing any behavior, swapping a SingleChildScrollWidget
+                        // for a ListView with a single child yields massive speed increases! What gives?
+                        // A: From the official documentation:
+                        // "When you have a list of children and do not require cross-axis shrink-wrapping behavior,
+                        // for example a scrolling list that is always the width of the screen, consider ListView,
+                        // which is vastly more efficient that a SingleChildScrollView containing a ListBody
+                        // or Column with many children."
+                        return ListView(controller: sc, children: [MarkdownPreview(expr: lines, scale: _scale)]);
                       }),
                     ),
                   ),
                 ),
               ),
             ];
-            return vertical
-                ? Column(children: children.reversed.followedBy([bottomBar]).toList())
-                : Column(children: [
-                    Expanded(child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: children)),
-                    bottomBar
-                  ]);
+            return Column(children: [
+              if (vertical)
+                ...children.reversed
+              else
+                Expanded(child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: children)),
+              bottomBar
+            ]);
           });
         }),
       ),

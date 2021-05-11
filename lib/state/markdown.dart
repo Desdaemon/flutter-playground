@@ -17,8 +17,10 @@ final files = StateNotifierProvider<MarkdownStore>((_) => MarkdownStore(boxname:
 /// The path to the file being edited.
 final activePath = Provider((ref) => ref.watch(files.state).active);
 
+// final paraBreak = RegExp(r'(\r\n|\r|\n)\1');
+
 /// The contents of the active file.
-final activeFile = Provider((ref) => (ref.watch(files.state).files[ref.watch(activePath)] ?? '').split('\n\n'));
+final activeFile = Provider((ref) => ref.watch(files.state).files[ref.watch(activePath)] ?? '');
 final fileList = Provider((ref) => ref.watch(files.state).files.keys);
 final isPreviewing = Provider((ref) => ref.watch(screenMode).state.previewing);
 

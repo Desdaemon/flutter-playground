@@ -1,0 +1,13 @@
+[package]
+name = "flutter_playground"
+version = "0.1.0"
+authors = ["Viet Dinh <54ckb0y789@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pulldown-cmark = {version = "*", default_features = false, features = ["simd"]}
