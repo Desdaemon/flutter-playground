@@ -22,7 +22,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.17.0
   flutter_hooks: ^0.16.0
   flutter_markdown: ^0.6.0
   flutter_math_fork: ^0.3.0+2
@@ -47,7 +46,6 @@ dev_dependencies:
   linter: ^1.0.0
 flutter:
   uses-material-design: true
-  generate: true
   assets:
     - assets/
   fonts:
@@ -56,5 +54,3 @@ flutter:
         - asset: assets/fonts/JetBrainsMono-Regular.ttf
         - asset: assets/fonts/JetBrainsMono-Italic.ttf
           style: italic
-flutter_intl:
-  enabled: true

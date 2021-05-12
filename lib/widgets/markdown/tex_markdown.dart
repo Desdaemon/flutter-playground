@@ -1,46 +1,56 @@
-import 'dart:async';
-import 'dart:isolate';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/gestures/recognizer.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:flutter_math_fork/tex.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yata_flutter/ffi.dart';
+import 'package:yata_flutter/state/markdown.dart';
 
+final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
 md.Node handleNode(dynamic json, [int alignment = 0]) {
-  if (json is String) return md.Text(json);
+  if (json is String) {
+    final match = mathre.matchAsPrefix(json);
+    if (match != null) {
+      final output = md.Element.text('math', match[1]!);
+      if (match[2]!.isEmpty) {
+        output.attributes['text'] = '';
+      }
+      return output;
+    }
+    return md.Text(json);
+  }
   final type = json['t'] as String;
   if (type == 'table') {
-    final aligns = json['align'] as List<int?>;
+    final aligns = json['align'] as List<dynamic>;
     final _children = json['c'] as List<dynamic>;
     final outChildren = <md.Node>[];
     for (var i = 0; i < _children.length; i++) {
-      outChildren.add(handleNode(_children[i], aligns[i] ?? 0));
+      outChildren.add(handleNode(_children[i], aligns.length - 1 < i ? 0 : aligns[i] as int));
     }
     return md.Element('table', outChildren);
   }
-  final children = (json['c'] as List<dynamic>?)?.map((e) => handleNode(e, alignment)).toList() ?? const [];
+  List<md.Node> children() => (json['c'] as List<dynamic>?)?.map((e) => handleNode(e, alignment)).toList() ?? const [];
   switch (type) {
     case 'ol':
-      return md.Element('ol', children)..attributes['start'] = json['start'] as String;
+      return md.Element('ol', children())..attributes['start'] = json['start'].toString();
     case 'a':
-      return md.Element('a', [md.Text(json['title'] as String)])..attributes['href'] = json['href'] as String;
+      final _children = children();
+      if (_children.isEmpty) _children.add(md.Text(json['href'] as String));
+      return md.Element('a', _children)..attributes['href'] = json['href'] as String;
     case 'checkbox':
       return md.Element.empty('checkbox')
         ..attributes['type'] = 'checkbox'
         ..attributes['checked'] = json['value'] as String;
     case 'img':
-      return md.Element.empty('img')
-        ..attributes['src'] = json['href'] as String
-        ..attributes['title'] = json['title'] as String;
+      return md.Element.empty('img')..attributes['src'] = json['href'] as String;
     case 'td':
     case 'th':
       String? style;
@@ -57,13 +67,17 @@ md.Node handleNode(dynamic json, [int alignment = 0]) {
         default:
           break;
       }
-      final output = md.Element(type, children);
+      final output = md.Element(type, (children()));
       if (style != null) {
         output.attributes['style'] = style;
       }
       return output;
+    case 'pre':
+      return md.Element.text('pre', (json['c'] as List<dynamic>).join());
+    case 'code':
+      return md.Element.text('code', json['value'] as String);
     default:
-      return md.Element(type, children);
+      return md.Element(type, children());
   }
 }
 
@@ -71,8 +85,10 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
   final String data;
   final double scale;
   final MarkdownStyleSheet style;
+  final bool nativeParse;
   final void Function(String, String?, String)? onTapLink;
-  const CustomMarkdownBody(this.data, {Key? key, this.scale = 1, this.onTapLink, required this.style})
+  const CustomMarkdownBody(this.data,
+      {Key? key, this.scale = 1, this.onTapLink, required this.style, this.nativeParse = true})
       : super(key: key);
 
   @override
@@ -80,22 +96,33 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
     final mdBuilder = useMemoized(
       () => MarkdownBuilder(
         delegate: this,
-        styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)),
+        styleSheet: style,
         selectable: false,
         imageDirectory: null,
         imageBuilder: null,
         checkboxBuilder: (val) =>
             val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
         bulletBuilder: null,
-        // builders: {'math': MathBuilder(scale: scale)},
-        builders: const {},
+        builders: {'math': MathBuilder(scale: scale)},
         listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
       ),
-      [],
+      [scale],
     );
     return useMemoized(() {
-      final nodes = parseNodes(data).map(handleNode).toList();
+      final s = Stopwatch()..start();
+      List<md.Node> nodes;
+      if (nativeParse) {
+        final document = md.Document(
+            inlineSyntaxes: [MathSyntax.instance], extensionSet: md.ExtensionSet.gitHubWeb, encodeHtml: false);
+        final lines = const LineSplitter().convert(data);
+        nodes = document.parseLines(lines);
+        print('String to node (native) took ${s.elapsedMicroseconds} us');
+      } else {
+        nodes = parseNodes(data).map(handleNode).toList();
+        print('String to node (ffi) took ${s.elapsedMicroseconds} us');
+      }
       final children = mdBuilder.build(nodes);
+      print('Node to widget (${nativeParse ? 'native' : 'ffi'}) took ${s.elapsedMicroseconds} us');
       return Column(children: children);
     }, [data, scale]);
   }
@@ -114,85 +141,81 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
 }
 
 class MarkdownPreview extends HookWidget {
-  const MarkdownPreview(
-      {Key? key, ScrollController? scrollController, required this.expr, this.scale = 1, this.selectable = false})
-      : sc = scrollController,
-        super(key: key);
+  const MarkdownPreview({Key? key, required this.expr, this.scale = 1, this.selectable = false}) : super(key: key);
 
-  final ScrollController? sc;
+  // final ScrollController? sc;
   final String expr;
   final double scale;
 
   /// Disabled by default due to high performance impact
   final bool selectable;
 
-  /// [Markdown] is buggy so we manually insert a scroll view here and use [MarkdownBody] instead.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return useMemoized(() {
-      return CustomMarkdownBody(
-        expr,
-        // shrinkWrap: false,
-        // extensionSet: md.ExtensionSet.gitHubWeb,
-        // inlineSyntaxes: [MathSyntax.instance],
-        // builders: {'math': MathBuilder(scale: scale)},
-        // checkboxBuilder: (val) =>
-        //     val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
-        // selectable: selectable,
-        style: MarkdownStyleSheet.fromTheme(theme).copyWith(
-          blockquoteDecoration: BoxDecoration(
-            color: theme.cardColor,
-            border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
-          ),
-          textScaleFactor: scale,
-          blockSpacing: 12 * scale,
-          listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
-          code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
+    final style = useMemoized(() {
+      return MarkdownStyleSheet.fromTheme(theme).copyWith(
+        blockquoteDecoration: BoxDecoration(
+          color: theme.cardColor,
+          border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
         ),
-        onTapLink: (text, href, title) async {
-          if (href == null) return;
-          if (href.startsWith('#')) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Header links are not supported'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.orangeAccent,
-            ));
-            return;
-          }
-          if (await canLaunch(href)) {
-            final answer = await showDialog<bool>(
-              context: context,
-              builder: (bc) => SimpleDialog(
-                title: Text('Open $text?'),
-                children: [
-                  SimpleDialogOption(
-                    onPressed: () => Navigator.pop(bc, true),
-                    child: const Text('Yes!'),
-                  ),
-                  SimpleDialogOption(
-                    onPressed: () => Navigator.pop(bc, false),
-                    child: const Text('No! Take me back!'),
-                  ),
-                  SimpleDialogOption(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: href));
-                      Navigator.pop(bc, false);
-                    },
-                    child: const Text('Copy link to clipboard'),
-                  )
-                ],
-              ),
-            );
-            if (answer ?? false) launch(href);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('$text could not be opened'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: theme.errorColor,
-            ));
-          }
-        },
+        textScaleFactor: scale,
+        blockSpacing: 12 * scale,
+        listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
+        code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
+      );
+    }, [scale, theme.hashCode]);
+    return useMemoized(() {
+      return Consumer(
+        builder: (bc, watch, _) => CustomMarkdownBody(
+          expr,
+          scale: scale,
+          style: style,
+          nativeParse: watch(nativeParsing).state,
+          onTapLink: (text, href, title) async {
+            if (href == null) return;
+            if (href.startsWith('#')) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Header links are not supported'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.orangeAccent,
+              ));
+              return;
+            }
+            if (await canLaunch(href)) {
+              final answer = await showDialog<bool>(
+                context: context,
+                builder: (bc) => SimpleDialog(
+                  title: Text('Open $text?'),
+                  children: [
+                    SimpleDialogOption(
+                      onPressed: () => Navigator.pop(bc, true),
+                      child: const Text('Yes!'),
+                    ),
+                    SimpleDialogOption(
+                      onPressed: () => Navigator.pop(bc, false),
+                      child: const Text('No! Take me back!'),
+                    ),
+                    SimpleDialogOption(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: href));
+                        Navigator.pop(bc, false);
+                      },
+                      child: const Text('Copy link to clipboard'),
+                    )
+                  ],
+                ),
+              );
+              if (answer ?? false) launch(href);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('$text could not be opened'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: theme.errorColor,
+              ));
+            }
+          },
+        ),
       );
     }, [expr, scale, theme.hashCode]);
   }
@@ -206,8 +229,17 @@ class MathBuilder extends MarkdownElementBuilder {
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
     final textMode = element.attributes.containsKey('text');
-    final child = MathBlock(tex, style: textMode ? MathStyle.text : MathStyle.display);
-    return textMode ? child : Align(key: ValueKey(tex), child: child);
+    final child = SingleChildScrollView(
+      child: Math.tex(
+        tex,
+        mathStyle: textMode ? MathStyle.text : MathStyle.display,
+        textScaleFactor: scale,
+        onErrorFallback: (e) {
+          return Tooltip(message: e.message, child: Text(tex, style: const TextStyle(color: Colors.red)));
+        },
+      ),
+    );
+    return textMode ? child : Align(child: child);
   }
 }
 
@@ -225,80 +257,5 @@ class MathSyntax extends md.InlineSyntax {
       parser.addNode(md.Element('p', [elem]));
     }
     return true;
-  }
-}
-
-class MathBlock extends StatefulWidget {
-  const MathBlock(this.data, {Key? key, required this.style}) : super(key: key);
-  final String data;
-  final MathStyle style;
-
-  @override
-  _MathBlockState createState() => _MathBlockState();
-}
-
-class _MathBlockState extends State<MathBlock> {
-  final lexer = Lexer();
-  late Future<SyntaxTree> ast;
-  @override
-  void initState() {
-    super.initState();
-    ast = lexer.start(widget.data);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<SyntaxTree>(
-      future: ast,
-      builder: (bc, fut) {
-        if (fut.hasData) {
-          return SingleChildScrollView(child: Math(ast: fut.data, mathStyle: widget.style));
-        } else if (fut.hasError) {
-          return Text(fut.error.toString(), style: const TextStyle(color: Colors.red));
-        }
-        return const CircularProgressIndicator();
-      },
-    );
-  }
-}
-
-typedef Worker = void Function(SendPort send);
-
-class Lexer {
-  Isolate? isolate;
-  Future<SyntaxTree> start(String data) async {
-    final rec = ReceivePort();
-    isolate = await Isolate.spawn(spawnTask(data), rec.sendPort);
-    final comp = Completer<SyntaxTree>();
-    rec.listen((message) {
-      if (message is SyntaxTree) {
-        comp.complete(message);
-      } else {
-        comp.completeError(message.toString());
-      }
-    });
-    return comp.future;
-  }
-
-  Worker spawnTask(String data) {
-    return (SendPort send) {
-      dynamic output;
-      try {
-        output = SyntaxTree(greenRoot: TexParser(data, const TexParserSettings()).parse());
-      } on ParseException catch (e) {
-        output = e;
-      } catch (e) {
-        output = 'Unknown error: $e';
-      }
-      send.send(output);
-      return stop();
-    };
-  }
-
-  void stop() {
-    if (isolate != null) {
-      isolate!.kill(priority: Isolate.immediate);
-      isolate = null;
-    }
   }
 }

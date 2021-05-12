@@ -1,4 +1,6 @@
 // import 'package:flutter_markdown/flutter_markdown.dart';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -114,6 +116,15 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                         tooltip: sm.description,
                         icon: AnimatedSwitcher(duration: animDur, child: sm.icon),
                       ),
+                      Consumer(builder: (bc, watch, _) {
+                        final state = watch(nativeParsing).state;
+                        return IconButton(
+                          onPressed: () {
+                            bc.read(nativeParsing).state = !state;
+                          },
+                          icon: watch(nativeParsing).state ? const Icon(Icons.timelapse) : const Icon(Icons.speed),
+                        );
+                      }),
                       IconButton(icon: const Icon(Icons.format_bold), onPressed: bold, tooltip: 'Bold'),
                       IconButton(icon: const Icon(Icons.format_italic), onPressed: italic, tooltip: 'Italic'),
                       IconButton(
@@ -148,7 +159,11 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     child: Consumer(builder: (bc, watch, _) {
                       final indent = watch(indents).state;
                       return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+                        padding: vertical
+                            ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                            : (Platform.isAndroid
+                                ? const EdgeInsets.fromLTRB(16, 32, 8, 8)
+                                : const EdgeInsets.fromLTRB(16, 16, 8, 8)),
                         child: Editor(
                           scrollController: editorSc,
                           controller: ctl.value,
@@ -205,7 +220,16 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                         // for example a scrolling list that is always the width of the screen, consider ListView,
                         // which is vastly more efficient that a SingleChildScrollView containing a ListBody
                         // or Column with many children."
-                        return ListView(controller: sc, children: [MarkdownPreview(expr: lines, scale: _scale)]);
+                        return ListView(
+                            padding: vertical
+                                ? Platform.isAndroid
+                                    ? const EdgeInsets.fromLTRB(16, 32, 16, 8)
+                                    : const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                                : Platform.isAndroid
+                                    ? const EdgeInsets.fromLTRB(8, 32, 16, 8)
+                                    : const EdgeInsets.fromLTRB(8, 16, 16, 8),
+                            controller: sc,
+                            children: [MarkdownPreview(expr: lines, scale: _scale)]);
                       }),
                     ),
                   ),

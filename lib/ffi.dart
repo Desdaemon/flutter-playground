@@ -1,24 +1,29 @@
 import 'dart:convert';
-import 'dart:ffi' as ffi;
-
+import 'dart:ffi';
 import 'dart:io';
-
 import 'package:ffi/ffi.dart';
 
-final libraryExtension = Platform.isWindows
-    ? 'dll'
-    : Platform.isIOS
-        ? 'dylib'
-        : 'so';
-final lib = ffi.DynamicLibrary.open('target/release/flutter_playground.$libraryExtension');
-typedef ParseMarkdown = ffi.Pointer<Utf8> Function(ffi.Pointer<Utf8>);
-typedef free_string = ffi.Void Function(ffi.Pointer<Utf8>);
-typedef FreeString = void Function(ffi.Pointer<Utf8>);
-final parseMarkdown = lib.lookup<ffi.NativeFunction<ParseMarkdown>>('parse_markdown').asFunction<ParseMarkdown>();
-final freeString = lib.lookup<ffi.NativeFunction<free_string>>('free_string').asFunction<FreeString>();
-List<Map<String, dynamic>> parseNodes(String markdown) {
+typedef ParseMarkdown = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef free_string = Void Function(Pointer<Utf8>);
+typedef FreeString = void Function(Pointer<Utf8>);
+
+/// Sometimes "armeabi-v7a" for 32-bit machines.
+const androidArch = String.fromEnvironment('ANDROID_ARCH', defaultValue: 'arm64-v8a');
+final libPath = Platform.isWindows
+    ? 'target/release/flutter_playground.dll'
+    : Platform.isAndroid
+        ? 'libflutter_playground.so'
+        : Platform.isLinux
+            ? 'target/release/libflutter_playground.so'
+            : const String.fromEnvironment('LIBRARY');
+final lib = DynamicLibrary.open(libPath);
+final parseMarkdown = lib.lookupFunction<ParseMarkdown, ParseMarkdown>('parse_markdown');
+final freeString = lib.lookupFunction<free_string, FreeString>('free_string');
+
+/// Wrapper around [parseMarkdown] + [freeString]
+List<dynamic> parseNodes(String markdown) {
   final ptr = parseMarkdown(markdown.toNativeUtf8());
-  final output = jsonDecode(ptr.toDartString()) as List<Map<String, dynamic>>;
+  final output = jsonDecode(ptr.toDartString()) as List<dynamic>;
   freeString(ptr);
   return output;
 }

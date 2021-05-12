@@ -8,6 +8,7 @@ import 'package:yata_flutter/main.dart' show boxname, prefname;
 
 final screenMode = StateProvider((_) => ScreenMode.sbs);
 final lockstep = StateProvider((_) => true);
+final nativeParsing = StateProvider((_) => false);
 final scale = StateProvider((_) => 1.0);
 final indents = StateProvider((_) => 2);
 
