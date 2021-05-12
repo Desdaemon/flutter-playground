@@ -21,12 +21,12 @@ pub extern "C" fn free_string(ptr: *mut c_char) {
         CString::from_raw(ptr);
     }
 }
-fn parse_json(mut parser: Parser<'_>) -> String {
+fn parse_json(parser: Parser<'_>) -> String {
     let mut buf = String::new();
     buf.push('[');
     let mut in_header = false;
     let mut in_text = false;
-    while let Some(event) = parser.next() {
+    for event in parser {
         match event {
             Event::Text(text) => {
                 if in_text {

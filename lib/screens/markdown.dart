@@ -145,6 +145,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           ),
                         ),
                       ),
+                      if (!vertical) Consumer(builder: (_, watch, __) => Text(watch(ticker).state))
                     ]),
                   ),
                 ),

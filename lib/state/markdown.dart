@@ -11,6 +11,7 @@ final lockstep = StateProvider((_) => true);
 final nativeParsing = StateProvider((_) => false);
 final scale = StateProvider((_) => 1.0);
 final indents = StateProvider((_) => 2);
+final ticker = StateProvider((_) => '');
 
 /// The directory of files and its interim contents.
 final files = StateNotifierProvider<MarkdownStore>((_) => MarkdownStore(boxname: boxname, prefname: prefname));

@@ -67,7 +67,7 @@ md.Node handleNode(dynamic json, [int alignment = 0]) {
         default:
           break;
       }
-      final output = md.Element(type, (children()));
+      final output = md.Element(type, children());
       if (style != null) {
         output.attributes['style'] = style;
       }
@@ -109,20 +109,16 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
       [scale],
     );
     return useMemoized(() {
-      final s = Stopwatch()..start();
       List<md.Node> nodes;
       if (nativeParse) {
         final document = md.Document(
             inlineSyntaxes: [MathSyntax.instance], extensionSet: md.ExtensionSet.gitHubWeb, encodeHtml: false);
         final lines = const LineSplitter().convert(data);
         nodes = document.parseLines(lines);
-        print('String to node (native) took ${s.elapsedMicroseconds} us');
       } else {
         nodes = parseNodes(data).map(handleNode).toList();
-        print('String to node (ffi) took ${s.elapsedMicroseconds} us');
       }
       final children = mdBuilder.build(nodes);
-      print('Node to widget (${nativeParse ? 'native' : 'ffi'}) took ${s.elapsedMicroseconds} us');
       return Column(children: children);
     }, [data, scale]);
   }
@@ -135,8 +131,8 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
   }
 
   @override
-  TextSpan formatText(MarkdownStyleSheet _, String code) {
-    return TextSpan(text: code);
+  TextSpan formatText(MarkdownStyleSheet style, String code) {
+    return TextSpan(text: code, style: style.code);
   }
 }
 
