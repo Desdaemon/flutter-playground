@@ -58,17 +58,17 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   /// Sets the active file to be [path] and populates its [contents].
   void activate(String path, String contents) {
     ctl.value.text = contents;
-    context.read(files).activate(path, contents);
+    context.read(files.notifier).activate(path, contents);
   }
 
   void remove(String file) {
-    final contents = context.read(files).remove(file);
+    final contents = context.read(files.notifier).remove(file);
     ctl.value.text = contents;
   }
 
   void create() {
     ctl.value.clear();
-    final _files = context.read(files.state).files;
+    final _files = context.read(files).files;
     String newpath;
     do {
       newpath = '${untitled}_(${untitledIdx++}).md';
@@ -161,7 +161,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       if (dir == null) return;
       newpath = p.join(dir, p.basename(p.setExtension(newpath, '.md')));
       activate(newpath, contents);
-      context.read(files).remove(path);
+      context.read(files.notifier).remove(path);
       path = newpath;
     }
     await File(path).writeAsString(contents);
@@ -217,7 +217,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   Future<void> openCheatsheet() async {
     // _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
-    context.read(files).activate(
+    context.read(files.notifier).activate(
         'markdown_reference.md', await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode));
   }
 
@@ -248,7 +248,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
         selection: sel.isNormalized
             ? TextSelection(baseOffset: start, extentOffset: end)
             : TextSelection(baseOffset: end, extentOffset: start));
-    context.read(files).updateActive(output);
+    context.read(files.notifier).updateActive(output);
   }
 
   void doIndent() {

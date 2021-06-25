@@ -37,7 +37,7 @@ class ListStore<T> extends StateNotifier<List<T>> {
   }
 }
 
-final todos = StateNotifierProvider<ListStore<Todo>>((_) => ListStore());
+final todos = StateNotifierProvider<ListStore<Todo>, List<Todo>>((_) => ListStore());
 
 /// Caches the non-empty state of [todos] here.
-final todoNotEmpty = Provider((ref) => ref.watch(todos.state).isNotEmpty);
+final todoNotEmpty = Provider((ref) => ref.watch(todos).isNotEmpty);

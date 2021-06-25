@@ -60,7 +60,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       onUpfont: upfont,
       onDownfont: downfont,
       onActivate: (val) {
-        context.read(files).focus(val);
+        context.read(files.notifier).focus(val);
         ctl.value.text = context.read(activeFile);
       });
 
@@ -168,7 +168,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                         child: Editor(
                           scrollController: editorSc,
                           controller: ctl.value,
-                          onChange: bc.read(files).updateActive,
+                          onChange: bc.read(files.notifier).updateActive,
                           fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
                           fontFamily: 'JetBrains Mono',
                           indent: indent,

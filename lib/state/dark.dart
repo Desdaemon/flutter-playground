@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
-final darkTheme = StateNotifierProvider((_) => Dark(boxname: 'prefs'));
+final darkTheme = StateNotifierProvider<Dark, ThemeMode>((_) => Dark(boxname: 'prefs'));
 
 class Dark extends StateNotifier<ThemeMode> {
   final String boxname;

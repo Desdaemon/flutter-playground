@@ -110,7 +110,7 @@ fn parse_json(parser: Parser<'_>) -> String {
                             );
                         }
                         // TODO: Implement FootnoteDefinition
-                        // pulldown_cmark::Tag::FootnoteDefinition(_) => {}
+                        //Tag::FootnoteDefinition(_) => {}
                         _ => {}
                     },
                     Event::End(tag) => match tag {
@@ -119,7 +119,7 @@ fn parse_json(parser: Parser<'_>) -> String {
                             buf.push_str(r#"]}"#);
                         }
                         _ => buf.push_str(r#"]}"#),
-                    }
+                    },
                     Event::Code(text) => {
                         buf.push_str(
                             format!(
@@ -133,7 +133,7 @@ fn parse_json(parser: Parser<'_>) -> String {
                     Event::Rule => buf.push_str(r#",{"t":"hr"}"#),
                     Event::TaskListMarker(checked) => buf
                         .push_str(format!(r#",{{"t":"checkbox","value":"{}"}}"#, checked).as_str()),
-                    // pulldown_cmark::Event::FootnoteReference(_) => {}
+                    //Event::FootnoteReference(_) => {}
                     _ => {}
                 };
             }

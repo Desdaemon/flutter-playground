@@ -14,16 +14,16 @@ final indents = StateProvider((_) => 2);
 final ticker = StateProvider((_) => '');
 
 /// The directory of files and its interim contents.
-final files = StateNotifierProvider<MarkdownStore>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
+final files = StateNotifierProvider<MarkdownStore, MarkdownState>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
 
 /// The path to the file being edited.
-final activePath = Provider((ref) => ref.watch(files.state).active);
+final activePath = Provider((ref) => ref.watch(files).active);
 
 // final paraBreak = RegExp(r'(\r\n|\r|\n)\1');
 
 /// The contents of the active file.
-final activeFile = Provider((ref) => ref.watch(files.state).files[ref.watch(activePath)] ?? '');
-final fileList = Provider((ref) => ref.watch(files.state).files.keys);
+final activeFile = Provider((ref) => ref.watch(files).files[ref.watch(activePath)] ?? '');
+final fileList = Provider((ref) => ref.watch(files).files.keys);
 final isPreviewing = Provider((ref) => ref.watch(screenMode).state.previewing);
 
 @immutable

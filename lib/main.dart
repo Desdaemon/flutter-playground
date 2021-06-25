@@ -31,7 +31,7 @@ class MarkdownApp extends StatelessWidget {
         // onGenerateTitle: (bc) => AppLocalizations.of(bc)!.helloWorld,
         theme: ThemeData.from(colorScheme: ayuLight, textTheme: Typography.englishLike2018),
         darkTheme: ThemeData.from(colorScheme: ayuDark, textTheme: Typography.englishLike2018),
-        themeMode: watch(darkTheme.state),
+        themeMode: watch(darkTheme),
         home: child,
         restorationScopeId: 'root',
         // localizationsDelegates: AppLocalizations.localizationsDelegates,

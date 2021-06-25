@@ -52,12 +52,12 @@ class _TodoPageState extends State<TodoPage> {
       appBar: commonAppBar(bc, title: widget.title, actions: [
         IconButton(
           icon: const Icon(Icons.clear_all),
-          onPressed: () => bc.read(todos).clear(),
+          onPressed: () => bc.read(todos.notifier).clear(),
         ),
       ]),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final idx = bc.read(todos).add(Todo());
+          final idx = bc.read(todos.notifier).add(Todo());
           klist.currentState?.insertItem(idx, duration: widget.duration);
           scrollToBottom(wait: widget.duration);
         },
@@ -96,7 +96,7 @@ class _TodoPageState extends State<TodoPage> {
                       // cache is used here to minimize updating work.
                       // This is optional.
                       var child = cache[idx] as TodoListItem?;
-                      final thisTodo = bc.read(todos.state)[idx];
+                      final thisTodo = bc.read(todos)[idx];
                       final changed = child?.idx != idx || child?.todo != thisTodo;
                       if (changed) {
                         child = TodoListItem(
@@ -104,7 +104,7 @@ class _TodoPageState extends State<TodoPage> {
                           thisTodo,
                           widget.duration,
                           key: ObjectKey(thisTodo),
-                          autofocus: bc.read(todos).lastidx == idx,
+                          autofocus: bc.read(todos.notifier).lastidx == idx,
                         );
                         cache[idx] = child;
                       }
@@ -163,7 +163,7 @@ class _TodoListItemState extends State<TodoListItem> {
 
   /// Updates the store and triggers a [setState].
   set todo(Todo value) {
-    context.read(todos).put(widget.idx, value);
+    context.read(todos.notifier).put(widget.idx, value);
     setState(() => _todo = value);
   }
 
@@ -175,7 +175,7 @@ class _TodoListItemState extends State<TodoListItem> {
   void insertTodo() {
     doneEditing();
     final idx = widget.idx + 1;
-    context.read(todos).insert(idx, Todo());
+    context.read(todos.notifier).insert(idx, Todo());
     klist.currentState?.insertItem(idx, duration: widget.duration);
     scrollToBottom(wait: widget.duration);
   }
@@ -192,7 +192,7 @@ class _TodoListItemState extends State<TodoListItem> {
       ),
       duration: widget.duration,
     );
-    context.read(todos).removeAt(widget.idx);
+    context.read(todos.notifier).removeAt(widget.idx);
   }
 
   /// Returns whether the event has been handled
@@ -249,7 +249,7 @@ class _TodoListItemState extends State<TodoListItem> {
         onTap: () => setState(() => editing = true),
         onAdd: insertTodo,
         onChange: (val) {
-          bc.read(todos).put(widget.idx, val);
+          bc.read(todos.notifier).put(widget.idx, val);
           todo = val;
         },
         onDelete: removeTodo,

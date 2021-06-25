@@ -83,8 +83,8 @@ class MarkdownBottomSheet extends StatelessWidget {
           IconButton(icon: const Icon(Icons.help), tooltip: 'Cheat Sheet', onPressed: onOpenCheatsheet),
           Consumer(
             builder: (bc, watch, _) => IconButton(
-              onPressed: bc.read(darkTheme).next,
-              icon: iconOf(watch(darkTheme.state)),
+              onPressed: bc.read(darkTheme.notifier).next,
+              icon: iconOf(watch(darkTheme)),
             ),
           ),
         ]),
