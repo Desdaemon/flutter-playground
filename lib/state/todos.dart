@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../types/todo.dart';
+import 'package:yata_flutter/types/todo.dart';
 
 class ListStore<T> extends StateNotifier<List<T>> {
   ListStore([List<T>? seed]) : super(seed ?? const []);

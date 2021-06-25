@@ -36,15 +36,15 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   final newline = '\n'.characters;
 
-  void upfont() => context.read(scale).state += scaleStep;
-  void downfont() => context.read(scale).state -= scaleStep;
-  void upindent() => context.read(indents).state++;
+  void upfont() => context.read(pScale).state += scaleStep;
+  void downfont() => context.read(pScale).state -= scaleStep;
+  void upindent() => context.read(pIndents).state++;
   void downindent() {
-    if (context.read(indents).state > 0) context.read(indents).state--;
+    if (context.read(pIndents).state > 0) context.read(pIndents).state--;
   }
 
   bool handleScroll(ScrollNotification noti) {
-    if (context.read(lockstep).state && sc.hasClients) {
+    if (context.read(pLockstep).state && sc.hasClients) {
       final m = noti.metrics;
       final pos = sc.position;
       final range = m.maxScrollExtent - m.minScrollExtent;
@@ -58,17 +58,17 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   /// Sets the active file to be [path] and populates its [contents].
   void activate(String path, String contents) {
     ctl.value.text = contents;
-    context.read(files.notifier).activate(path, contents);
+    context.read(pFiles.notifier).activate(path, contents);
   }
 
   void remove(String file) {
-    final contents = context.read(files.notifier).remove(file);
+    final contents = context.read(pFiles.notifier).remove(file);
     ctl.value.text = contents;
   }
 
   void create() {
     ctl.value.clear();
-    final _files = context.read(files).files;
+    final _files = context.read(pFiles).files;
     String newpath;
     do {
       newpath = '${untitled}_(${untitledIdx++}).md';
@@ -82,7 +82,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['md', 'txt']);
       if (result == null) return;
       final file = result.files.single;
-      path = file.name!;
+      path = file.name;
       contents = String.fromCharCodes(file.bytes!);
     } else {
       final Directory root;
@@ -119,7 +119,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
 
   Future<void> save() async {
     final contents = ctl.value.text;
-    var path = context.read(activePath);
+    var path = context.read(pActivePath);
     if (path.startsWith(untitled)) {
       final String? filename = await showDialog(
         context: context,
@@ -161,7 +161,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       if (dir == null) return;
       newpath = p.join(dir, p.basename(p.setExtension(newpath, '.md')));
       activate(newpath, contents);
-      context.read(files.notifier).remove(path);
+      context.read(pFiles.notifier).remove(path);
       path = newpath;
     }
     await File(path).writeAsString(contents);
@@ -170,11 +170,8 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   Future<void> _export(String content, [String? key]) async {
     final appdir = await getApplicationSupportDirectory();
     final outpath = '${appdir.path}/${key ?? 'out'}.html';
-    // TODO: Find a replacement for String.hashCode
     final file = File(outpath);
-    // if (key == null || contentkey != key || !(await file.exists())) {
     await file.create();
-    // contentkey = key ?? content.hashCode.toString();
     final template = await rootBundle.loadString('assets/template.html', cache: !kDebugMode);
     final markdown = md.markdownToHtml(
       content,
@@ -183,9 +180,8 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     );
     final output = template
         .replaceFirst('{{ body }}', markdown)
-        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(activePath)));
+        .replaceFirst('{{ title }}', p.basenameWithoutExtension(context.read(pActivePath)));
     await file.writeAsString(output);
-    // }
     OpenFile.open(outpath);
   }
 
@@ -211,20 +207,20 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       ),
     );
     if (result != null) {
-      context.read(indents).state = result;
+      context.read(pIndents).state = result;
     }
   }
 
   Future<void> openCheatsheet() async {
     // _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
-    context.read(files.notifier).activate(
+    context.read(pFiles.notifier).activate(
         'markdown_reference.md', await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode));
   }
 
   /// Initializes and/or updates [indent] only if their lengths mismatch.
   /// Returns the current indent size.
   int _setindent() {
-    final size = context.read(indents).state;
+    final size = context.read(pIndents).state;
     if (indent.length != size) {
       indent = List.filled(size, ' ', growable: false).join().characters;
     }
@@ -248,7 +244,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
         selection: sel.isNormalized
             ? TextSelection(baseOffset: start, extentOffset: end)
             : TextSelection(baseOffset: end, extentOffset: start));
-    context.read(files.notifier).updateActive(output);
+    context.read(pFiles.notifier).updateActive(output);
   }
 
   void doIndent() {

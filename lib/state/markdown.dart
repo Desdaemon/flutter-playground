@@ -6,25 +6,27 @@ import 'package:hive/hive.dart';
 
 import 'package:yata_flutter/main.dart' show boxname, prefname;
 
-final screenMode = StateProvider((_) => ScreenMode.sbs);
-final lockstep = StateProvider((_) => true);
-final nativeParsing = StateProvider((_) => false);
-final scale = StateProvider((_) => 1.0);
-final indents = StateProvider((_) => 2);
-final ticker = StateProvider((_) => '');
+final pScreenMode = StateProvider((_) => ScreenMode.sbs);
+final pLockstep = StateProvider((_) => true);
+final pNativeParsing = StateProvider((_) => false);
+final pScale = StateProvider((_) => 1.0);
+final pIndents = StateProvider((_) => 2);
+final pTicker = StateProvider((_) => '');
 
 /// The directory of files and its interim contents.
-final files = StateNotifierProvider<MarkdownStore, MarkdownState>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
+final pFiles =
+    StateNotifierProvider<MarkdownStore, MarkdownState>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
 
 /// The path to the file being edited.
-final activePath = Provider((ref) => ref.watch(files).active);
-
-// final paraBreak = RegExp(r'(\r\n|\r|\n)\1');
+final pActivePath = Provider((ref) => ref.watch(pFiles).active);
 
 /// The contents of the active file.
-final activeFile = Provider((ref) => ref.watch(files).files[ref.watch(activePath)] ?? '');
-final fileList = Provider((ref) => ref.watch(files).files.keys);
-final isPreviewing = Provider((ref) => ref.watch(screenMode).state.previewing);
+final pActiveFile = Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
+final pFileList = Provider((ref) => ref.watch(pFiles).files.keys);
+final pIsPreviewing = Provider((ref) => ref.watch(pScreenMode).state.previewing);
+
+/// Scalable fontsize.
+final pFontSize = Provider.family((ref, double size) => ref.watch(pScale).state * size);
 
 @immutable
 class MarkdownState {
@@ -128,9 +130,6 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   }
 }
 
-/// Scalable fontsize.
-final fontsize = Provider.family((ref, double size) => ref.watch(scale).state * size);
-
 enum ScreenMode { edit, preview, sbs }
 
 extension ScreenModeX on ScreenMode {
@@ -158,5 +157,11 @@ extension ScreenModeX on ScreenMode {
       case ScreenMode.sbs:
         return 'Side-by-side';
     }
+  }
+}
+
+extension Merge<K, V> on Map<K, V> {
+  Map<K, V> merge(Map<K, V> other) {
+    return {for (final en in entries) en.key: en.value, for (final en in other.entries) en.key: en.value};
   }
 }

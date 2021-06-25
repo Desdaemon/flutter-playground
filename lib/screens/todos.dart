@@ -52,7 +52,7 @@ class _TodoPageState extends State<TodoPage> {
       appBar: commonAppBar(bc, title: widget.title, actions: [
         IconButton(
           icon: const Icon(Icons.clear_all),
-          onPressed: () => bc.read(todos.notifier).clear(),
+          onPressed: () => bc.read(todos).clear(),
         ),
       ]),
       floatingActionButton: FloatingActionButton(
@@ -175,7 +175,7 @@ class _TodoListItemState extends State<TodoListItem> {
   void insertTodo() {
     doneEditing();
     final idx = widget.idx + 1;
-    context.read(todos.notifier).insert(idx, Todo());
+    context.read(todos).insert(idx, Todo());
     klist.currentState?.insertItem(idx, duration: widget.duration);
     scrollToBottom(wait: widget.duration);
   }
@@ -192,7 +192,7 @@ class _TodoListItemState extends State<TodoListItem> {
       ),
       duration: widget.duration,
     );
-    context.read(todos.notifier).removeAt(widget.idx);
+    context.read(todos).removeAt(widget.idx);
   }
 
   /// Returns whether the event has been handled

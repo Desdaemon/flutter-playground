@@ -26,7 +26,7 @@ class MarkdownBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Consumer(builder: (bc, watch, _) {
-        final path = watch(activePath);
+        final path = watch(pActivePath);
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
           child: Tooltip(message: path, child: Text(shortenPath(path), maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -37,14 +37,14 @@ class MarkdownBottomSheet extends StatelessWidget {
         builder: (bc, watch, _) => Container(
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text('Files (${watch(fileList).length})', style: Theme.of(bc).textTheme.caption, maxLines: 1),
+          child: Text('Files (${watch(pFileList).length})', style: Theme.of(bc).textTheme.caption, maxLines: 1),
         ),
       ),
       Flexible(
         child: Scrollbar(
           child: Consumer(builder: (bc, watch, _) {
-            final list = watch(fileList);
-            final active = watch(activePath);
+            final list = watch(pFileList);
+            final active = watch(pActivePath);
             return ListView.builder(
               shrinkWrap: true,
               itemCount: list.length,
@@ -71,10 +71,10 @@ class MarkdownBottomSheet extends StatelessWidget {
           IconButton(icon: const Icon(Icons.save), tooltip: 'Save', onPressed: onSave),
           IconButton(icon: const Icon(Icons.print), onPressed: onExport, tooltip: 'Export to HTML'),
           Consumer(builder: (bc, watch, _) {
-            final ls = watch(lockstep).state;
+            final ls = watch(pLockstep).state;
             return IconButton(
               icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
-              onPressed: () => bc.read(lockstep).state = !ls,
+              onPressed: () => bc.read(pLockstep).state = !ls,
               tooltip: 'Lockstep',
             );
           }),

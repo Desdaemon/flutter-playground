@@ -11,7 +11,8 @@ PreferredSizeWidget commonAppBar(BuildContext bc, {String title = 'Widgets Funho
       if (actions != null) ...actions,
       // A minimal example usage of a self-contained Consumer.
       Consumer(
-        builder: (bc, watch, _) => IconButton(onPressed: bc.read(darkTheme.notifier).next, icon: iconOf(watch(darkTheme))),
+        builder: (bc, watch, _) =>
+            IconButton(onPressed: bc.read(darkTheme.notifier).next, icon: iconOf(watch(darkTheme))),
       ),
     ],
   );

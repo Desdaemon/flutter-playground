@@ -167,7 +167,7 @@ class MarkdownPreview extends HookWidget {
           expr,
           scale: scale,
           style: style,
-          nativeParse: watch(nativeParsing).state,
+          nativeParse: watch(pNativeParsing).state,
           onTapLink: (text, href, title) async {
             if (href == null) return;
             if (href.startsWith('#')) {

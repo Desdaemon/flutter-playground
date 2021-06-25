@@ -38,7 +38,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     registerForRestoration(ctl, 'ctl');
-    final expr = context.read(activeFile);
+    final expr = context.read(pActiveFile);
     if (expr.isNotEmpty) ctl.value.text = expr;
   }
 
@@ -60,8 +60,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       onUpfont: upfont,
       onDownfont: downfont,
       onActivate: (val) {
-        context.read(files.notifier).focus(val);
-        ctl.value.text = context.read(activeFile);
+        context.read(pFiles.notifier).focus(val);
+        ctl.value.text = context.read(pActiveFile);
       });
 
   void showMenu() {
@@ -101,7 +101,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       top: false,
       child: Scaffold(
         body: Consumer(builder: (bc, watch, _) {
-          final sm = watch(screenMode).state;
+          final sm = watch(pScreenMode).state;
           return LayoutBuilder(builder: (bc, cons) {
             final vertical = cons.maxWidth < 1000;
             final bottomBar = Material(
@@ -112,17 +112,17 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     scrollDirection: Axis.horizontal,
                     child: Row(children: [
                       IconButton(
-                        onPressed: () => bc.read(screenMode).state = sm.next,
+                        onPressed: () => bc.read(pScreenMode).state = sm.next,
                         tooltip: sm.description,
                         icon: AnimatedSwitcher(duration: animDur, child: sm.icon),
                       ),
                       Consumer(builder: (bc, watch, _) {
-                        final state = watch(nativeParsing).state;
+                        final state = watch(pNativeParsing).state;
                         return IconButton(
                           onPressed: () {
-                            bc.read(nativeParsing).state = !state;
+                            bc.read(pNativeParsing).state = !state;
                           },
-                          icon: watch(nativeParsing).state ? const Icon(Icons.timelapse) : const Icon(Icons.speed),
+                          icon: watch(pNativeParsing).state ? const Icon(Icons.timelapse) : const Icon(Icons.speed),
                         );
                       }),
                       IconButton(icon: const Icon(Icons.format_bold), onPressed: bold, tooltip: 'Bold'),
@@ -141,11 +141,12 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           message: 'Spaces',
                           child: MouseRegion(
                             cursor: SystemMouseCursors.click,
-                            child: GestureDetector(onTap: changeIndent, child: Text('Spaces: ${watch(indents).state}')),
+                            child:
+                                GestureDetector(onTap: changeIndent, child: Text('Spaces: ${watch(pIndents).state}')),
                           ),
                         ),
                       ),
-                      if (!vertical) Consumer(builder: (_, watch, __) => Text(watch(ticker).state))
+                      if (!vertical) Consumer(builder: (_, watch, __) => Text(watch(pTicker).state))
                     ]),
                   ),
                 ),
@@ -158,7 +159,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                   child: Scrollbar(
                     notificationPredicate: handleScroll,
                     child: Consumer(builder: (bc, watch, _) {
-                      final indent = watch(indents).state;
+                      final indent = watch(pIndents).state;
                       return Padding(
                         padding: vertical
                             ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
@@ -168,8 +169,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                         child: Editor(
                           scrollController: editorSc,
                           controller: ctl.value,
-                          onChange: bc.read(files.notifier).updateActive,
-                          fontSize: watch(fontsize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
+                          onChange: bc.read(pFiles.notifier).updateActive,
+                          fontSize: watch(pFontSize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
                           fontFamily: 'JetBrains Mono',
                           indent: indent,
                           noBuiltins: true,
@@ -212,8 +213,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     maintainState: true,
                     child: Scrollbar(
                       child: Consumer(builder: (bc, watch, __) {
-                        final lines = watch(activeFile);
-                        final _scale = watch(scale).state;
+                        final lines = watch(pActiveFile);
+                        final _scale = watch(pScale).state;
                         // Q: Most peculiar: Without changing any behavior, swapping a SingleChildScrollWidget
                         // for a ListView with a single child yields massive speed increases! What gives?
                         // A: From the official documentation:
