@@ -57,8 +57,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       onOpenCheatsheet: openCheatsheet,
       onSave: save,
       onRemove: remove,
-      onUpfont: upfont,
-      onDownfont: downfont,
+      onUpfont: increaseFontSize,
+      onDownfont: decreaseFontSize,
       onActivate: (val) {
         context.read(pFiles.notifier).focus(val);
         ctl.value.text = context.read(pActiveFile);
@@ -132,10 +132,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           onPressed: strikethrough,
                           tooltip: 'Strikethrough'),
                       IconButton(icon: const Icon(Icons.functions), onPressed: math, tooltip: 'Math'),
-                      IconButton(
-                          icon: const Icon(Icons.format_indent_increase), onPressed: doIndent, tooltip: 'Indent'),
-                      IconButton(
-                          icon: const Icon(Icons.format_indent_decrease), onPressed: doDedent, tooltip: 'Dedent'),
+                      IconButton(icon: const Icon(Icons.format_indent_increase), onPressed: indent, tooltip: 'Indent'),
+                      IconButton(icon: const Icon(Icons.format_indent_decrease), onPressed: dedent, tooltip: 'Dedent'),
                       Consumer(
                         builder: (bc, watch, _) => Tooltip(
                           message: 'Spaces',
@@ -159,7 +157,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                   child: Scrollbar(
                     notificationPredicate: handleScroll,
                     child: Consumer(builder: (bc, watch, _) {
-                      final indent = watch(pIndents).state;
+                      final indentSize = watch(pIndents).state;
                       return Padding(
                         padding: vertical
                             ? const EdgeInsets.fromLTRB(16, 16, 16, 8)
@@ -172,15 +170,15 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                           onChange: bc.read(pFiles.notifier).updateActive,
                           fontSize: watch(pFontSize(Theme.of(bc).textTheme.bodyText2!.fontSize!)),
                           fontFamily: 'JetBrains Mono',
-                          indent: indent,
+                          indent: indentSize,
                           noBuiltins: true,
                           handlers: [
                             PlusMinusHandler(
                               plusKey: LogicalKeyboardKey.bracketRight,
                               minusKey: LogicalKeyboardKey.bracketLeft,
                               ctrl: true,
-                              onPlus: doIndent,
-                              onMinus: doDedent,
+                              onPlus: indent,
+                              onMinus: dedent,
                             ),
                             SingleHandler(keys: const [LogicalKeyboardKey.keyB], ctrl: true, onHandle: bold),
                             SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
@@ -190,8 +188,8 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                               plusKey: LogicalKeyboardKey.equal,
                               minusKey: LogicalKeyboardKey.minus,
                               ctrl: true,
-                              onPlus: upfont,
-                              onMinus: downfont,
+                              onPlus: increaseFontSize,
+                              onMinus: decreaseFontSize,
                             ),
                             SingleHandler(keys: const [LogicalKeyboardKey.keyO], ctrl: true, onHandle: open)
                           ],
@@ -210,7 +208,7 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                   alignment: Alignment.topLeft,
                   child: Visibility(
                     visible: sm.previewing,
-                    maintainState: true,
+                    //maintainState: true,
                     child: Scrollbar(
                       child: Consumer(builder: (bc, watch, __) {
                         final lines = watch(pActiveFile);

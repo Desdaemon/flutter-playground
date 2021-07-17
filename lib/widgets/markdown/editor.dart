@@ -72,15 +72,15 @@ class Editor extends StatelessWidget {
     onChange?.call(text);
   }
 
-  bool handleKey(FocusNode _, RawKeyEvent event) {
+  KeyEventResult handleKey(FocusNode _, RawKeyEvent event) {
     final val = ctl.value;
     final sel = val.selection;
     final pre = val.text.substring(0, sel.start);
     final post = val.text.substring(sel.start);
     for (final handler in allHandlers) {
-      if (handler.execute(event, sel: sel, pre: pre, post: post, setValue: setValue)) return true;
+      if (handler.execute(event, sel: sel, pre: pre, post: post, setValue: setValue)) return KeyEventResult.handled;
     }
-    return false;
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -127,7 +127,6 @@ class PairAdder extends TextInputFormatter {
     final old = oldValue.text.length;
     final neo = newValue.text.length;
     if (neo - old != 1) {
-      // print('oldValue: $oldValue\nnewValue: $newValue');
       return newValue;
     }
 

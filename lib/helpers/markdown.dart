@@ -29,17 +29,17 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   String get untitled;
   // String contentkey = '';
   int untitledIdx = 1;
-  Characters indent = ''.characters;
+  Characters _indent = ''.characters;
 
   late TextSelection sel;
   late CharacterRange iter;
 
   final newline = '\n'.characters;
 
-  void upfont() => context.read(pScale).state += scaleStep;
-  void downfont() => context.read(pScale).state -= scaleStep;
-  void upindent() => context.read(pIndents).state++;
-  void downindent() {
+  void increaseFontSize() => context.read(pScale).state += scaleStep;
+  void decreaseFontSize() => context.read(pScale).state -= scaleStep;
+  void increaseIndent() => context.read(pIndents).state++;
+  void decreaseIndent() {
     if (context.read(pIndents).state > 0) context.read(pIndents).state--;
   }
 
@@ -56,7 +56,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
   }
 
   /// Sets the active file to be [path] and populates its [contents].
-  void activate(String path, String contents) {
+  void activatePath(String path, String contents) {
     ctl.value.text = contents;
     context.read(pFiles.notifier).activate(path, contents);
   }
@@ -73,7 +73,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     do {
       newpath = '${untitled}_(${untitledIdx++}).md';
     } while (_files.containsKey(newpath));
-    activate(newpath, '');
+    activatePath(newpath, '');
   }
 
   Future<void> open() async {
@@ -114,7 +114,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
       contents = await File(path).readAsString();
     }
     ctl.value.text = contents;
-    activate(path, contents);
+    activatePath(path, contents);
   }
 
   Future<void> save() async {
@@ -160,7 +160,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
               context: context, fsType: FilesystemType.folder, rootDirectory: Directory.current);
       if (dir == null) return;
       newpath = p.join(dir, p.basename(p.setExtension(newpath, '.md')));
-      activate(newpath, contents);
+      activatePath(newpath, contents);
       context.read(pFiles.notifier).remove(path);
       path = newpath;
     }
@@ -217,18 +217,18 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
         'markdown_reference.md', await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode));
   }
 
-  /// Initializes and/or updates [indent] only if their lengths mismatch.
+  /// Initializes and/or updates [_indent] only if their lengths mismatch.
   /// Returns the current indent size.
-  int _setindent() {
+  int _prepareIndent() {
     final size = context.read(pIndents).state;
-    if (indent.length != size) {
-      indent = List.filled(size, ' ', growable: false).join().characters;
+    if (_indent.length != size) {
+      _indent = List.filled(size, ' ', growable: false).join().characters;
     }
     return size;
   }
 
   /// Setups for [iter.current] to contain the lines covered by [sel].
-  void _setline() {
+  void _prepareLine() {
     sel = ctl.value.selection;
     iter = ctl.value.text.characters.iterator
       ..moveNext(sel.start)
@@ -247,22 +247,22 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     context.read(pFiles.notifier).updateActive(output);
   }
 
-  void doIndent() {
-    final nIndents = _setindent();
-    _setline();
-    final inner = iter.currentCharacters.split(newline).map((e) => indent.followedBy(e).join());
+  void indent() {
+    final nIndents = _prepareIndent();
+    _prepareLine();
+    final inner = iter.currentCharacters.split(newline).map((e) => _indent.followedBy(e).join());
     final lines = inner.length;
     final innerOut = inner.join('\n');
     _updateActive('${iter.stringBefore}$innerOut${iter.stringAfter}', sel.start + nIndents, sel.end + nIndents * lines);
   }
 
-  void doDedent() {
-    final nIndents = _setindent();
-    _setline();
+  void dedent() {
+    final nIndents = _prepareIndent();
+    _prepareLine();
     int? firstlineback;
     int combinedback = 0;
     final inner = iter.currentCharacters.split(newline).map((line) {
-      if (line.startsWith(indent)) {
+      if (line.startsWith(_indent)) {
         firstlineback ??= -nIndents;
         combinedback -= nIndents;
         return line.skip(nIndents).join();

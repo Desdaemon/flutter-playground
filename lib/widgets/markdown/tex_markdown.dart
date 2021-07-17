@@ -93,34 +93,29 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
 
   @override
   Widget build(BuildContext context) {
-    final mdBuilder = useMemoized(
-      () => MarkdownBuilder(
-        delegate: this,
-        styleSheet: style,
-        selectable: false,
-        imageDirectory: null,
-        imageBuilder: null,
-        checkboxBuilder: (val) =>
-            val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
-        bulletBuilder: null,
-        builders: {'math': MathBuilder(scale: scale)},
-        listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
-      ),
-      [scale],
+    final mdBuilder = MarkdownBuilder(
+      delegate: this,
+      styleSheet: style,
+      selectable: false,
+      imageDirectory: null,
+      imageBuilder: null,
+      checkboxBuilder: (val) =>
+          val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
+      bulletBuilder: null,
+      builders: {'math': MathBuilder(scale: scale)},
+      listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
     );
-    return useMemoized(() {
-      List<md.Node> nodes;
-      if (nativeParse) {
-        final document = md.Document(
-            inlineSyntaxes: [MathSyntax.instance], extensionSet: md.ExtensionSet.gitHubWeb, encodeHtml: false);
-        final lines = const LineSplitter().convert(data);
-        nodes = document.parseLines(lines);
-      } else {
-        nodes = parseNodes(data).map(handleNode).toList();
-      }
-      final children = mdBuilder.build(nodes);
-      return Column(children: children);
-    }, [data, scale]);
+    List<md.Node> nodes;
+    if (nativeParse) {
+      final document = md.Document(
+          inlineSyntaxes: [MathSyntax.instance], extensionSet: md.ExtensionSet.gitHubWeb, encodeHtml: false);
+      final lines = const LineSplitter().convert(data);
+      nodes = document.parseLines(lines);
+    } else {
+      nodes = parseNodes(data).map(handleNode).toList();
+    }
+    final children = mdBuilder.build(nodes);
+    return Column(children: children);
   }
 
   @override
@@ -149,71 +144,67 @@ class MarkdownPreview extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = useMemoized(() {
-      return MarkdownStyleSheet.fromTheme(theme).copyWith(
-        blockquoteDecoration: BoxDecoration(
-          color: theme.cardColor,
-          border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
-        ),
-        textScaleFactor: scale,
-        blockSpacing: 12 * scale,
-        listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
-        code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
-      );
-    }, [scale, theme.hashCode]);
-    return useMemoized(() {
-      return Consumer(
-        builder: (bc, watch, _) => CustomMarkdownBody(
-          expr,
-          scale: scale,
-          style: style,
-          nativeParse: watch(pNativeParsing).state,
-          onTapLink: (text, href, title) async {
-            if (href == null) return;
-            if (href.startsWith('#')) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Header links are not supported'),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.orangeAccent,
-              ));
-              return;
-            }
-            if (await canLaunch(href)) {
-              final answer = await showDialog<bool>(
-                context: context,
-                builder: (bc) => SimpleDialog(
-                  title: Text('Open $text?'),
-                  children: [
-                    SimpleDialogOption(
-                      onPressed: () => Navigator.pop(bc, true),
-                      child: const Text('Yes!'),
-                    ),
-                    SimpleDialogOption(
-                      onPressed: () => Navigator.pop(bc, false),
-                      child: const Text('No! Take me back!'),
-                    ),
-                    SimpleDialogOption(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: href));
-                        Navigator.pop(bc, false);
-                      },
-                      child: const Text('Copy link to clipboard'),
-                    )
-                  ],
-                ),
-              );
-              if (answer ?? false) launch(href);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('$text could not be opened'),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: theme.errorColor,
-              ));
-            }
-          },
-        ),
-      );
-    }, [expr, scale, theme.hashCode]);
+    final style = MarkdownStyleSheet.fromTheme(theme).copyWith(
+      blockquoteDecoration: BoxDecoration(
+        color: theme.cardColor,
+        border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
+      ),
+      textScaleFactor: scale,
+      blockSpacing: 12 * scale,
+      listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
+      code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
+    );
+    return Consumer(
+      builder: (bc, watch, _) => CustomMarkdownBody(
+        expr,
+        scale: scale,
+        style: style,
+        nativeParse: watch(pNativeParsing).state,
+        onTapLink: (text, href, title) async {
+          if (href == null) return;
+          if (href.startsWith('#')) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Header links are not supported'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.orangeAccent,
+            ));
+            return;
+          }
+          if (await canLaunch(href)) {
+            final answer = await showDialog<bool>(
+              context: context,
+              builder: (bc) => SimpleDialog(
+                title: Text('Open $text?'),
+                children: [
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.pop(bc, true),
+                    child: const Text('Yes!'),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.pop(bc, false),
+                    child: const Text('No! Take me back!'),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: href));
+                      Navigator.pop(bc, false);
+                    },
+                    child: const Text('Copy link to clipboard'),
+                  )
+                ],
+              ),
+            );
+            if (answer ?? false) launch(href);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('$text could not be opened'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: theme.errorColor,
+            ));
+          }
+        },
+      ),
+    );
   }
 }
 

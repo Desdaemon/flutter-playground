@@ -45,7 +45,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   final String boxid;
   final String prefname;
   final String untitled;
-  Timer? timer;
+  Timer timer = Timer(Duration.zero, () {});
   bool firstrun = true;
 
   String get activepathid => 'right_$boxid';
@@ -117,9 +117,9 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
 
   /// Sets the contents of the current active file.
   void updateActive(String contents) {
-    timer?.cancel();
+    timer.cancel();
     final active = state.active;
-    timer = Timer(const Duration(milliseconds: 300), () {
+    timer = Timer(const Duration(milliseconds: 100), () {
       state = state.copyWith(files: {
         for (final en in state.files.entries)
           if (en.key == active) active: contents else en.key: en.value,
@@ -157,11 +157,5 @@ extension ScreenModeX on ScreenMode {
       case ScreenMode.sbs:
         return 'Side-by-side';
     }
-  }
-}
-
-extension Merge<K, V> on Map<K, V> {
-  Map<K, V> merge(Map<K, V> other) {
-    return {for (final en in entries) en.key: en.value, for (final en in other.entries) en.key: en.value};
   }
 }
