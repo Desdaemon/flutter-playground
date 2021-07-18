@@ -5,7 +5,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,74 +13,91 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yata_flutter/ffi.dart';
 import 'package:yata_flutter/state/markdown.dart';
 
-final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
-md.Node handleNode(dynamic json, [int alignment = 0]) {
-  if (json is String) {
-    final match = mathre.matchAsPrefix(json);
-    if (match != null) {
-      final output = md.Element.text('math', match[1]!);
-      if (match[2]!.isEmpty) {
-        output.attributes['text'] = '';
+/// Allows a Map to pretend to be an [md.Element] without having
+/// to deserialize into a proper element type.
+class JSONElement extends md.Element {
+  final Map<String, dynamic> json;
+  final int alignment;
+  List<md.Node>? _children;
+  static final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
+
+  JSONElement(this.json, {this.alignment = 1}) : super.empty(json['t'] as String) {
+    if (tag == 'table') {
+      final c = json['c'] as List<dynamic>;
+      final aligns = json['align'] as List<dynamic>;
+      _children = [];
+      for (var i = 0; i < _children!.length; ++i) {
+        _children!.add(JSONElement(
+          c[i] as Map<String, dynamic>,
+          alignment: aligns.length - 1 < i ? 0 : aligns[i] as int,
+        ));
       }
-      return output;
+      return;
     }
-    return md.Text(json);
-  }
-  final type = json['t'] as String;
-  if (type == 'table') {
-    final aligns = json['align'] as List<dynamic>;
-    final _children = json['c'] as List<dynamic>;
-    final outChildren = <md.Node>[];
-    for (var i = 0; i < _children.length; i++) {
-      outChildren.add(handleNode(_children[i], aligns.length - 1 < i ? 0 : aligns[i] as int));
+    switch (tag) {
+      case 'ol':
+        attributes['start'] = json['start'].toString();
+        break;
+      case 'a':
+        attributes['href'] = json['href'] as String;
+        if (isEmpty) _children = [md.Text(json['href'] as String)];
+        break;
+      case 'checkbox':
+        attributes['type'] = 'checkbox';
+        attributes['checked'] = json['value'] as String;
+        break;
+      case 'img':
+        attributes['src'] = json['href'] as String;
+        break;
+      case 'td':
+      case 'th':
+        String style = 'text-align: left';
+        switch (alignment) {
+          case 2:
+            style = 'text-align: center';
+            break;
+          case 3:
+            style = 'text-align: right';
+            break;
+          default:
+            break;
+        }
+        attributes['style'] = style;
+        break;
+      case 'pre':
+        _children = [md.Text((json['c'] as List<dynamic>).join())];
+        break;
+      case 'code':
+        _children = [md.Text(json['value'] as String)];
+        break;
     }
-    return md.Element('table', outChildren);
   }
-  List<md.Node> children() => (json['c'] as List<dynamic>?)?.map((e) => handleNode(e, alignment)).toList() ?? const [];
-  switch (type) {
-    case 'ol':
-      return md.Element('ol', children())..attributes['start'] = json['start'].toString();
-    case 'a':
-      final _children = children();
-      if (_children.isEmpty) _children.add(md.Text(json['href'] as String));
-      return md.Element('a', _children)..attributes['href'] = json['href'] as String;
-    case 'checkbox':
-      return md.Element.empty('checkbox')
-        ..attributes['type'] = 'checkbox'
-        ..attributes['checked'] = json['value'] as String;
-    case 'img':
-      return md.Element.empty('img')..attributes['src'] = json['href'] as String;
-    case 'td':
-    case 'th':
-      String? style;
-      switch (alignment) {
-        case 1:
-          style = 'text-align: left';
-          break;
-        case 2:
-          style = 'text-align: center';
-          break;
-        case 3:
-          style = 'text-align: right';
-          break;
-        default:
-          break;
+
+  static md.Node fromStrOrMap(dynamic json) {
+    if (json is String) {
+      final match = mathre.matchAsPrefix(json);
+      if (match != null) {
+        final output = md.Element.text('math', match[1]!);
+        if (match[2]!.isEmpty) {
+          output.attributes['text'] = '';
+        }
+        return output;
       }
-      final output = md.Element(type, children());
-      if (style != null) {
-        output.attributes['style'] = style;
-      }
-      return output;
-    case 'pre':
-      return md.Element.text('pre', (json['c'] as List<dynamic>).join());
-    case 'code':
-      return md.Element.text('code', json['value'] as String);
-    default:
-      return md.Element(type, children());
+      return md.Text(json);
+    }
+    return JSONElement(json as Map<String, dynamic>);
   }
+
+  /// The final piece of the puzzle: caching [_children]
+  /// helps improve build times by a f_ck-ton.
+  @override
+  List<md.Node>? get children => _children ??= (json['c'] as List<dynamic>?)?.map(JSONElement.fromStrOrMap).toList();
+
+  @override
+  bool get isEmpty => (children ?? json['c'] as List<dynamic>?)?.isEmpty ?? true;
 }
 
-class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
+class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDelegate {
   final String data;
   final double scale;
   final MarkdownStyleSheet style;
@@ -106,15 +122,22 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
     );
     List<md.Node> nodes;
+    final st = Stopwatch()..start();
     if (nativeParse) {
       final document = md.Document(
-          inlineSyntaxes: [MathSyntax.instance], extensionSet: md.ExtensionSet.gitHubWeb, encodeHtml: false);
+        inlineSyntaxes: [MathSyntax.instance],
+        extensionSet: md.ExtensionSet.gitHubWeb,
+        encodeHtml: false,
+      );
       final lines = const LineSplitter().convert(data);
       nodes = document.parseLines(lines);
     } else {
-      nodes = parseNodes(data).map(handleNode).toList();
+      nodes = parseNodes(data).map(JSONElement.fromStrOrMap).toList(growable: false);
     }
+    final t0 = st.elapsed;
     final children = mdBuilder.build(nodes);
+    final t1 = st.elapsed - t0;
+    if (kDebugMode) print('Native: $nativeParse; Parse: $t0; Build: $t1; Took: ${st.elapsed}');
     return Column(children: children);
   }
 
@@ -131,15 +154,15 @@ class CustomMarkdownBody extends HookWidget implements MarkdownBuilderDelegate {
   }
 }
 
-class MarkdownPreview extends HookWidget {
-  const MarkdownPreview({Key? key, required this.expr, this.scale = 1, this.selectable = false}) : super(key: key);
+class MarkdownPreview extends StatelessWidget {
+  final String expr;
 
   // final ScrollController? sc;
-  final String expr;
   final double scale;
 
   /// Disabled by default due to high performance impact
   final bool selectable;
+  const MarkdownPreview({Key? key, required this.expr, this.scale = 1, this.selectable = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +170,7 @@ class MarkdownPreview extends HookWidget {
     final style = MarkdownStyleSheet.fromTheme(theme).copyWith(
       blockquoteDecoration: BoxDecoration(
         color: theme.cardColor,
-        border: Border(left: BorderSide(color: theme.accentColor, width: 4)),
+        border: Border(left: BorderSide(color: theme.colorScheme.secondary, width: 4)),
       ),
       textScaleFactor: scale,
       blockSpacing: 12 * scale,
@@ -209,8 +232,8 @@ class MarkdownPreview extends HookWidget {
 }
 
 class MathBuilder extends MarkdownElementBuilder {
-  MathBuilder({this.scale = 1});
   final double scale;
+  MathBuilder({this.scale = 1});
 
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
@@ -231,8 +254,8 @@ class MathBuilder extends MarkdownElementBuilder {
 }
 
 class MathSyntax extends md.InlineSyntax {
-  MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
   static final instance = MathSyntax();
+  MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
   @override
   bool onMatch(md.InlineParser parser, Match match) {
     final elem = md.Element.text('math', match[1]!);
