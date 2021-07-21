@@ -30,6 +30,7 @@ dependencies:
   url_launcher: ^6.0.2
   ffi: ^1.0.0
   xml: ^5.1.2
+  protobuf: ^2.0.0
 dev_dependencies:
   ffigen:
   build_runner:

@@ -14,6 +14,7 @@ use std::{
 };
 
 pub mod impls;
+mod protos;
 pub mod slice;
 
 /// Parses a Markdown string and returns a JSON string of the AST.

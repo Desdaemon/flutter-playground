@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 pulldown-cmark = {version = "*", default_features = false, features = ["simd"]}
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
+protobuf = "*"
 
 [build-dependencies]
-cbindgen = "*"
+protoc-rust = "2.0"
