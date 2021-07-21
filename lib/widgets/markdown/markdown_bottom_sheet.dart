@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:yata_flutter/helpers/utils.dart';
 import 'package:yata_flutter/state/dark.dart';
 import 'package:yata_flutter/state/markdown.dart';
-import 'package:path/path.dart' as p;
 
 class MarkdownBottomSheet extends StatelessWidget {
   const MarkdownBottomSheet({

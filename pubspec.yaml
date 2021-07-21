@@ -5,6 +5,7 @@ version: 1.0.0+1
 environment:
   sdk: ">=2.13.0 <3.0.0"
 dependencies:
+  freezed_annotation:
   file_picker: ^3.0.0
   file_saver: ^0.0.4
   filesystem_picker: 2.0.0-nullsafety.0
@@ -14,7 +15,9 @@ dependencies:
     sdk: flutter
   flutter_hooks: ^0.17.0
   flutter_markdown: ^0.6.0
-  flutter_math_fork: ^0.3.0+2
+  # flutter_math_fork: ^0.3.0+2
+  flutter_math_fork:
+    path: ../flutter_math_fork
   flutter_riverpod: ^0.14.0
   hive: ^2.0.0
   hive_flutter: ^1.0.0
@@ -26,14 +29,18 @@ dependencies:
   permission_handler: ^8.1.1
   url_launcher: ^6.0.2
   ffi: ^1.0.0
+  xml: ^5.1.2
 dev_dependencies:
-  build_runner: ^2.0.5
+  ffigen:
+  build_runner:
+  freezed:
   flutter_test:
     sdk: flutter
   hive_generator: ^1.0.0
   json_serializable: ^4.0.0
   lint: ^1.5.3
   linter: ^1.0.0
+  json_diff: ^0.2.0
 flutter:
   uses-material-design: true
   assets:
@@ -44,3 +51,12 @@ flutter:
         - asset: assets/fonts/JetBrainsMono-Regular.ttf
         - asset: assets/fonts/JetBrainsMono-Italic.ttf
           style: italic
+ffigen:
+  name: MarkdownRust
+  description: Bindings to the Rust library
+  output: lib/bindings.dart
+  llvm-path:
+    - ./
+  headers:
+    entry-points:
+      - bindings.h

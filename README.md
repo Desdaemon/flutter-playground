@@ -2,14 +2,7 @@
 
 Flutter Playground.
 
-## Building native libraries (Android)
+## Instructions
 
-    # Setup toolchain
-    cargo install cargo-ndk
-    rustup target add \
-        aarch64-linux-android \
-        armv7-linux-androideabi \
-        x86_64-linux-android \
-        i686-linux-android
-    # Emit JNI libraries
-    cargo ndk -t armeabi-v7a -t arm64-v8a -o android/app/src/main/jniLibs build --release
+Clone this repo and run `make init` to setup the toolchain.
+You should have Android NDK installed and visible at `ANDROID_NDK_HOME`.

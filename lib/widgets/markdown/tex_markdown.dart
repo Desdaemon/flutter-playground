@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,11 +8,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:flutter_math_fork/tex.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yata_flutter/ffi.dart';
 import 'package:yata_flutter/state/markdown.dart';
+// import 'package:yata_flutter/types/node.dart';
 
 /// Allows a Map to pretend to be an [md.Element] without having
 /// to deserialize into a proper element type.
@@ -20,18 +24,30 @@ class JSONElement extends md.Element {
   final int alignment;
   List<md.Node>? _children;
   static final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
+  // static final cache = HashMap<int, List<md.Node>?>();
+  static void clearCache() {
+    // cache.clear();
+  }
+
+  // @override
+  // int get hashCode => runtimeType.hashCode ^ alignment.hashCode ^ const DeepCollectionEquality().hash(json);
+
+  // @override
+  // bool operator ==(Object other) => other is JSONElement && other.hashCode == hashCode;
 
   JSONElement(this.json, {this.alignment = 1}) : super.empty(json['t'] as String) {
+    // final _hash = hashCode;
     if (tag == 'table') {
       final c = json['c'] as List<dynamic>;
       final aligns = json['align'] as List<dynamic>;
-      _children = [];
-      for (var i = 0; i < _children!.length; ++i) {
+      _children = <md.Node>[];
+      for (var i = 0; i < c.length; ++i) {
         _children!.add(JSONElement(
           c[i] as Map<String, dynamic>,
           alignment: aligns.length - 1 < i ? 0 : aligns[i] as int,
         ));
       }
+      // cache[_hash] = _children;
       return;
     }
     switch (tag) {
@@ -88,8 +104,6 @@ class JSONElement extends md.Element {
     return JSONElement(json as Map<String, dynamic>);
   }
 
-  /// The final piece of the puzzle: caching [_children]
-  /// helps improve build times by a f_ck-ton.
   @override
   List<md.Node>? get children => _children ??= (json['c'] as List<dynamic>?)?.map(JSONElement.fromStrOrMap).toList();
 
@@ -102,10 +116,17 @@ class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDeleg
   final double scale;
   final MarkdownStyleSheet style;
   final bool nativeParse;
+  // final bool cache;
   final void Function(String, String?, String)? onTapLink;
-  const CustomMarkdownBody(this.data,
-      {Key? key, this.scale = 1, this.onTapLink, required this.style, this.nativeParse = true})
-      : super(key: key);
+  const CustomMarkdownBody(
+    this.data, {
+    Key? key,
+    // this.cache = true,
+    this.scale = 1,
+    this.onTapLink,
+    required this.style,
+    this.nativeParse = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +142,7 @@ class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDeleg
       builders: {'math': MathBuilder(scale: scale)},
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
     );
-    List<md.Node> nodes;
+    final List<md.Node> nodes;
     final st = Stopwatch()..start();
     if (nativeParse) {
       final document = md.Document(
@@ -132,12 +153,12 @@ class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDeleg
       final lines = const LineSplitter().convert(data);
       nodes = document.parseLines(lines);
     } else {
-      nodes = parseNodes(data).map(JSONElement.fromStrOrMap).toList(growable: false);
+      nodes = parseNodes(data).map(/** cache ? Node.fromJson : */ JSONElement.fromStrOrMap).toList(growable: false);
     }
     final t0 = st.elapsed;
     final children = mdBuilder.build(nodes);
     final t1 = st.elapsed - t0;
-    if (kDebugMode) print('Native: $nativeParse; Parse: $t0; Build: $t1; Took: ${st.elapsed}');
+    print('${nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
     return Column(children: children);
   }
 
@@ -183,6 +204,7 @@ class MarkdownPreview extends StatelessWidget {
         scale: scale,
         style: style,
         nativeParse: watch(pNativeParsing).state,
+        // cache: watch(pCache).state,
         onTapLink: (text, href, title) async {
           if (href == null) return;
           if (href.startsWith('#')) {
@@ -234,14 +256,32 @@ class MarkdownPreview extends StatelessWidget {
 class MathBuilder extends MarkdownElementBuilder {
   final double scale;
   MathBuilder({this.scale = 1});
+  static final cache = HashMap<String, List<GreenNode>>();
 
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
     final textMode = element.attributes.containsKey('text');
-    final child = SingleChildScrollView(
-      child: Math.tex(
+    List<GreenNode>? ast;
+    ParseException? exception;
+
+    try {
+      ast = cache[tex] ??= TexParser(
         tex,
+        textMode ? const TexParserSettings() : const TexParserSettings(displayMode: true),
+      ).parseExpression();
+    } on ParseException catch (e) {
+      ast = null;
+      cache.remove(tex);
+      exception = e;
+    } catch (e) {
+      rethrow;
+    }
+
+    final child = SingleChildScrollView(
+      child: Math(
+        ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
+        parseError: exception,
         mathStyle: textMode ? MathStyle.text : MathStyle.display,
         textScaleFactor: scale,
         onErrorFallback: (e) {

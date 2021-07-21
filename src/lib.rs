@@ -1,17 +1,75 @@
-use pulldown_cmark::{escape::escape_href, Alignment, Event, Options, Parser, Tag};
+use crate::slice::rust_slice_to_c;
+use crate::slice::Slice;
+use impls::{
+    ast::{parse_elements, Element, HtmlTag, Tags, TextAlign},
+    json::parse_json,
+};
+use pulldown_cmark::{html::push_html, Options, Parser};
+use slice::free_slice;
+use std::ffi::{c_void, NulError};
+use std::ptr::null_mut;
 use std::{
     ffi::{CStr, CString},
     os::raw::c_char,
 };
 
+pub mod impls;
+pub mod slice;
+
+/// Parses a Markdown string and returns a JSON string of the AST.
+/// The returned pointer should be freed by [free_string].
 #[no_mangle]
 pub extern "C" fn parse_markdown(ptr: *const c_char) -> *mut c_char {
     let cstr = unsafe { CStr::from_ptr(ptr) };
-    let parser = Parser::new_ext(cstr.to_str().unwrap(), Options::all());
-    let buf = parse_json(parser);
-    let cstr = unsafe { CString::from_vec_unchecked(buf.into()) };
-    cstr.into_raw()
+    let string = cstr.to_str().unwrap();
+    let parser = Parser::new_ext(string, Options::all());
+    let buf = parse_json(parser, Some(string.len()));
+    match CString::new(buf) {
+        Ok(cstr) => cstr.into_raw(),
+        Err(_) => null_mut(),
+    }
 }
+
+/// Parses a Markdown string and returns HTML.
+/// The returned pointer should be freed by [free_string].
+#[no_mangle]
+pub extern "C" fn parse_markdown_xml(ptr: *const c_char) -> *mut c_char {
+    let cstr = unsafe { CStr::from_ptr(ptr) };
+    let parser = Parser::new_ext(cstr.to_str().unwrap(), Options::all());
+    let mut buf = String::new();
+    push_html(&mut buf, parser);
+    match CString::new(buf) {
+        Ok(cstr) => cstr.into_raw(),
+        Err(_) => null_mut(),
+    }
+}
+
+/// Parses a Markdown string and returns a list of [CElement]s.
+/// The returned pointer should be freed by [free_elements].
+#[no_mangle]
+pub extern "C" fn parse_markdown_ast(ptr: *const c_char) -> *mut Slice<CElement> {
+    let cstr = unsafe { CStr::from_ptr(ptr) };
+    let parser = Parser::new_ext(cstr.to_str().unwrap(), Options::all());
+    let ast = parse_elements(parser);
+    let slice = ast.into_iter().map(From::from).collect::<Box<[_]>>();
+    rust_slice_to_c(slice)
+}
+#[no_mangle]
+pub extern "C" fn free_elements(ptr: *mut Slice<CElement>) {
+    free_slice(ptr);
+}
+
+/// Similar to [parse_markdown], but uses the algorithm from [parse_markdown_ast].
+/// The returned pointer should be freed by [free_string].
+#[no_mangle]
+pub extern "C" fn parse_markdown_ast_json(ptr: *const c_char) -> *mut c_char {
+    let cstr = unsafe { CStr::from_ptr(ptr) };
+    let parser = Parser::new_ext(cstr.to_str().unwrap(), Options::all());
+    let ast = parse_elements(parser);
+    let json = serde_json::to_string(&ast).unwrap();
+    CString::new(json).unwrap().into_raw()
+}
+
 #[no_mangle]
 pub extern "C" fn free_string(ptr: *mut c_char) {
     if ptr.is_null() {
@@ -21,124 +79,120 @@ pub extern "C" fn free_string(ptr: *mut c_char) {
         CString::from_raw(ptr);
     }
 }
-fn parse_json(parser: Parser<'_>) -> String {
-    let mut buf = String::new();
-    buf.push('[');
-    let mut in_header = false;
-    let mut in_text = false;
-    for event in parser {
-        match event {
-            Event::Text(text) => {
-                if in_text {
-                    buf.push_str(text.escape_debug().to_string().as_str());
-                } else {
-                    buf.push_str(format!(r#","{}"#, text.escape_debug()).as_str());
-                    in_text = true;
-                }
-            }
-            other => {
-                if in_text {
-                    buf.push('"');
-                    in_text = false;
-                }
-                match other {
-                    Event::Start(tag) => match tag {
-                        Tag::Paragraph => buf.push_str(r#",{"t":"p","c":["#),
-                        Tag::Heading(lvl) => {
-                            buf.push_str(format!(r#",{{"t":"h{}","c":["#, lvl).as_str())
-                        }
-                        Tag::BlockQuote => buf.push_str(r#",{"t":"blockquote","c":["#),
-                        Tag::CodeBlock(lang) => match lang {
-                            pulldown_cmark::CodeBlockKind::Indented => {
-                                buf.push_str(r#",{"t":"pre","indent":true,"c":["#)
-                            }
-                            pulldown_cmark::CodeBlockKind::Fenced(lang) => buf.push_str(
-                                format!(r#",{{"t":"pre","indent":false,"lang":"{}","c":["#, lang)
-                                    .as_str(),
-                            ),
-                        },
-                        Tag::List(index) => match index {
-                            Some(num) => {
-                                buf.push_str(
-                                    format!(r#",{{"t":"ol","start":{},"c":["#, num).as_str(),
-                                );
-                            }
-                            None => {
-                                buf.push_str(r#",{"t":"ul","c":["#);
-                            }
-                        },
-                        Tag::Item => buf.push_str(r#",{"t":"li","c":["#),
-                        Tag::Table(aligns) => {
-                            buf.push_str(r#",{"t":"table","align":["#);
-                            for e in &aligns {
-                                match e {
-                                    Alignment::None => buf.push_str(",0"),
-                                    Alignment::Left => buf.push_str(",1"),
-                                    Alignment::Center => buf.push_str(",2"),
-                                    Alignment::Right => buf.push_str(",3"),
-                                }
-                            }
-                            buf.push_str(r#"],"c":["#);
-                        }
-                        Tag::TableHead => {
-                            buf.push_str(r#",{"t":"tr","c":["#);
-                            in_header = true;
-                        }
-                        Tag::TableRow => buf.push_str(r#",{"t":"tr","c":["#),
-                        Tag::TableCell => {
-                            if in_header {
-                                buf.push_str(r#",{"t":"th","c":["#);
-                            } else {
-                                buf.push_str(r#",{"t":"td","c":["#);
-                            }
-                        }
-                        Tag::Emphasis => buf.push_str(r#",{"t":"em","c":["#),
-                        Tag::Strong => buf.push_str(r#",{"t":"strong","c":["#),
-                        Tag::Strikethrough => buf.push_str(r#",{"t":"s","c":["#),
-                        Tag::Link(_, href, _) => {
-                            let mut escaped = String::new();
-                            escape_href(&mut escaped, &href).unwrap();
-                            buf.push_str(
-                                format!(r#",{{"t":"a","href":"{}","c":["#, escaped,).as_str(),
-                            );
-                        }
-                        Tag::Image(_, href, _) => {
-                            let mut escaped = String::new();
-                            escape_href(&mut escaped, &href).unwrap();
-                            buf.push_str(
-                                format!(r#",{{"t":"img","href":"{}","c":["#, escaped,).as_str(),
-                            );
-                        }
-                        // TODO: Implement FootnoteDefinition
-                        //Tag::FootnoteDefinition(_) => {}
-                        _ => {}
-                    },
-                    Event::End(tag) => match tag {
-                        Tag::TableHead => {
-                            in_header = false;
-                            buf.push_str(r#"]}"#);
-                        }
-                        _ => buf.push_str(r#"]}"#),
-                    },
-                    Event::Code(text) => {
-                        buf.push_str(
-                            format!(
-                                r#",{{"t":"code","value":"{}"}}"#,
-                                text.replace("\\", "\\\\")
-                            )
-                            .as_str(),
-                        );
-                    }
-                    Event::SoftBreak | Event::HardBreak => buf.push_str(",\"\\n\""),
-                    Event::Rule => buf.push_str(r#",{"t":"hr"}"#),
-                    Event::TaskListMarker(checked) => buf
-                        .push_str(format!(r#",{{"t":"checkbox","value":"{}"}}"#, checked).as_str()),
-                    //Event::FootnoteReference(_) => {}
-                    _ => {}
-                };
-            }
+
+#[repr(C)]
+pub enum CTag {
+    Text,
+    Tag,
+}
+
+/// Dart does not support enum strcts (20210721),
+/// so we have to create an adapter struct like this.
+#[repr(C)]
+pub struct CElement(CTag, *mut c_void);
+impl Drop for CElement {
+    fn drop(&mut self) {
+        match self.0 {
+            CTag::Text => free_string(self.1.cast::<c_char>()),
+            CTag::Tag => unsafe {
+                Box::from_raw(self.1.cast::<CHtmlTag>());
+            },
         }
     }
-    buf.push(']');
-    buf.replace("[,", "[")
+}
+#[no_mangle]
+pub extern "C" fn as_text(el: *mut CElement) -> *mut c_char {
+    unsafe {
+        match el.as_mut() {
+            Some(CElement(CTag::Text, text)) => (*text) as *mut c_char,
+            _ => null_mut(),
+        }
+    }
+}
+#[no_mangle]
+pub extern "C" fn as_tag(el: *mut CElement) -> *mut CHtmlTag {
+    unsafe {
+        match el.as_mut() {
+            Some(CElement(CTag::Tag, tag)) => (*tag) as *mut CHtmlTag,
+            _ => null_mut(),
+        }
+    }
+}
+
+impl From<Element> for CElement {
+    fn from(item: Element) -> Self {
+        match item {
+            Element::Text(string) => CElement(
+                CTag::Text,
+                CString::new(string).unwrap().into_raw().cast::<c_void>(),
+            ),
+            Element::Tag(tag) => CElement(
+                CTag::Tag,
+                Box::into_raw(Box::new(CHtmlTag::from(tag))).cast::<c_void>(),
+            ),
+        }
+    }
+}
+
+/// FFI-compatible adapter for [HtmlTag].
+#[repr(C)]
+pub struct CHtmlTag {
+    /// HTML tag.
+    t: Tags,
+    /// List of children.
+    c: *mut Slice<CElement>,
+    /// empty or 'text-align: left|center|right'
+    style: TextAlign,
+    /// image src
+    src: *mut c_char,
+    /// anchor href
+    href: *mut c_char,
+    /// for checkbox only
+    typ: *mut c_char,
+    /// for checkbox only
+    checked: *mut c_char,
+}
+impl Drop for CHtmlTag {
+    /// TODO: This is very error prone and will break when
+    /// fields are added. The compiler will check for most
+    /// of these, but it cannot check if you have added new fields.
+    /// that might need customized destructors.
+    fn drop(&mut self) {
+        free_elements(self.c);
+        free_string(self.src);
+        free_string(self.href);
+        free_string(self.typ);
+        free_string(self.checked);
+    }
+}
+
+fn mut_ptr_from<'a>(string: Option<String>) -> Result<*mut c_char, NulError> {
+    let ret = match string {
+        Some(string) => CString::new(string)?.into_raw(),
+        None => null_mut(),
+    };
+    Ok(ret)
+}
+
+impl From<HtmlTag> for CHtmlTag {
+    /// This function comprises of a lot of forgets.
+    /// For each call to [rust_slice_to_c] or [mut_ptr_from],
+    /// we need to add a respective destructor of [free_slice] and [free_string],
+    /// which has been done for CHtmlTag.
+    fn from(item: HtmlTag) -> Self {
+        CHtmlTag {
+            t: item.t,
+            c: match item.c {
+                Some(item) => {
+                    rust_slice_to_c(item.into_iter().map(From::from).collect::<Box<[_]>>())
+                }
+                None => null_mut(),
+            },
+            style: item.style.unwrap_or(TextAlign::None),
+            href: mut_ptr_from(item.href).unwrap(),
+            typ: mut_ptr_from(item.typ.map(String::from)).unwrap(),
+            checked: mut_ptr_from(item.checked.map(String::from)).unwrap(),
+            src: mut_ptr_from(item.src).unwrap(),
+        }
+    }
 }

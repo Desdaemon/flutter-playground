@@ -48,3 +48,6 @@ app.*.map.json
 
 *.html
 target
+
+# Symlink to LLVM
+lib/libclang.so

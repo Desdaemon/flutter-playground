@@ -93,9 +93,9 @@ class Editor extends StatelessWidget {
         scrollController: scrollController,
         decoration: const InputDecoration.collapsed(hintText: null),
         controller: ctl,
-        style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+        style: TextStyle(fontFamily: fontFamily, fontSize: fontSize, height: 1.4),
         onChanged: onChange,
-        inputFormatters: [/* LastKey(),  */ PairAdder()],
+        inputFormatters: [/* LastKey(),  PairAdder(), */ PairRemover()],
       ),
     );
   }
@@ -112,14 +112,18 @@ class LastKey extends TextInputFormatter {
     final neo = newValue.text.length;
     delta = neo - old;
     lastValue = delta > 0 ? newValue.text.substring(old) : oldValue.text.substring(neo);
-    // print('LastKey(delta: $delta lastValue: $lastValue)');
     return newValue;
   }
 }
 
-class PairAdder extends TextInputFormatter {
-  static const pairs = {'(': ')', '{': '}', '[': ']'};
+const pairs = {"(": ")", "{": "}", "[": "]", '"': '"', '`': '`'};
+const reversed = {
+  ")": "(",
+  "}": "{",
+  "]": "[",
+};
 
+class PairAdder extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) return newValue;
@@ -140,5 +144,51 @@ class PairAdder extends TextInputFormatter {
     final inner = newValue.text.substring(sel.start, sel.end);
     final post = newValue.text.substring(sel.end);
     return newValue.copyWith(text: '$pre$inner$pair$post');
+  }
+}
+
+class PairRemover extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final o = oldValue.text;
+    final n = newValue.text;
+    final sn = newValue.selection;
+    if (o.length - n.length != 1 || n.isEmpty) return newValue;
+
+    final pairLeft = o[sn.start];
+    final pairRight = n.substring(sn.start).characters.take(1);
+    if (pairs[pairLeft] == pairRight.toString()) {
+      return newValue.copyWith(
+          text: '${n.substring(0, sn.start)}${n.substring(sn.start).characters.skip(1).toString()}');
+    }
+    return newValue;
+  }
+}
+
+class PairSkipper extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final o = oldValue.text;
+    final n = newValue.text;
+    final so = oldValue.selection;
+    if (n.length - o.length != 1) return newValue;
+
+    final pairRight = n[so.start];
+    final pairLeft = reversed[pairRight];
+    if (pairLeft == null) return newValue;
+
+    return oldValue.copyWith(selection: oldValue.selection.copyWith(baseOffset: oldValue.selection.baseOffset + 1));
+
+    // final iter = o.substring(0, so.start).characters.iteratorAtEnd;
+    // final pairLeftFound = iter.expandBackTo(pairLeft.characters);
+    // if (!pairLeftFound) return newValue;
+    // return newValue;
+
+    // var nested = pairRight.allMatches(iter.current).length;
+    // while (nested-- > 0) {
+    // iter.expandBackTo(pairLeft.characters);
+    // }
+    // print([pairLeft, pairRight, iter.current, pairLeftFound].join(';'));
+    // return newValue;
   }
 }

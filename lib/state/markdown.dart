@@ -12,6 +12,7 @@ final pNativeParsing = StateProvider((_) => false);
 final pScale = StateProvider((_) => 1.0);
 final pIndents = StateProvider((_) => 2);
 final pTicker = StateProvider((_) => '');
+final pCache = StateProvider((_) => true);
 
 /// The directory of files and its interim contents.
 final pFiles =
@@ -119,7 +120,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   void updateActive(String contents) {
     timer.cancel();
     final active = state.active;
-    timer = Timer(const Duration(milliseconds: 100), () {
+    timer = Timer(const Duration(milliseconds: 300), () {
       state = state.copyWith(files: {
         for (final en in state.files.entries)
           if (en.key == active) active: contents else en.key: en.value,

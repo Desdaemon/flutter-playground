@@ -162,6 +162,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  diff_match_patch:
+    dependency: transitive
+    description:
+      name: diff_match_patch
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   fake_async:
     dependency: transitive
     description:
@@ -176,6 +183,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.2"
+  ffigen:
+    dependency: "direct dev"
+    description:
+      name: ffigen
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.0"
   file:
     dependency: transitive
     description:
@@ -238,9 +252,9 @@ packages:
   flutter_math_fork:
     dependency: "direct main"
     description:
-      name: flutter_math_fork
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../flutter_math_fork"
+      relative: true
+    source: path
     version: "0.3.3+1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
@@ -273,8 +287,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freezed:
+    dependency: "direct dev"
+    description:
+      name: freezed
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.14.2"
   freezed_annotation:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: freezed_annotation
       url: "https://pub.dartlang.org"
@@ -371,6 +392,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.1"
+  json_diff:
+    dependency: "direct dev"
+    description:
+      name: json_diff
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.0"
   json_serializable:
     dependency: "direct dev"
     description:
@@ -783,7 +811,7 @@ packages:
     source: hosted
     version: "0.2.0"
   xml:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: xml
       url: "https://pub.dartlang.org"

@@ -1,0 +1,3 @@
+language = "C"
+include_version = true
+no_includes = true

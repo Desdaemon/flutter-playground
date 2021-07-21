@@ -1,0 +1,550 @@
+<ul>
+<li><a href="#markdown-cheat-sheet">Markdown Cheat Sheet</a>
+<ul>
+<li><a href="#headings">Headings</a></li>
+</ul>
+</li>
+<li><a href="#heading-1">Heading 1</a>
+<ul>
+<li><a href="#heading-2">Heading 2</a>
+<ul>
+<li><a href="#heading-3">Heading 3</a>
+<ul>
+<li><a href="#heading-4">Heading 4</a>
+<ul>
+<li><a href="#heading-5">Heading 5</a>
+<ul>
+<li><a href="#heading-6">Heading 6</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#paragraphs">Paragraphs</a></li>
+<li><a href="#formatting">Formatting</a></li>
+<li><a href="#lists">Lists</a>
+<ul>
+<li><a href="#unordered-list">Unordered List</a></li>
+<li><a href="#ordered-list">Ordered List</a></li>
+</ul>
+</li>
+<li><a href="#tables">Tables</a></li>
+<li><a href="#blockquotes">Blockquotes</a></li>
+<li><a href="#code-blocks">Code blocks</a>
+<ul>
+<li><a href="#code-spans">Code spans</a></li>
+<li><a href="#fenced-code-blocks">Fenced code blocks</a></li>
+<li><a href="#indented-code-blocks">Indented code blocks</a></li>
+</ul>
+</li>
+<li><a href="#comments">Comments</a></li>
+<li><a href="#links">Links</a>
+<ul>
+<li><a href="#autolinks">Autolinks</a></li>
+<li><a href="#text-links">Text Links</a></li>
+<li><a href="#picture-links">Picture Links</a></li>
+</ul>
+</li>
+<li><a href="#emojis">Emojis</a></li>
+</ul>
+</li>
+<li><a href="#tex-cheat-sheet">TeX Cheat Sheet</a>
+<ul>
+<li><a href="#inline-math-and-math-block">Inline Math and Math Block</a></li>
+<li><a href="#accents">Accents</a></li>
+<li><a href="#delimiters">Delimiters</a>
+<ul>
+<li><a href="#delimiter-sizing">Delimiter Sizing</a></li>
+</ul>
+</li>
+<li><a href="#environments">Environments</a></li>
+<li><a href="#letters-and-unicode">Letters and Unicode</a>
+<ul>
+<li><a href="#greek-letters">Greek Letters</a></li>
+<li><a href="#other-letters">Other Letters</a></li>
+</ul>
+</li>
+<li><a href="#layout">Layout</a>
+<ul>
+<li><a href="#vertical-layout">Vertical Layout</a></li>
+<li><a href="#overlap-and-spacing">Overlap and Spacing</a>
+<ul>
+<li><a href="#spacing">Spacing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#logic-and-set-theory">Logic and Set Theory</a></li>
+<li><a href="#operators">Operators</a>
+<ul>
+<li><a href="#big-operators">Big Operators</a></li>
+<li><a href="#binary-operators">Binary Operators</a></li>
+<li><a href="#fractions-and-binomials">Fractions and Binomials</a></li>
+<li><a href="#math-operators">Math Operators</a></li>
+<li><a href="#sqrt">\sqrt</a></li>
+</ul>
+</li>
+<li><a href="#relations-building_construction">Relations :building_construction:</a></li>
+<li><a href="#special-notation-building_construction">Special Notation :building_construction:</a></li>
+<li><a href="#symbols-and-punctuation-building_construction">Symbols and Punctuation :building_construction:</a></li>
+<li><a href="#units-building_construction">Units :building_construction:</a></li>
+</ul>
+</li>
+<li><a href="#appendix">Appendix</a></li>
+</ul>
+<h1>Markdown Cheat Sheet</h1>
+<h2>Headings</h2>
+<h1>Heading 1</h1>
+<h2>Heading 2</h2>
+<h3>Heading 3</h3>
+<h4>Heading 4</h4>
+<h5>Heading 5</h5>
+<h6>Heading 6</h6>
+<pre><code class="language-md"># Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+</code></pre>
+<h2>Paragraphs</h2>
+<p>This is a sentence in paragraph A.
+This is also a sentence in paragraph A.</p>
+<p>This is not, however.</p>
+<pre><code class="language-md">This is a sentence in paragraph A.
+This is also a sentence in paragraph A.
+
+This is not, however.
+</code></pre>
+<h2>Formatting</h2>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td><strong>Bold</strong></td><td><code>**Bold**</code></td></tr>
+<tr><td><em>Italic</em></td><td><code>*Italic*</code></td></tr>
+<tr><td><strong>Bold then <em>Italic</em></strong></td><td><code>**Bold then *Italic***</code></td></tr>
+<tr><td><del>Removed</del></td><td><code>~~Removed~~</code></td></tr>
+</tbody></table>
+<h2>Lists</h2>
+<h3>Unordered List</h3>
+<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li><input disabled="" type="checkbox"/>
+Item 3 with checkbox</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Item 4 with checked checkbox</li>
+</ul>
+<pre><code class="language-md">- Item 1
+- Item 2
+- [ ] Item 3 with checkbox
+- [x] Item 4 with checked checkbox
+</code></pre>
+<h3>Ordered List</h3>
+<ol>
+<li>Une</li>
+<li>Deux</li>
+<li>Trois</li>
+<li>Quatre</li>
+</ol>
+<pre><code class="language-md">1. Une
+2. Deux
+3. Trois
+4. Quatre
+</code></pre>
+<h2>Tables</h2>
+<table><thead><tr><th>ID</th><th align="left">Name</th><th align="center">Gender</th><th align="right">Amount</th></tr></thead><tbody>
+<tr><td>000001</td><td align="left">Bob Ross</td><td align="center">Male</td><td align="right">$123.00</td></tr>
+<tr><td>035002</td><td align="left">Mike Tyson</td><td align="center">Male</td><td align="right">$5.00</td></tr>
+<tr><td>123456</td><td align="left">Inkling</td><td align="center">Female</td><td align="right">$5554.12</td></tr>
+</tbody></table>
+<pre><code class="language-md">| ID     | Name       | Gender |   Amount |
+| ------ | :--------- | :----: | -------: |
+| 000001 | Bob Ross   |  Male  |  $123.00 |
+| 035002 | Mike Tyson |  Male  |    $5.00 |
+| 123456 | Inkling    | Female | $5554.12 |
+</code></pre>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>“Insert wise man quote here” - Anonymous, 2XXX</p>
+</blockquote>
+<pre><code class="language-md">&gt; &quot;Insert wise man quote here&quot; - Anonymous, 2XXX
+</code></pre>
+<h2>Code blocks</h2>
+<h3>Code spans</h3>
+<p><code>doStuff()</code> is a method.</p>
+<pre><code class="language-md">`doStuff()` is a method.
+</code></pre>
+<h3>Fenced code blocks</h3>
+<pre><code class="language-python">if __name__ == &quot;__main__&quot;:
+    do_stuff()
+</code></pre>
+<pre><code>```python
+if __name__ == &quot;__main__&quot;:
+   do_stuff()
+```
+</code></pre>
+<h3>Indented code blocks</h3>
+<pre><code>Indented lines are treated as code blocks.
+</code></pre>
+<p>This is not, however.</p>
+<pre><code class="language-md">    Indented lines are treated as code blocks.
+This is not, however.
+</code></pre>
+<h2>Comments</h2>
+<pre><code class="language-md">&lt;!-- An HTML comment that is invisible in the final output --&gt;
+</code></pre>
+<h2>Links</h2>
+<h3>Autolinks</h3>
+<p>https://www.google.com</p>
+<p><a href="mailto:john@gmail.com">john@gmail.com</a></p>
+<pre><code class="language-md">https://www.google.com
+
+&lt;john@gmail.com&gt;
+</code></pre>
+<h3>Text Links</h3>
+<p><a href="https://en.wikipedia.org">English Wikipedia</a></p>
+<pre><code class="language-md">[English Wikipedia](https://en.wikipedia.org)
+</code></pre>
+<h3>Picture Links</h3>
+<p><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg/160px-South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg/160px-South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg" alt="Link to Penguin" /></a></p>
+<pre><code class="language-md">[![Link to Penguin](...)](...)
+</code></pre>
+<h2>Emojis</h2>
+<p>:smile:</p>
+<h1>TeX Cheat Sheet</h1>
+<h2>Inline Math and Math Block</h2>
+<p>The result of $1+1$ is $2$.
+$$a^2+b^2=c^2$$</p>
+<pre><code class="language-md">The result of $1+1$ is $2$.
+$$a^2+b^2=c^2$$
+</code></pre>
+<h2>Accents</h2>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$a’$</td><td><code>a'</code></td><td>$\tilde{a}$</td><td><code>\tilde{a}</code></td></tr>
+<tr><td>$a’’$</td><td><code>a''</code></td><td>$\widetilde{ac}$</td><td><code>\widetilde{ac}</code></td></tr>
+<tr><td>$a^{\prime}$</td><td><code>a^{\prime}</code></td><td>$\utilde{AB}$</td><td><code>\utilde{AB}</code></td></tr>
+<tr><td>$\acute{a}$</td><td><code>\acute{a}</code></td><td>$\vec{F}$</td><td><code>\vec{F}</code></td></tr>
+<tr><td>$\bar{y}$</td><td><code>\bar{y}</code></td><td>$\overleftarrow{AB}$</td><td><code>\overleftarrow{AB}</code></td></tr>
+<tr><td>$\breve{a}$</td><td><code>\breve{a}</code></td><td>$\underleftarrow{AB}$</td><td><code>\underleftarrow{AB}</code></td></tr>
+<tr><td>$\check{a}$</td><td><code>\check{a}</code></td><td>$\overleftharpoon{ac}$</td><td><code>\overleftharpoon{ac}</code></td></tr>
+<tr><td>$\dot{a}$</td><td><code>\dot{a}</code></td><td>$\overleftrightarrow{AB}$</td><td><code>\overleftrightarrow{AB}</code></td></tr>
+<tr><td>$\ddot{a}$</td><td><code>\ddot{a}</code></td><td>$\underleftrightarrow{AB}$</td><td><code>\underleftrightarrow{AB}</code></td></tr>
+<tr><td>$\grave{a}$</td><td><code>\grave{a}</code></td><td>$\overline{AB}$</td><td><code>\overline{AB}</code></td></tr>
+<tr><td>$\hat{\theta}$</td><td><code>\hat{\theta}</code></td><td>$\underline{AB}$</td><td><code>\underline{AB}</code></td></tr>
+<tr><td>$\widehat{ac}$</td><td><code>\widehat{ac}</code></td><td>$\widecheck{ac}$</td><td><code>\widecheck{ac}</code></td></tr>
+</tbody></table>
+<h2>Delimiters</h2>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\lparen\rparen$</td><td><code>\lparen\rparen</code></td><td>$\lgroup\rgroup$</td><td><code>\lgroup\rgroup</code></td></tr>
+<tr><td>$\lbrack\rbrack$</td><td><code>\lbrack\rbrack</code></td><td>$\ulcorner\urcorner$</td><td><code>\ulcorner\urcorner</code></td></tr>
+<tr><td>$\lbrace\rbrace$</td><td><code>\lbrace\rbrace</code></td><td>$\llcorner\lrcorner$</td><td><code>\llcorner\lrcorner</code></td></tr>
+<tr><td>$\langle\rangle$</td><td><code>\langle\rangle</code></td><td>$\llbracket$</td><td><code>\llbracket</code></td></tr>
+<tr><td>$\lang\rang$</td><td><code>\lang\rang</code></td><td>$\rrbracket$</td><td><code>\rrbracket</code></td></tr>
+<tr><td>$\vert$</td><td><code>\vert</code></td><td>$\uparrow$</td><td><code>\uparrow</code></td></tr>
+<tr><td>$\lvert\rvert$</td><td><code>\lvert\rvert</code></td><td>$\downarrow$</td><td><code>\downarrow</code></td></tr>
+<tr><td>$\Vert$</td><td><code>\Vert</code></td><td>$\updownarrow$</td><td><code>\updownarrow</code></td></tr>
+<tr><td>$\lVert\rVert$</td><td><code>\lVert\rVert</code></td><td>$\Uparrow$</td><td><code>\Uparrow</code></td></tr>
+<tr><td>$\lt\gt$</td><td><code>\lt\gt</code></td><td>$\Downarrow$</td><td><code>\Downarrow</code></td></tr>
+<tr><td>$\lceil\rceil$</td><td><code>\lceil\rceil</code></td><td>$\Updownarrow$</td><td><code>\Updownarrow</code></td></tr>
+<tr><td>$\lfloor\rfloor$</td><td><code>\lfloor\rfloor</code></td><td>$\backslash$</td><td><code>\backslash</code></td></tr>
+<tr><td>$\lmoustache\rmoustache$</td><td><code>\lmoustache\rmoustache</code></td><td>$\lBrace\rBrace$</td><td><code>\lBrace\rBrace</code></td></tr>
+</tbody></table>
+<h3>Delimiter Sizing</h3>
+<p>$\left(\LARGE{AB}\right)$ <code>\left(\LARGE{AB}\right)</code></p>
+<p>$( \big( \Big( \bigg( \Bigg($ <code>( \big( \Big( \bigg( \Bigg(</code></p>
+<table><thead><tr><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody>
+<tr><td><code>\left</code></td><td><code>\big</code></td><td><code>\bigl</code></td><td><code>\bigm</code></td><td><code>\bigr</code></td></tr>
+<tr><td><code>\right</code></td><td><code>\Big</code></td><td><code>\Bigl</code></td><td><code>\Bigm</code></td><td><code>\Bigr</code></td></tr>
+<tr><td><code>\right</code></td><td><code>\bigg</code></td><td><code>\biggl</code></td><td><code>\biggm</code></td><td><code>\biggr</code></td></tr>
+<tr><td></td><td><code>\Bigg</code></td><td><code>\Biggl</code></td><td><code>\Biggm</code></td><td><code>\Biggr</code></td></tr>
+</tbody></table>
+<h2>Environments</h2>
+<p><em>Usage</em>:</p>
+<pre><code class="language-t">\begin{environment}{options}
+  ...
+\end{environment}
+</code></pre>
+<p>For the alignment environments, <code>&amp;</code> denotes an anchor position.</p>
+<table><thead><tr><th>Content</th><th>Environment</th></tr></thead><tbody>
+<tr><td>$\begin{matrix}a&amp;b\c&amp;d\end{matrix}$</td><td><code>matrix</code></td></tr>
+<tr><td>$\begin{array}{cc}a&amp;b\c&amp;d\end{array}$</td><td><code>array</code></td></tr>
+<tr><td>$\begin{pmatrix}a&amp;b\c&amp;d\end{pmatrix}$</td><td><code>pmatrix</code></td></tr>
+<tr><td>$\begin{bmatrix}a&amp;b\c&amp;d\end{bmatrix}$</td><td><code>bmatrix</code></td></tr>
+<tr><td>$\begin{vmatrix}a&amp;b\c&amp;d\end{vmatrix}$</td><td><code>vmatrix</code></td></tr>
+<tr><td>$\begin{Vmatrix}a&amp;b\c&amp;d\end{Vmatrix}$</td><td><code>Vmatrix</code></td></tr>
+<tr><td>$\begin{Bmatrix}a&amp;b\c&amp;d\end{Bmatrix}$</td><td><code>Bmatrix</code></td></tr>
+<tr><td>$x=\begin{cases}a&amp;\text{if }b\c&amp;\text{if }d\end{cases}$</td><td><code>cases</code></td></tr>
+<tr><td>$\begin{smallmatrix}a&amp;b\c&amp;d\end{smallmatrix}$</td><td><code>smallmatrix</code></td></tr>
+<tr><td>$\displaystyle\sum_{\begin{subarray}{l}i\in\Lambda\0&lt;j&lt;n\end{subarray}}$</td><td><code>subarray</code></td></tr>
+<tr><td>$\begin{aligned} a&amp;=b+c\ d+e&amp;=f \end{aligned}$</td><td><code>aligned</code></td></tr>
+<tr><td>$\begin{gathered} a=b\ e=b+c \end{gathered}$</td><td><code>gathered</code></td></tr>
+<tr><td>$\begin{alignedat}{2} 10&amp;x+&amp;3&amp;y=2\ 3&amp;x+&amp;13&amp;y=4 \end{alignedat}$</td><td><code>alignedat</code></td></tr>
+</tbody></table>
+<h2>Letters and Unicode</h2>
+<h3>Greek Letters</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\Alpha$</td><td><code>\Alpha</code></td><td>$\alpha$</td><td><code>\alpha</code></td></tr>
+<tr><td>$\Beta$</td><td><code>\Beta</code></td><td>$\beta$</td><td><code>\beta</code></td></tr>
+<tr><td>$\Gamma$</td><td><code>\Gamma</code></td><td>$\gamma$</td><td><code>\gamma</code></td></tr>
+<tr><td>$\Epsilon$</td><td><code>\Epsilon</code></td><td>$\epsilon$</td><td><code>\epsilon</code></td></tr>
+<tr><td>$\Zeta$</td><td><code>\Zeta</code></td><td>$\zeta$</td><td><code>\zeta</code></td></tr>
+<tr><td>$\Eta$</td><td><code>\Eta</code></td><td>$\eta$</td><td><code>\eta</code></td></tr>
+<tr><td>$\Theta$</td><td><code>\Theta</code></td><td>$\theta$</td><td><code>\theta</code></td></tr>
+<tr><td>$\Iota$</td><td><code>\Iota</code></td><td>$\iota$</td><td><code>\iota</code></td></tr>
+<tr><td>$\Kappa$</td><td><code>\Kappa</code></td><td>$\kappa$</td><td><code>\kappa</code></td></tr>
+<tr><td>$\Lambda$</td><td><code>\Lambda</code></td><td>$\lambda$</td><td><code>\lambda</code></td></tr>
+<tr><td>$\Mu$</td><td><code>\Mu</code></td><td>$\mu$</td><td><code>\mu</code></td></tr>
+<tr><td>$\Nu$</td><td><code>\Nu</code></td><td>$\nu$</td><td><code>\nu</code></td></tr>
+<tr><td>$\Xi$</td><td><code>\Xi</code></td><td>$\xi$</td><td><code>\xi</code></td></tr>
+<tr><td>$\Omicron$</td><td><code>\Omicron</code></td><td>$\omicron$</td><td><code>\omicron</code></td></tr>
+<tr><td>$\Pi$</td><td><code>\Pi</code></td><td>$\pi$</td><td><code>\pi</code></td></tr>
+<tr><td>$\Rho$</td><td><code>\Rho</code></td><td>$\rho$</td><td><code>\rho</code></td></tr>
+<tr><td>$\Sigma$</td><td><code>\Sigma</code></td><td>$\sigma$</td><td><code>\sigma</code></td></tr>
+<tr><td>$\Tau$</td><td><code>\Tau</code></td><td>$\tau$</td><td><code>\tau</code></td></tr>
+<tr><td>$\Upsilon$</td><td><code>\Upsilon</code></td><td>$\upsilon$</td><td><code>\upsilon</code></td></tr>
+<tr><td>$\Phi$</td><td><code>\Phi</code></td><td>$\phi$</td><td><code>\phi</code></td></tr>
+<tr><td>$\Chi$</td><td><code>\Chi</code></td><td>$\chi$</td><td><code>\chi</code></td></tr>
+<tr><td>$\Psi$</td><td><code>\Psi</code></td><td>$\psi$</td><td><code>\psi</code></td></tr>
+<tr><td>$\Omega$</td><td><code>\Omega</code></td><td>$\omega$</td><td><code>\omega</code></td></tr>
+<tr><td>$\varGamma$</td><td><code>\varGamma</code></td><td>$\varepsilon$</td><td><code>\varepsilon</code></td></tr>
+<tr><td>$\varTheta$</td><td><code>\varTheta</code></td><td>$\varkappa$</td><td><code>\varkappa</code></td></tr>
+<tr><td>$\varLambda$</td><td><code>\varLambda</code></td><td>$\vartheta$</td><td><code>\vartheta</code></td></tr>
+<tr><td>$\varXi$</td><td><code>\varXi</code></td><td>$\thetasym$</td><td><code>\thetasym</code></td></tr>
+<tr><td>$\varPi$</td><td><code>\varPi</code></td><td>$\varpi$</td><td><code>\varpi</code></td></tr>
+<tr><td>$\varSigma$</td><td><code>\varSigma</code></td><td>$\varrho$</td><td><code>\varrho</code></td></tr>
+<tr><td>$\varUpsilon$</td><td><code>\varUpsilon</code></td><td>$\varsigma$</td><td><code>\varsigma</code></td></tr>
+<tr><td>$\varPhi$</td><td><code>\varPhi</code></td><td>$\varphi$</td><td><code>\varphi</code></td></tr>
+<tr><td>$\varPsi$</td><td><code>\varPsi</code></td><td>$\digamma$</td><td><code>\digamma</code></td></tr>
+<tr><td>$\varOmega$</td><td><code>\varOmega</code></td><td></td><td></td></tr>
+</tbody></table>
+<h3>Other Letters</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\imath$</td><td><code>\imath</code></td><td>$\jmath$</td><td><code>\jmath</code></td></tr>
+<tr><td>$\aleph$</td><td><code>\aleph</code></td><td>$\alef$</td><td><code>\alef</code></td></tr>
+<tr><td>$\alefsym$</td><td><code>\alefsym</code></td><td>$\beth$</td><td><code>\beth</code></td></tr>
+<tr><td>$\gimel$</td><td><code>\gimel</code></td><td>$\daleth$</td><td><code>\daleth</code></td></tr>
+<tr><td>$\eth$</td><td><code>\eth</code></td><td>$\nabla$</td><td><code>\nabla</code></td></tr>
+<tr><td>$\partial$</td><td><code>\partial</code></td><td>$\Game$</td><td><code>\Game</code></td></tr>
+<tr><td>$\Finv$</td><td><code>\Finv</code></td><td>$\cnums$</td><td><code>\cnums</code></td></tr>
+<tr><td>$\Complex$</td><td><code>\Complex</code></td><td>$\ell$</td><td><code>\ell</code></td></tr>
+<tr><td>$\hbar$</td><td><code>\hbar</code></td><td>$\hslash$</td><td><code>\hslash</code></td></tr>
+<tr><td>$\Im$</td><td><code>\Im</code></td><td>$\image$</td><td><code>\image</code></td></tr>
+<tr><td>$\Bbbk$</td><td><code>\Bbbk</code></td><td>$\N$</td><td><code>\N</code></td></tr>
+<tr><td>$\natnums$</td><td><code>\natnums</code></td><td>$\R$</td><td><code>\R</code></td></tr>
+<tr><td>$\Re$</td><td><code>\Re</code></td><td>$\real$</td><td><code>\real</code></td></tr>
+<tr><td>$\reals$</td><td><code>\reals</code></td><td>$\Reals$</td><td><code>\Reals</code></td></tr>
+<tr><td>$\wp$</td><td><code>\wp</code></td><td>$\weierp$</td><td><code>\weierp</code></td></tr>
+<tr><td>$\Z$</td><td><code>\Z</code></td><td>$\text{\aa}$</td><td><code>\text{\aa}</code></td></tr>
+<tr><td>$\text{\AA}$</td><td><code>\text{\AA}</code></td><td>$\text{\ae}$</td><td><code>\text{\ae}</code></td></tr>
+<tr><td>$\text{\AE}$</td><td><code>\text{\AE}</code></td><td>$\text{\oe}$</td><td><code>\text{\oe}</code></td></tr>
+<tr><td>$\text{\OE}$</td><td><code>\text{\OE}</code></td><td>$\text{\o}$</td><td><code>\text{\o}</code></td></tr>
+<tr><td>$\text{\O}$</td><td><code>\text{\O}</code></td><td>$\text{\ss}$</td><td><code>\text{\ss}</code></td></tr>
+<tr><td>$\text{\i}$</td><td><code>\text{\i}</code></td><td>$\text{\j}$</td><td><code>\text{\j}</code></td></tr>
+</tbody></table>
+<h2>Layout</h2>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\cancel{5}$</td><td><code>\cancel{5}</code></td></tr>
+<tr><td>$\bcancel{5}$</td><td><code>\bcancel{5}</code></td></tr>
+<tr><td>$\xcancel{ABC}$</td><td><code>\xcancel{ABC}</code></td></tr>
+<tr><td>$\sout{abc}$</td><td><code>\sout{abc}</code></td></tr>
+<tr><td>$\overbrace{a+b+c}^\text{note}$</td><td><code>\overbrace{a+b+c}^\text{note}</code></td></tr>
+<tr><td>$\underbrace{a+b+c}_\text{note}$</td><td><code>\underbrace{a+b+c}_\text{note}</code></td></tr>
+<tr><td>$\not =$</td><td><code>\not =</code></td></tr>
+<tr><td>$\boxed{\pi=\frac c d}$</td><td><code>\boxed{\pi=\frac c d}</code></td></tr>
+</tbody></table>
+<p>$$
+\tag{hi} x+y^{2x}
+$$</p>
+<pre><code class="language-t">\tag{hi} x+y^{2x}
+</code></pre>
+<p>$$
+\tag*{hi} x+y^{2x}
+$$</p>
+<pre><code class="language-t">\tag*{hi} x+y^{2x}
+</code></pre>
+<h3>Vertical Layout</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$x_n$</td><td><code>x_n</code></td></tr>
+<tr><td>$e^x$</td><td><code>e^x</code></td></tr>
+<tr><td>$_u^o$</td><td><code>_u^o</code></td></tr>
+<tr><td>$\stackrel{!}{=}$</td><td><code>\stackrel{!}{=}</code></td></tr>
+<tr><td>$\overset{!}{=}$</td><td><code>\overset{!}{=}</code></td></tr>
+<tr><td>$\underset{!}{=}$</td><td><code>\underset{!}{=}</code></td></tr>
+<tr><td>$a \atop b$</td><td><code>a \atop b</code></td></tr>
+<tr><td>$a\raisebox{0.25em}{b}c$</td><td><code>a\raisebox{0.25em}{b}c</code></td></tr>
+<tr><td>$\sum_{\substack{0&lt;i&lt;m\0&lt;j&lt;n}}$</td><td><code>\sum_{\substack{0&lt;i&lt;m\\0&lt;j&lt;n}}</code></td></tr>
+</tbody></table>
+<h3>Overlap and Spacing</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>${=}\mathllap{/,}$</td><td><code>{=}\mathllap{/\,}</code></td></tr>
+<tr><td>$\mathrlap{,/}{=}$</td><td><code>\mathrlap{\,/}{=}</code></td></tr>
+<tr><td>$\left(x^{\smash{2}}\right)$</td><td><code>\left(x^{\smash{2}}\right)</code></td></tr>
+<tr><td>$\sqrt{\smash[b]{y}}$</td><td><code>\sqrt{\smash[b]{y}}</code></td></tr>
+<tr><td>$\displaystyle\sum_{\mathclap{1\le i\le j\le n}} x_{ij}$</td><td><code>\sum_{\mathclap{1\le i\le j\le n}} x_{ij}</code></td></tr>
+</tbody></table>
+<h4>Spacing</h4>
+<table><thead><tr><th>Function</th><th>Produces</th></tr></thead><tbody>
+<tr><td><code>\,</code></td><td>³∕₁₈ em space</td></tr>
+<tr><td><code>\thinspace</code></td><td>³∕₁₈ em space</td></tr>
+<tr><td><code>\&gt;</code></td><td>⁴∕₁₈ em space</td></tr>
+<tr><td><code>\:</code></td><td>⁴∕₁₈ em space</td></tr>
+<tr><td><code>\medspace</code></td><td>⁴∕₁₈ em space</td></tr>
+<tr><td><code>\;</code></td><td>⁵∕₁₈ em space</td></tr>
+<tr><td><code>\thickspace</code></td><td>⁵∕₁₈ em space</td></tr>
+<tr><td><code>\enspace</code></td><td>½ em space</td></tr>
+<tr><td><code>\quad</code></td><td>1 em space</td></tr>
+<tr><td><code>\qquad</code></td><td>2 em space</td></tr>
+<tr><td><code>~</code></td><td>non-breaking space</td></tr>
+<tr><td><code>\&lt;space&gt;</code></td><td>space</td></tr>
+<tr><td><code>\nobreakspace</code></td><td>non-breaking space</td></tr>
+<tr><td><code>\space</code></td><td>space</td></tr>
+<tr><td><code>\kern{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\mkern{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\mskip{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\hskip{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\hspace{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\hspace*{distance}</code></td><td>space, width = distance</td></tr>
+<tr><td><code>\phantom{content}</code></td><td>space the width and height of content</td></tr>
+<tr><td><code>\hphantom{content}</code></td><td>space the width of content</td></tr>
+<tr><td><code>\vphantom{content}</code></td><td>a strut the height of content</td></tr>
+<tr><td><code>\!</code></td><td>–³∕₁₈ em space</td></tr>
+<tr><td><code>\negthinspace</code></td><td>–³∕₁₈ em space</td></tr>
+<tr><td><code>\negmedspace</code></td><td>-⁴∕₁₈ em space</td></tr>
+<tr><td><code>\negthickspace</code></td><td>-⁵∕₁₈ em space</td></tr>
+<tr><td><code>\mathstrut</code></td><td><code>\vphantom{(}</code></td></tr>
+</tbody></table>
+<p><strong>Notes:</strong></p>
+<p><code>distance</code> will accept any of the <a href="#units">KaTeX units</a>.</p>
+<p><code>\kern</code>, <code>\mkern</code>, <code>\mskip</code>, and <code>\hspace</code> accept unbraced distances, as in: <code>\kern1m</code>.</p>
+<h2>Logic and Set Theory</h2>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\forall$</td><td><code>\forall</code></td><td>$\therefore$</td><td><code>\therefore</code></td></tr>
+<tr><td>$\exists$</td><td><code>\exists</code></td><td>$\because$</td><td><code>\because</code></td></tr>
+<tr><td>$\exist$</td><td><code>\exist</code></td><td>$\mapsto$</td><td><code>\mapsto</code></td></tr>
+<tr><td>$\nexists$</td><td><code>\nexists</code></td><td>$\to$</td><td><code>\to</code></td></tr>
+<tr><td>$\in$</td><td><code>\in</code></td><td>$\gets$</td><td><code>\gets</code></td></tr>
+<tr><td>$\isin$</td><td><code>\isin</code></td><td>$\leftrightarrow$</td><td><code>\leftrightarrow</code></td></tr>
+<tr><td>$\notin$</td><td><code>\notin</code></td><td>$\notni$</td><td><code>\notni</code></td></tr>
+<tr><td>$\complement$</td><td><code>\complement</code></td><td>$\emptyset$</td><td><code>\emptyset</code></td></tr>
+<tr><td>$\subset$</td><td><code>\subset</code></td><td>$\empty$</td><td><code>\empty</code></td></tr>
+<tr><td>$\supset$</td><td><code>\supset</code></td><td>$\varnothing$</td><td><code>\varnothing</code></td></tr>
+<tr><td>$\mid$</td><td><code>\mid</code></td><td>$\implies$</td><td><code>\implies</code></td></tr>
+<tr><td>$\land$</td><td><code>\land</code></td><td>$\impliedby$</td><td><code>\impliedby</code></td></tr>
+<tr><td>$\lor$</td><td><code>\lor</code></td><td>$\iff$</td><td><code>\iff</code></td></tr>
+<tr><td>$\ni$</td><td><code>\ni</code></td><td>$\neg$</td><td><code>\neg</code></td></tr>
+<tr><td>$\lnot$</td><td><code>\lnot</code></td><td></td><td></td></tr>
+</tbody></table>
+<h2>Operators</h2>
+<h3>Big Operators</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\sum$</td><td><code>\sum</code></td><td>$\bigotimes$</td><td><code>\bigotimes</code></td></tr>
+<tr><td>$\int$</td><td><code>\int</code></td><td>$\bigoplus$</td><td><code>\bigoplus</code></td></tr>
+<tr><td>$\iint$</td><td><code>\iint</code></td><td>$\bigodot$</td><td><code>\bigodot</code></td></tr>
+<tr><td>$\iiint$</td><td><code>\iiint</code></td><td>$\biguplus$</td><td><code>\biguplus</code></td></tr>
+<tr><td>$\oint$</td><td><code>\oint</code></td><td>$\oiiint$</td><td><code>\oiiint</code></td></tr>
+<tr><td>$\prod$</td><td><code>\prod</code></td><td>$\bigvee$</td><td><code>\bigvee</code></td></tr>
+<tr><td>$\coprod$</td><td><code>\coprod</code></td><td>$\bigwedge$</td><td><code>\bigwedge</code></td></tr>
+<tr><td>$\intop$</td><td><code>\intop</code></td><td>$\bigcap$</td><td><code>\bigcap</code></td></tr>
+<tr><td>$\smallint$</td><td><code>\smallint</code></td><td>$\bigcup$</td><td><code>\bigcup</code></td></tr>
+<tr><td>$\oiint$</td><td><code>\oiint</code></td><td>$\bigsqcup$</td><td><code>\bigsqcup</code></td></tr>
+</tbody></table>
+<h3>Binary Operators</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$+$</td><td><code>+</code></td><td>$\gtrdot$</td><td><code>\gtrdot</code></td></tr>
+<tr><td>$-$</td><td><code>-</code></td><td>$\intercal$</td><td><code>\intercal</code></td></tr>
+<tr><td>$*$</td><td><code>*</code></td><td>$\land$</td><td><code>\land</code></td></tr>
+<tr><td>$/$</td><td><code>/</code></td><td>$\leftthreetimes$</td><td><code>\leftthreetimes</code></td></tr>
+<tr><td>$\amalg$</td><td><code>\amalg</code></td><td>$\ldotp$</td><td><code>\ldotp</code></td></tr>
+<tr><td>$\And$</td><td><code>\And</code></td><td>$\lor$</td><td><code>\lor</code></td></tr>
+<tr><td>$\ast$</td><td><code>\ast</code></td><td>$\lessdot$</td><td><code>\lessdot</code></td></tr>
+<tr><td>$\barwedge$</td><td><code>\barwedge</code></td><td>$\lhd$</td><td><code>\lhd</code></td></tr>
+<tr><td>$\bigcirc$</td><td><code>\bigcirc</code></td><td>$\ltimes$</td><td><code>\ltimes</code></td></tr>
+<tr><td>$\bmod$</td><td><code>\bmod</code></td><td>$x\mod a$</td><td><code>x\mod a</code></td></tr>
+<tr><td>$\boxdot$</td><td><code>\boxdot</code></td><td>$\mp$</td><td><code>\mp</code></td></tr>
+<tr><td>$\boxminus$</td><td><code>\boxminus</code></td><td>$\odot$</td><td><code>\odot</code></td></tr>
+<tr><td>$\boxplus$</td><td><code>\boxplus</code></td><td>$\ominus$</td><td><code>\ominus</code></td></tr>
+<tr><td>$\boxtimes$</td><td><code>\boxtimes</code></td><td>$\oplus$</td><td><code>\oplus</code></td></tr>
+<tr><td>$\bullet$</td><td><code>\bullet</code></td><td>$\otimes$</td><td><code>\otimes</code></td></tr>
+<tr><td>$\Cap$</td><td><code>\Cap</code></td><td>$\oslash$</td><td><code>\oslash</code></td></tr>
+<tr><td>$\cap$</td><td><code>\cap</code></td><td>$\pm$</td><td><code>\pm</code></td></tr>
+<tr><td>$\cdot$</td><td><code>\cdot</code></td><td>$\plusmn$</td><td><code>\plusmn</code></td></tr>
+<tr><td>$\cdotp$</td><td><code>\cdotp</code></td><td>$x\pmod a$</td><td><code>x\pmod a</code></td></tr>
+<tr><td>$\centerdot$</td><td><code>\centerdot</code></td><td>$x\pod a$</td><td><code>x\pod a</code></td></tr>
+<tr><td>$\circ$</td><td><code>\circ</code></td><td>$\rhd$</td><td><code>\rhd</code></td></tr>
+<tr><td>$\circledast$</td><td><code>\circledast</code></td><td>$\rightthreetimes$</td><td><code>\rightthreetimes</code></td></tr>
+<tr><td>$\circledcirc$</td><td><code>\circledcirc</code></td><td>$\rtimes$</td><td><code>\rtimes</code></td></tr>
+<tr><td>$\circleddash$</td><td><code>\circleddash</code></td><td>$\setminus$</td><td><code>\setminus</code></td></tr>
+<tr><td>$\Cup$</td><td><code>\Cup</code></td><td>$\smallsetminus$</td><td><code>\smallsetminus</code></td></tr>
+<tr><td>$\cup$</td><td><code>\cup</code></td><td>$\sqcap$</td><td><code>\sqcap</code></td></tr>
+<tr><td>$\curlyvee$</td><td><code>\curlyvee</code></td><td>$\sqcup$</td><td><code>\sqcup</code></td></tr>
+<tr><td>$\curlywedge$</td><td><code>\curlywedge</code></td><td>$\times$</td><td><code>\times</code></td></tr>
+<tr><td>$\div$</td><td><code>\div</code></td><td>$\unlhd$</td><td><code>\unlhd</code></td></tr>
+<tr><td>$\divideontimes$</td><td><code>\divideontimes</code></td><td>$\unrhd$</td><td><code>\unrhd</code></td></tr>
+<tr><td>$\dotplus$</td><td><code>\dotplus</code></td><td>$\uplus$</td><td><code>\uplus</code></td></tr>
+<tr><td>$\doublebarwedge$</td><td><code>\doublebarwedge</code></td><td>$\vee$</td><td><code>\vee</code></td></tr>
+<tr><td>$\doublecap$</td><td><code>\doublecap</code></td><td>$\veebar$</td><td><code>\veebar</code></td></tr>
+<tr><td>$\doublecup$</td><td><code>\doublecup</code></td><td>$\wedge$</td><td><code>\wedge</code></td></tr>
+<tr><td>$\wr$</td><td><code>\wr</code></td><td></td><td></td></tr>
+</tbody></table>
+<h3>Fractions and Binomials</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\frac{a}{b}$</td><td><code>\frac{a}{b}</code></td></tr>
+<tr><td>$a\over b$</td><td><code>a\over b</code></td></tr>
+<tr><td>$a/b$</td><td><code>a/b</code></td></tr>
+<tr><td>$\tfrac{a}{b}$</td><td><code>\tfrac{a}{b}</code></td></tr>
+<tr><td>$\dfrac{a}{b}$</td><td><code>\dfrac{a}{b}</code></td></tr>
+<tr><td>$\genfrac ( ] {2pt}{1}a{a+1}$</td><td><code>\genfrac ( ] {2pt}{1}a{a+1}</code></td></tr>
+<tr><td>$a\above{2pt} b+1$</td><td><code>a\above{2pt} b+1</code></td></tr>
+<tr><td>$\cfrac{a}{1 + \cfrac{1}{b}}$</td><td><code>\cfrac{a}{1 + \cfrac{1}{b}}</code></td></tr>
+<tr><td>$\binom{n}{k}$</td><td><code>\binom{n}{k}</code></td></tr>
+<tr><td>$n\choose k$</td><td><code>n\choose k</code></td></tr>
+<tr><td>$\dbinom{n}{k}$</td><td><code>\dbinom{n}{k}</code></td></tr>
+<tr><td>$\tbinom{n}{k}$</td><td><code>\tbinom{n}{k}</code></td></tr>
+<tr><td>$n\brace k$</td><td><code>n\brace k</code></td></tr>
+<tr><td>$n\brack k$</td><td><code>n\brack k</code></td></tr>
+</tbody></table>
+<h3>Math Operators</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\arcsin$</td><td><code>\arcsin</code></td><td>$\sec$</td><td><code>\sec</code></td></tr>
+<tr><td>$\arccos$</td><td><code>\arccos</code></td><td>$\sin$</td><td><code>\sin</code></td></tr>
+<tr><td>$\arctan$</td><td><code>\arctan</code></td><td>$\sinh$</td><td><code>\sinh</code></td></tr>
+<tr><td>$\arctg$</td><td><code>\arctg</code></td><td>$\sh$</td><td><code>\sh</code></td></tr>
+<tr><td>$\arcctg$</td><td><code>\arcctg</code></td><td>$\tan$</td><td><code>\tan</code></td></tr>
+<tr><td>$\arg$</td><td><code>\arg</code></td><td>$\tanh$</td><td><code>\tanh</code></td></tr>
+<tr><td>$\ch$</td><td><code>\ch</code></td><td>$\tg$</td><td><code>\tg</code></td></tr>
+<tr><td>$\cos$</td><td><code>\cos</code></td><td>$\th$</td><td><code>\th</code></td></tr>
+<tr><td>$\cosec$</td><td><code>\cosec</code></td><td>$\operatorname{f}$</td><td><code>\operatorname{f}</code></td></tr>
+<tr><td>$\cosh$</td><td><code>\cosh</code></td><td>$\argmax$</td><td><code>\argmax</code></td></tr>
+<tr><td>$\cot$</td><td><code>\cot</code></td><td>$\argmin$</td><td><code>\argmin</code></td></tr>
+<tr><td>$\cotg$</td><td><code>\cotg</code></td><td>$\det$</td><td><code>\det</code></td></tr>
+<tr><td>$\coth$</td><td><code>\coth</code></td><td>$\gcd$</td><td><code>\gcd</code></td></tr>
+<tr><td>$\csc$</td><td><code>\csc</code></td><td>$\inf$</td><td><code>\inf</code></td></tr>
+<tr><td>$\ctg$</td><td><code>\ctg</code></td><td>$\lim$</td><td><code>\lim</code></td></tr>
+<tr><td>$\cth$</td><td><code>\cth</code></td><td>$\liminf$</td><td><code>\liminf</code></td></tr>
+<tr><td>$\deg$</td><td><code>\deg</code></td><td>$\limsup$</td><td><code>\limsup</code></td></tr>
+<tr><td>$\dim$</td><td><code>\dim</code></td><td>$\max$</td><td><code>\max</code></td></tr>
+<tr><td>$\exp$</td><td><code>\exp</code></td><td>$\min$</td><td><code>\min</code></td></tr>
+<tr><td>$\hom$</td><td><code>\hom</code></td><td>$\plim$</td><td><code>\plim</code></td></tr>
+<tr><td>$\ker$</td><td><code>\ker</code></td><td>$\Pr$</td><td><code>\Pr</code></td></tr>
+<tr><td>$\lg$</td><td><code>\lg</code></td><td>$\sup$</td><td><code>\sup</code></td></tr>
+<tr><td>$\ln$</td><td><code>\ln</code></td><td>$\operatorname*{f}$</td><td><code>\operatorname*{f}</code></td></tr>
+<tr><td>$\log$</td><td><code>\log</code></td><td></td><td></td></tr>
+</tbody></table>
+<p>Functions below <code>\operatorname</code> can take <code>\limits</code>.</p>
+<h3>\sqrt</h3>
+<table><thead><tr><th>Content</th><th>Syntax</th></tr></thead><tbody>
+<tr><td>$\sqrt{x}$</td><td><code>\sqrt{x}</code></td></tr>
+<tr><td>$\sqrt[3]{x}$</td><td><code>\sqrt[3]{x}</code></td></tr>
+</tbody></table>
+<h2>Relations :building_construction:</h2>
+<h2>Special Notation :building_construction:</h2>
+<h2>Symbols and Punctuation :building_construction:</h2>
+<h2>Units :building_construction:</h2>
+<h1>Appendix</h1>
+<ul>
+<li><a href="https://github.github.com/gfm/">GitHub Flavored Markdown Spec</a></li>
+<li><a href="https://katex.org/docs/supported.html">KaTeX Supported Functions</a></li>
+<li><a href="https://znjameswu.github.io/flutter_math_demo/#/">Flutter Math Demo</a></li>
+</ul>

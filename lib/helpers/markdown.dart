@@ -4,16 +4,16 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../screens/markdown.dart' show MathMarkdown;
@@ -24,10 +24,10 @@ import '../state/markdown.dart';
 abstract class IMathMarkdownState extends State<MathMarkdown> {
   RestorableTextEditingController get ctl;
   ScrollController get sc;
+  ScrollController get editorSc;
 
   static const scaleStep = 0.1;
   String get untitled;
-  // String contentkey = '';
   int untitledIdx = 1;
   Characters _indent = ''.characters;
 
@@ -43,16 +43,15 @@ abstract class IMathMarkdownState extends State<MathMarkdown> {
     if (context.read(pIndents).state > 0) context.read(pIndents).state--;
   }
 
-  bool handleScroll(ScrollNotification noti) {
+  void onScroll() {
     if (context.read(pLockstep).state && sc.hasClients) {
-      final m = noti.metrics;
       final pos = sc.position;
-      final range = m.maxScrollExtent - m.minScrollExtent;
-      final prevRange = pos.maxScrollExtent - pos.minScrollExtent;
-      final ratio = prevRange / range;
-      sc.jumpTo(m.pixels * ratio);
+      final epos = editorSc.position;
+      final range = epos.maxScrollExtent - epos.minScrollExtent;
+      final prev = pos.maxScrollExtent - pos.minScrollExtent;
+      final ratio = prev / range;
+      sc.jumpTo(epos.pixels * ratio);
     }
-    return true;
   }
 
   /// Sets the active file to be [path] and populates its [contents].
