@@ -276,5 +276,27 @@
         "windows/**/x86/": true,
         "windows/**/*.[Cc]ache": true,
         "windows/**/*.[Cc]ache/": false
+    },
+    "files.associations": {
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "memory_resource": "cpp",
+        "optional": "cpp",
+        "functional": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "numeric": "cpp",
+        "ostream": "cpp",
+        "ranges": "cpp",
+        "ratio": "cpp",
+        "string_view": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "typeinfo": "cpp",
+        "algorithm": "cpp"
     }
 }

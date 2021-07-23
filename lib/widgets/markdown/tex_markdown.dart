@@ -1,6 +1,8 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ffi';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -10,46 +12,21 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_math_fork/tex.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:yata_flutter/bindings.dart';
 import 'package:yata_flutter/ffi.dart';
 import 'package:yata_flutter/state/markdown.dart';
-// import 'package:yata_flutter/types/node.dart';
+import 'package:yata_flutter/types/native_node.dart' as nat;
 
 /// Allows a Map to pretend to be an [md.Element] without having
 /// to deserialize into a proper element type.
 class JSONElement extends md.Element {
   final Map<String, dynamic> json;
-  final int alignment;
   List<md.Node>? _children;
   static final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
-  // static final cache = HashMap<int, List<md.Node>?>();
-  static void clearCache() {
-    // cache.clear();
-  }
 
-  // @override
-  // int get hashCode => runtimeType.hashCode ^ alignment.hashCode ^ const DeepCollectionEquality().hash(json);
-
-  // @override
-  // bool operator ==(Object other) => other is JSONElement && other.hashCode == hashCode;
-
-  JSONElement(this.json, {this.alignment = 1}) : super.empty(json['t'] as String) {
-    // final _hash = hashCode;
-    if (tag == 'table') {
-      final c = json['c'] as List<dynamic>;
-      final aligns = json['align'] as List<dynamic>;
-      _children = <md.Node>[];
-      for (var i = 0; i < c.length; ++i) {
-        _children!.add(JSONElement(
-          c[i] as Map<String, dynamic>,
-          alignment: aligns.length - 1 < i ? 0 : aligns[i] as int,
-        ));
-      }
-      // cache[_hash] = _children;
-      return;
-    }
+  JSONElement(this.json) : super.empty(json['t'] as String) {
     switch (tag) {
       case 'ol':
         attributes['start'] = json['start'].toString();
@@ -65,26 +42,8 @@ class JSONElement extends md.Element {
       case 'img':
         attributes['src'] = json['href'] as String;
         break;
-      case 'td':
-      case 'th':
-        String style = 'text-align: left';
-        switch (alignment) {
-          case 2:
-            style = 'text-align: center';
-            break;
-          case 3:
-            style = 'text-align: right';
-            break;
-          default:
-            break;
-        }
-        attributes['style'] = style;
-        break;
       case 'pre':
         _children = [md.Text((json['c'] as List<dynamic>).join())];
-        break;
-      case 'code':
-        _children = [md.Text(json['value'] as String)];
         break;
     }
   }
@@ -109,15 +68,20 @@ class JSONElement extends md.Element {
 
   @override
   bool get isEmpty => (children ?? json['c'] as List<dynamic>?)?.isEmpty ?? true;
+
+  Map<String, dynamic> toJson() => json;
 }
 
-class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDelegate {
+class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelegate {
   final String data;
   final double scale;
   final MarkdownStyleSheet style;
   final bool nativeParse;
-  // final bool cache;
   final void Function(String, String?, String)? onTapLink;
+
+  @override
+  State<StatefulWidget> createState() => _CustomMarkdownBodyState();
+
   const CustomMarkdownBody(
     this.data, {
     Key? key,
@@ -129,40 +93,6 @@ class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDeleg
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final mdBuilder = MarkdownBuilder(
-      delegate: this,
-      styleSheet: style,
-      selectable: false,
-      imageDirectory: null,
-      imageBuilder: null,
-      checkboxBuilder: (val) =>
-          val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
-      bulletBuilder: null,
-      builders: {'math': MathBuilder(scale: scale)},
-      listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
-    );
-    final List<md.Node> nodes;
-    final st = Stopwatch()..start();
-    if (nativeParse) {
-      final document = md.Document(
-        inlineSyntaxes: [MathSyntax.instance],
-        extensionSet: md.ExtensionSet.gitHubWeb,
-        encodeHtml: false,
-      );
-      final lines = const LineSplitter().convert(data);
-      nodes = document.parseLines(lines);
-    } else {
-      nodes = parseNodes(data).map(/** cache ? Node.fromJson : */ JSONElement.fromStrOrMap).toList(growable: false);
-    }
-    final t0 = st.elapsed;
-    final children = mdBuilder.build(nodes);
-    final t1 = st.elapsed - t0;
-    print('${nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
-    return Column(children: children);
-  }
-
-  @override
   GestureRecognizer createLink(String text, String? href, String title) {
     final output = TapGestureRecognizer();
     if (onTapLink != null) output.onTap = () => onTapLink!.call(text, href, title);
@@ -172,6 +102,66 @@ class CustomMarkdownBody extends StatelessWidget implements MarkdownBuilderDeleg
   @override
   TextSpan formatText(MarkdownStyleSheet style, String code) {
     return TextSpan(text: code, style: style.code);
+  }
+}
+
+class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
+  Pointer<Slice_CElement> sliceptr = nullptr;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    lib.free_elements(sliceptr);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // freeing a nullptr is a no-op, so this is OK.
+    lib.free_elements(sliceptr);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mdBuilder = MarkdownBuilder(
+      delegate: widget,
+      styleSheet: widget.style,
+      selectable: false,
+      imageDirectory: null,
+      imageBuilder: null,
+      checkboxBuilder: (val) =>
+          val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
+      bulletBuilder: null,
+      builders: {'math': MathBuilder(scale: widget.scale)},
+      listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
+    );
+    final List<md.Node> nodes;
+    final st = Stopwatch()..start();
+    if (widget.nativeParse) {
+      final document = md.Document(
+        inlineSyntaxes: [MathSyntax.instance],
+        extensionSet: md.ExtensionSet.gitHubWeb,
+        encodeHtml: false,
+      );
+      final lines = const LineSplitter().convert(widget.data);
+      nodes = document.parseLines(lines);
+    } else {
+      nodes = parseNodes(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
+      // sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
+      // nodes = [];
+      // for (var i = 0; i < sliceptr.ref.length; ++i) {
+      //   final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
+      //   nodes.add(el);
+      // }
+    }
+    final t0 = st.elapsed;
+    final encoded = const JsonEncoder.withIndent("  ").convert(nodes);
+
+    // final children = mdBuilder.build(nodes);
+    final t1 = st.elapsed - t0;
+    print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
+    // return Column(children: children);
+    return Text(encoded);
   }
 }
 

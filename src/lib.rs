@@ -52,7 +52,7 @@ pub extern "C" fn parse_markdown_ast(ptr: *const c_char) -> *mut Slice<CElement>
     let cstr = unsafe { CStr::from_ptr(ptr) };
     let parser = Parser::new_ext(cstr.to_str().unwrap(), Options::all());
     let ast = parse_elements(parser);
-    let slice = ast.into_iter().map(From::from).collect::<Box<[_]>>();
+    let slice = ast.into_iter().map(From::from).collect::<Box<_>>();
     rust_slice_to_c(slice)
 }
 #[no_mangle]
@@ -149,7 +149,7 @@ pub struct CHtmlTag {
     /// anchor href
     href: *mut c_char,
     /// for checkbox only
-    typ: *mut c_char,
+    // typ: *mut c_char,
     /// for checkbox only
     checked: *mut c_char,
 }
@@ -162,7 +162,7 @@ impl Drop for CHtmlTag {
         free_elements(self.c);
         free_string(self.src);
         free_string(self.href);
-        free_string(self.typ);
+        // free_string(self.typ);
         free_string(self.checked);
     }
 }
@@ -191,7 +191,7 @@ impl From<HtmlTag> for CHtmlTag {
             },
             style: item.style.unwrap_or(TextAlign::None),
             href: mut_ptr_from(item.href).unwrap(),
-            typ: mut_ptr_from(item.typ.map(String::from)).unwrap(),
+            // typ: mut_ptr_from(item.typ.map(String::from)).unwrap(),
             checked: mut_ptr_from(item.checked.map(String::from)).unwrap(),
             src: mut_ptr_from(item.src).unwrap(),
         }

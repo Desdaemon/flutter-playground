@@ -6,7 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yata_flutter/helpers/markdown.dart';
-import 'package:yata_flutter/types/node.dart';
 import 'package:yata_flutter/widgets/markdown/markdown_bottom_sheet.dart';
 import 'package:yata_flutter/widgets/markdown/tex_markdown.dart';
 
@@ -55,17 +54,6 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
       SingleHandler(keys: const [LogicalKeyboardKey.keyI], ctrl: true, onHandle: italic),
       SingleHandler(keys: const [LogicalKeyboardKey.keyS], alt: true, onHandle: strikethrough),
       SingleHandler(keys: const [LogicalKeyboardKey.keyM], ctrl: true, onHandle: math),
-      SingleHandler(
-        keys: const [LogicalKeyboardKey.keyC],
-        ctrl: true,
-        alt: true,
-        onHandle: () {
-          Node.clearCache();
-          JSONElement.clearCache();
-          final cache = context.read(pCache).state;
-          context.read(pCache).state = !cache;
-        },
-      ),
       PlusMinusHandler(
         plusKey: LogicalKeyboardKey.equal,
         minusKey: LogicalKeyboardKey.minus,

@@ -1,29 +1,17 @@
 use pulldown_cmark::escape::escape_href;
 use pulldown_cmark::Alignment;
-use pulldown_cmark::CowStr;
 use pulldown_cmark::{Event, Parser, Tag};
 use serde::Serialize;
-use std::borrow::{BorrowMut, Cow};
+use std::borrow::BorrowMut;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 #[serde(untagged)]
 pub enum Element {
     Text(String),
     Tag(HtmlTag),
 }
-impl Element {
-    fn done(self) -> Element {
-        match self {
-            Element::Tag(tag) => Element::Tag(tag.done()),
-            other => other,
-        }
-    }
-}
-
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct HtmlTag {
-    #[serde(skip)]
-    done: bool,
     pub t: Tags,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub c: Option<Vec<Element>>,
@@ -33,8 +21,8 @@ pub struct HtmlTag {
     pub src: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub typ: Option<&'static str>,
+    // #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    // pub typ: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checked: Option<&'static str>,
 }
@@ -42,25 +30,17 @@ impl HtmlTag {
     fn new(tag: Tags) -> Self {
         HtmlTag {
             t: tag,
-            c: None,
+            c: Some(vec![]),
             style: None,
             src: None,
             href: None,
-            typ: None,
+            // typ: None,
             checked: None,
-            done: false,
-        }
-    }
-    fn done(self) -> Self {
-        if self.done {
-            self
-        } else {
-            HtmlTag { done: true, ..self }
         }
     }
 }
 
-#[derive(Clone, Copy, Serialize, PartialEq)]
+#[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
 #[repr(C)]
 pub enum Tags {
@@ -101,8 +81,9 @@ pub enum Tags {
     Code,
     #[serde(rename = "br")]
     HardBreak,
-    #[serde(rename = "hr'")]
+    #[serde(rename = "hr")]
     Ruler,
+    Checkbox,
 }
 
 impl From<Tags> for Element {
@@ -111,7 +92,7 @@ impl From<Tags> for Element {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 #[repr(C)]
 pub enum TextAlign {
     #[serde(rename = "")]
@@ -124,175 +105,181 @@ pub enum TextAlign {
     Right,
 }
 
-type Cowstr<'a> = Cow<'a, str>;
-trait Fold<T> {
-    fn fold(&mut self, item: T);
-    fn fold_str(&mut self, item: Cowstr);
+trait Append<T> {
+    /// Returns ownership of the item if it cannot append.
+    fn append(&mut self, item: T) -> Option<T>;
 }
 
-impl Fold<Element> for Option<Element> {
-    fn fold(&mut self, item: Element) {
-        if let Some(Element::Tag(tag)) = self.borrow_mut() {
-            tag.c.get_or_insert(vec![]).push(item);
-        } else {
-            self.get_or_insert(item);
+impl Append<Element> for Element {
+    fn append(&mut self, item: Element) -> Option<Element> {
+        match (self, item) {
+            (Element::Text(text), Element::Text(item)) => {
+                text.push_str(&item);
+                None
+            }
+            (Element::Tag(tag), item) /*if !tag.done*/ => {
+                tag.c.get_or_insert(vec![]).push(item);
+                None
+            }
+            // Siblings so we cannot merge them directly.
+            (_, tag) => Some(tag)
         }
     }
-    fn fold_str(&mut self, item: Cowstr) {
-        if let Some(Element::Text(string)) = self.borrow_mut() {
-            *string = format!("{}{}", string, item);
-        } else {
-            self.fold(Element::Text(item.to_string()));
+}
+
+impl Append<Element> for Option<Element> {
+    fn append(&mut self, item: Element) -> Option<Element> {
+        match self.borrow_mut() {
+            Some(el) => el.append(item),
+            None => {
+                *self = Some(item);
+                None
+            }
         }
     }
 }
 
 pub fn parse_elements(parser: Parser) -> Vec<Element> {
     let mut ret = vec![];
-    let mut in_header = false;
-    let mut alignment: Vec<Alignment> = vec![];
-    let mut cell_index = 0;
     let mut el: Option<Element> = None;
-    let mut buf: Option<String> = None;
+    let mut aligns = vec![];
+    let mut column = 0;
+    let mut in_header = false;
     for event in parser {
         match event {
-            Event::Text(text) if !text.is_empty() => {
-                let escaped = text.escape_debug().to_string();
-                if buf.is_none() {
-                    buf = Some(escaped);
-                } else {
-                    if let Some(buf) = buf.borrow_mut() {
-                        buf.push_str(&escaped);
+            Event::Start(tag) => {
+                // We always start a tag with an empty element.
+                // When a tag ends, we merge with the top element on the stack.
+                if let Some(el) = el.take() {
+                    ret.push(el);
+                }
+                match tag {
+                    Tag::Paragraph => el = Some(Element::from(Tags::Paragraph)),
+                    Tag::Heading(lvl) => {
+                        el = Some(Element::from(match lvl {
+                            1 => Tags::H1,
+                            2 => Tags::H2,
+                            3 => Tags::H3,
+                            4 => Tags::H4,
+                            5 => Tags::H5,
+                            6 => Tags::H6,
+                            _ => unreachable!(),
+                        }))
                     }
-                }
-            }
-            other => {
-                if buf.is_some() {
-                    el.fold_str(Cow::from(buf.take().unwrap()));
-                }
-                match other {
-                    Event::Start(tag) => {
-                        match tag {
-                            Tag::Paragraph => el.fold(Element::from(Tags::Paragraph)),
-                            Tag::Heading(lvl) => el.fold(Element::from(match lvl {
-                                1 => Tags::H1,
-                                2 => Tags::H2,
-                                3 => Tags::H3,
-                                4 => Tags::H4,
-                                5 => Tags::H5,
-                                6 => Tags::H6,
-                                _ => unreachable!(),
-                            })),
-                            Tag::BlockQuote => el.fold(Element::from(Tags::Paragraph)),
-                            Tag::CodeBlock(_kind) => el.fold(Element::from(Tags::Pre)),
-                            Tag::List(index) => el.fold(match index {
-                                None => Element::from(Tags::UnorderedList),
-                                _ => Element::from(Tags::OrderedList),
-                            }),
-                            Tag::Item => el.fold(Element::from(Tags::ListItem)),
-                            Tag::Table(aligns) => {
-                                alignment = aligns;
-                                el.fold(Element::from(Tags::Table));
-                            }
-                            Tag::TableHead => {
-                                in_header = true;
-                                el.fold(Element::from(Tags::TableHead));
-                            }
-                            Tag::TableRow => el.fold(Element::from(Tags::TableRow)),
-                            Tag::TableCell => {
-                                let style = match alignment[cell_index] {
-                                    Alignment::None => TextAlign::None,
-                                    Alignment::Left => TextAlign::Left,
-                                    Alignment::Center => TextAlign::Center,
-                                    Alignment::Right => TextAlign::Right,
-                                };
-                                let mut tag = HtmlTag::new(if in_header {
-                                    Tags::TableHeaderCell
-                                } else {
-                                    Tags::TableCell
-                                });
-                                tag.style = Some(style);
-                                el.fold(Element::Tag(tag));
-                            }
-                            Tag::Emphasis => el.fold(Element::from(Tags::Emphasis)),
-                            Tag::Strong => el.fold(Element::from(Tags::Strong)),
-                            Tag::Strikethrough => el.fold(Element::from(Tags::Strikethrough)),
-                            Tag::Link(link_t, mut href, display) => {
-                                let mut escaped = String::new();
-                                let mut display = String::from(display.as_ref());
-                                match link_t {
-                                    pulldown_cmark::LinkType::Autolink => {
-                                        if display.is_empty() {
-                                            display.push_str(href.as_ref());
-                                        }
-                                    }
-                                    pulldown_cmark::LinkType::Email => {
-                                        href = CowStr::from(format!("mailto:{}", href));
-                                    }
-                                    _ => {}
-                                }
-                                escape_href(&mut escaped, &href).unwrap();
-                                let mut tag = HtmlTag::new(Tags::Anchor);
-                                tag.href = Some(escaped);
-                                if !display.is_empty() {
-                                    tag.c = Some(vec![Element::Text(display.to_string())]);
-                                } else {
-                                    tag.c = Some(vec![]);
-                                }
-                                el.fold(Element::Tag(tag));
-                            }
-                            Tag::Image(_, href, _) => {
-                                let mut escaped = String::new();
-                                escape_href(&mut escaped, &href).unwrap();
-                                let mut tag = HtmlTag::new(Tags::Image);
-                                tag.c = Some(vec![]);
-                                tag.src = Some(escaped);
-                                el.fold(Element::Tag(tag));
-                            }
-                            // TODO: Implement FootnoteDefinition
-                            //Tag::FootnoteDefinition(_) => {}
-                            _ => {}
+                    Tag::BlockQuote => el = Some(Element::from(Tags::Blockquote)),
+                    Tag::CodeBlock(_) => el = Some(Element::from(Tags::Pre)),
+                    Tag::List(Some(_)) => el = Some(Element::from(Tags::OrderedList)),
+                    Tag::List(None) => el = Some(Element::from(Tags::UnorderedList)),
+                    Tag::Item => el = Some(Element::from(Tags::ListItem)),
+                    Tag::Table(alignments) => {
+                        aligns = alignments;
+                        el = Some(Element::from(Tags::Table));
+                    }
+                    Tag::TableHead => {
+                        in_header = true;
+                        el = Some(Element::from(Tags::TableHead));
+                    }
+                    Tag::TableRow => el = Some(Element::from(Tags::TableRow)),
+                    Tag::TableCell => {
+                        let style = match aligns[column] {
+                            Alignment::None => TextAlign::None,
+                            Alignment::Left => TextAlign::Left,
+                            Alignment::Center => TextAlign::Center,
+                            Alignment::Right => TextAlign::Right,
                         };
+                        assert!(!aligns.is_empty());
+                        column = (column + 1) % aligns.len();
+                        let mut tag = HtmlTag::new(if in_header {
+                            Tags::TableHeaderCell
+                        } else {
+                            Tags::TableCell
+                        });
+                        tag.style = Some(style);
+                        el = Some(Element::Tag(tag));
                     }
-                    Event::End(tag) => {
-                        match tag {
-                            Tag::TableHead => {
-                                in_header = false;
-                            }
-                            Tag::TableRow => {
-                                cell_index = 0;
-                            }
+                    Tag::Emphasis => el = Some(Element::from(Tags::Emphasis)),
+                    Tag::Strong => el = Some(Element::from(Tags::Strong)),
+                    Tag::Strikethrough => el = Some(Element::from(Tags::Strikethrough)),
+                    Tag::Link(link_t, href, display) => {
+                        match link_t {
                             _ => {}
                         }
-                        match (el.take(), ret.last_mut()) {
-                            (None, Some(Element::Tag(top))) => top.done = true,
-                            (Some(Element::Text(el)), Some(Element::Text(top))) => {
-                                top.push_str(&el)
-                            }
-                            (Some(Element::Tag(el)), Some(Element::Tag(top))) if !top.done => {
-                                top.c.get_or_insert(vec![]).push(Element::Tag(el.done()))
-                            }
-                            (Some(el), _) => ret.push(el.done()),
+                        let mut escaped = String::new();
+                        escape_href(&mut escaped, &href).unwrap();
+                        let mut tag = HtmlTag::new(Tags::Anchor);
+                        tag.c = Some(vec![Element::Text(display.to_string())]);
+                        tag.href = Some(escaped);
+                        el = Some(Element::Tag(tag));
+                    }
+                    Tag::Image(link_t, href, display) => {
+                        match link_t {
                             _ => {}
                         }
+                        let mut escaped = String::new();
+                        escape_href(&mut escaped, &href).unwrap();
+                        let mut tag = HtmlTag::new(Tags::Image);
+                        tag.src = Some(escaped);
+                        tag.c = Some(vec![Element::Text(display.to_string())]);
+                        el = Some(Element::Tag(tag));
                     }
-                    Event::Code(text) => {
-                        let mut tag = HtmlTag::new(Tags::Code);
-                        tag.c = Some(vec![Element::Text(text.replace("\\", "\\\\"))]);
-                        el.fold(Element::Tag(tag));
-                    }
-                    Event::SoftBreak | Event::HardBreak => el.fold_str(Cow::from("\n")),
-                    Event::Rule => el.fold(Element::from(Tags::HardBreak)),
-                    Event::TaskListMarker(checked) => {
-                        let mut tag = HtmlTag::new(Tags::Ruler);
-                        tag.typ = Some("checkbox");
-                        tag.checked = Some(if checked { "true" } else { "false" });
-                        el.fold(Element::Tag(tag));
-                    }
-                    //Event::FootnoteReference(_) => {}
+                    // Tag::FootnoteDefinition(def) => todo!()
                     _ => {}
                 };
             }
+            Event::End(tag) => {
+                match tag {
+                    Tag::FootnoteDefinition(_) => continue,
+                    Tag::TableHead => {
+                        in_header = false;
+                    }
+                    _ => {}
+                }
+                match el.take() {
+                    Some(el) => match ret.last_mut() {
+                        None => ret.push(el),
+                        Some(top) => {
+                            if let Some(sibling) = top.append(el) {
+                                todo!();
+                            }
+                        }
+                    },
+                    None => {
+                        let top = ret.pop();
+                        match (ret.last_mut(), top) {
+                            (Some(parent), Some(top)) => {
+                                if let Some(sibling) = parent.append(top) {
+                                    todo!();
+                                }
+                            }
+                            (None, Some(top)) => ret.push(top),
+                            (None, None) => {} // we're done!
+                            (Some(_), None) => unreachable!(),
+                        }
+                    }
+                }
+            }
+            Event::Text(text) => {
+                el.append(Element::Text(text.to_string()));
+            }
+            Event::Code(text) => {
+                let mut tag = HtmlTag::new(Tags::Code);
+                tag.c = Some(vec![Element::Text(text.to_string())]);
+                el.append(Element::Tag(tag));
+            }
+            Event::SoftBreak | Event::HardBreak => {
+                el.append(Element::Text(String::from("\n")));
+            }
+            Event::Rule => {
+                el.append(Element::from(Tags::Ruler));
+            }
+            Event::TaskListMarker(checked) => {
+                let mut tag = HtmlTag::new(Tags::Checkbox);
+                tag.checked = Some(if checked { "true" } else { "false" });
+                el.append(Element::Tag(tag));
+            }
+            // Event::Html(_) => todo!(),
+            // Event::FootnoteReference(_) => todo!(),
+            _ => {}
         }
     }
     ret

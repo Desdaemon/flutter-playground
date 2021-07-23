@@ -1,5 +1,7 @@
 /* Generated with cbindgen:0.19.0 */
 
+#include <stdint.h>
+
 typedef enum CTag {
   Text,
   Tag,
@@ -31,6 +33,8 @@ typedef enum Tags {
   Code,
   HardBreak,
   Ruler,
+  Checkbox,
+  Span,
 } Tags;
 
 typedef enum TextAlign {
@@ -59,8 +63,8 @@ typedef struct CElement {
  * function can be used to define destructors for a particular type.
  */
 typedef struct Slice_CElement {
-  struct CElement *ptr;
   uintptr_t length;
+  struct CElement *ptr;
 } Slice_CElement;
 
 /**
@@ -89,9 +93,6 @@ typedef struct CHtmlTag {
   char *href;
   /**
    * for checkbox only
-   */
-  char *typ;
-  /**
    * for checkbox only
    */
   char *checked;
