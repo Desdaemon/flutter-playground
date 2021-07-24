@@ -11,10 +11,10 @@ pub fn parse_json(parser: Parser<'_>, size_hint: Option<usize>) -> String {
     let mut in_header = false;
     let mut in_text = false;
     let mut alignment: Vec<Alignment> = vec![];
-    let mut cell_index = 0;
+    let mut column = 0;
     for event in parser {
         match event {
-            Event::Text(text) if !text.is_empty() => {
+            Event::Text(text) => {
                 if !in_text {
                     buf.push_str(",\"");
                     in_text = true;
@@ -30,16 +30,16 @@ pub fn parse_json(parser: Parser<'_>, size_hint: Option<usize>) -> String {
                     Event::Start(tag) => match tag {
                         Tag::Paragraph => buf.push_str(r#",{"t":"p","c":["#),
                         Tag::Heading(lvl) => {
-                            buf.push_str(r#",{"t":"h"#);
-                            buf.push_str(lvl.to_string().as_str());
-                            buf.push_str(r#"","c":["#);
+                            buf.push_str(format!(r#",{{"t":"h{}","c":["#, lvl).as_str());
                         }
                         Tag::BlockQuote => buf.push_str(r#",{"t":"blockquote","c":["#),
                         Tag::CodeBlock(_) => {
                             buf.push_str(r#",{"t":"pre","c":["#);
                         }
                         Tag::List(index) => match index {
-                            Some(_num) => buf.push_str(r#",{"t":"ol","c":["#),
+                            Some(start) => buf.push_str(
+                                format!(r#",{{"t":"ol","start":"{}","c":["#, start).as_str(),
+                            ),
                             None => buf.push_str(r#",{"t":"ul","c":["#),
                         },
                         Tag::Item => buf.push_str(r#",{"t":"li","c":["#),
@@ -49,16 +49,17 @@ pub fn parse_json(parser: Parser<'_>, size_hint: Option<usize>) -> String {
                         }
                         Tag::TableHead => {
                             in_header = true;
-                            buf.push_str(r#",{"t":"thead","c":["#);
+                            buf.push_str(r#",{"t":"tr","c":["#);
                         }
                         Tag::TableRow => buf.push_str(r#",{"t":"tr","c":["#),
                         Tag::TableCell => {
-                            let style = match alignment[cell_index] {
-                                Alignment::None => "",
-                                Alignment::Left => r#""style":"text-align: left","#,
+                            let style = match alignment[column] {
+                                // Alignment::None => "",
                                 Alignment::Center => r#""style":"text-align: center","#,
                                 Alignment::Right => r#""style":"text-align: right","#,
+                                _ => r#""style":"text-align: left","#,
                             };
+                            column = (column + 1) % alignment.len();
                             if in_header {
                                 buf.push_str(r#",{"t":"th","#);
                             } else {
@@ -96,16 +97,13 @@ pub fn parse_json(parser: Parser<'_>, size_hint: Option<usize>) -> String {
                             buf.push_str(r#"","c":["#);
                         }
                         // TODO: Implement FootnoteDefinition
-                        //Tag::FootnoteDefinition(_) => {}
+                        // pulldown_cmark::Tag::FootnoteDefinition(_) => {}
                         _ => {}
                     },
                     Event::End(tag) => {
                         match tag {
                             Tag::TableHead => {
                                 in_header = false;
-                            }
-                            Tag::TableRow => {
-                                cell_index = 0;
                             }
                             _ => {}
                         }

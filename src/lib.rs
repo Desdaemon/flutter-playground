@@ -14,6 +14,7 @@ use std::{
 };
 
 pub mod impls;
+pub mod math;
 mod protos;
 pub mod slice;
 
@@ -123,9 +124,9 @@ pub extern "C" fn as_tag(el: *mut CElement) -> *mut CHtmlTag {
 impl From<Element> for CElement {
     fn from(item: Element) -> Self {
         match item {
-            Element::Text(string) => CElement(
+            Element::Text(text) => CElement(
                 CTag::Text,
-                CString::new(string).unwrap().into_raw().cast::<c_void>(),
+                CString::new(text).unwrap().into_raw().cast::<c_void>(),
             ),
             Element::Tag(tag) => CElement(
                 CTag::Tag,
@@ -149,21 +150,20 @@ pub struct CHtmlTag {
     /// anchor href
     href: *mut c_char,
     /// for checkbox only
-    // typ: *mut c_char,
-    /// for checkbox only
-    checked: *mut c_char,
+    checked: bool,
+    display: bool,
 }
 impl Drop for CHtmlTag {
     /// TODO: This is very error prone and will break when
     /// fields are added. The compiler will check for most
-    /// of these, but it cannot check if you have added new fields.
+    /// of these, but it cannot check if you have added new fields
     /// that might need customized destructors.
     fn drop(&mut self) {
         free_elements(self.c);
         free_string(self.src);
         free_string(self.href);
         // free_string(self.typ);
-        free_string(self.checked);
+        // free_string(self.checked);
     }
 }
 
@@ -192,8 +192,10 @@ impl From<HtmlTag> for CHtmlTag {
             style: item.style.unwrap_or(TextAlign::None),
             href: mut_ptr_from(item.href).unwrap(),
             // typ: mut_ptr_from(item.typ.map(String::from)).unwrap(),
-            checked: mut_ptr_from(item.checked.map(String::from)).unwrap(),
+            // checked: mut_ptr_from(item.checked.map(String::from)).unwrap(),
+            checked: item.checked.unwrap_or(false),
             src: mut_ptr_from(item.src).unwrap(),
+            display: item.display.unwrap_or(false),
         }
     }
 }

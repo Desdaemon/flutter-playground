@@ -153,20 +153,19 @@ abstract class Tags {
   static const int UnorderedList = 10;
   static const int ListItem = 11;
   static const int Table = 12;
-  static const int TableHead = 13;
-  static const int TableRow = 14;
-  static const int TableCell = 15;
-  static const int TableHeaderCell = 16;
-  static const int Emphasis = 17;
-  static const int Strong = 18;
-  static const int Strikethrough = 19;
-  static const int Anchor = 20;
-  static const int Image = 21;
-  static const int Code = 22;
-  static const int HardBreak = 23;
-  static const int Ruler = 24;
-  static const int Checkbox = 25;
-  static const int Span = 26;
+  static const int TableRow = 13;
+  static const int TableCell = 14;
+  static const int TableHeaderCell = 15;
+  static const int Emphasis = 16;
+  static const int Strong = 17;
+  static const int Strikethrough = 18;
+  static const int Anchor = 19;
+  static const int Image = 20;
+  static const int Code = 21;
+  static const int HardBreak = 22;
+  static const int Ruler = 23;
+  static const int Checkbox = 24;
+  static const int Math = 25;
 }
 
 abstract class TextAlign {
@@ -219,8 +218,11 @@ class CHtmlTag extends ffi.Struct {
   external ffi.Pointer<ffi.Int8> href;
 
   /// for checkbox only
-  /// for checkbox only
-  external ffi.Pointer<ffi.Int8> checked;
+  @ffi.Uint8()
+  external int checked;
+
+  @ffi.Uint8()
+  external int display;
 }
 
 const int _STDINT_H = 1;
@@ -418,6 +420,12 @@ const int WCHAR_MAX = 2147483647;
 const int WINT_MIN = 0;
 
 const int WINT_MAX = 4294967295;
+
+const int true_1 = 1;
+
+const int false_1 = 0;
+
+const int __bool_true_false_are_defined = 1;
 
 typedef _c_parse_markdown = ffi.Pointer<ffi.Int8> Function(
   ffi.Pointer<ffi.Int8> ptr,

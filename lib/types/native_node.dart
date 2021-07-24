@@ -22,21 +22,23 @@ class HtmlTag implements Map<String, String>, md.Element {
       case 'type':
         return 'checkbox';
       case 'checked':
-        return inner.checked.cast<Utf8>().toDartString();
+        return inner.checked == 0 ? 'false' : 'true';
       case 'style':
         return style;
+      case 'display':
+        return inner.display == 0 ? 'false' : 'true';
     }
   }
 
   late final String? style = computeStyle();
   String? computeStyle() {
     switch (inner.style) {
-      case TextAlign.Left:
-        return 'text-align: left';
       case TextAlign.Center:
         return 'text-align: center';
       case TextAlign.Right:
         return 'text-align: right';
+      default:
+        return 'text-align: left';
     }
   }
 
@@ -51,16 +53,16 @@ class HtmlTag implements Map<String, String>, md.Element {
       case 'type':
         return inner.t == Tags.Checkbox;
       case 'checked':
-        return inner.checked.address != nullptr.address;
       case 'style':
-        return style != null;
+      case 'display':
+        return true;
       default:
         return false;
     }
   }
 
   @override
-  late final Iterable<String> keys = ['src', 'href', 'type', 'checked', 'style'].where(containsKey);
+  late final Iterable<String> keys = ['src', 'href', 'type', 'checked', 'style', 'display'].where(containsKey);
 
   @override
   late final Iterable<String> values = keys.map((key) => this[key]!);
@@ -208,7 +210,6 @@ class HtmlTag implements Map<String, String>, md.Element {
     Tags.Ruler: 'hr',
     Tags.Table: 'table',
     Tags.TableRow: 'tr',
-    Tags.TableHead: 'thead',
     Tags.OrderedList: 'ol',
     Tags.UnorderedList: 'ul',
     Tags.ListItem: 'li',
@@ -221,6 +222,7 @@ class HtmlTag implements Map<String, String>, md.Element {
     Tags.HardBreak: 'br',
     Tags.Anchor: 'a',
     Tags.Checkbox: 'checkbox',
+    Tags.Math: 'math'
   };
 
   Map<String, dynamic> toJson() =>

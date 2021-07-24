@@ -8,38 +8,38 @@ import 'package:yata_flutter/ffi.dart';
 void main() {
   final source = File('assets/markdown_reference.md').readAsStringSync();
   final utf8 = source.toNativeUtf8();
-  // final st = Stopwatch();
+  final st = Stopwatch();
 
-  // var passes = 0;
-  // st.start();
-  // while (st.elapsedMilliseconds <= 5000) {
-  // final vec = lib.parse_markdown_ast(utf8.cast<Int8>());
-  // lib.free_slice(vec.cast<Slice_c_void>());
-  // passes++;
-  // }
-
-  // var passes1 = 0;
-  // // st.reset();
-  // // while (st.elapsedMilliseconds <= 5000) {
-  // // final json = lib.parse_markdown(utf8.cast<Int8>());
-  // // lib.free_string(json);
-  // // passes1++;
-  // // }
-  // print('$passes $passes1');
-  final slice = lib.parse_markdown_ast(utf8.cast<Int8>());
-  for (var i = 0; i < slice.ref.length; i++) {
-    final item = slice.ref.ptr.elementAt(i);
-    // final tag = lib.as_tag(item);
-    // if (tag.isNotNull()) {
-    // print('$tag ${tag.ref.c}');
-    // continue;
-    // }
-    final text = lib.as_text(item);
-    if (text.isNotNull()) {
-      print('$i ${text.address} ${text.castString()}');
-    }
+  var passes = 0;
+  st.start();
+  while (st.elapsedMilliseconds <= 5000) {
+    final slice = lib.parse_markdown_ast(utf8.cast<Int8>());
+    lib.free_elements(slice);
+    passes++;
   }
-  lib.free_elements(slice.cast<Slice_CElement>());
+
+  var passes1 = 0;
+  st.reset();
+  while (st.elapsedMilliseconds <= 5000) {
+    final json = lib.parse_markdown(utf8.cast<Int8>());
+    lib.free_string(json);
+    passes1++;
+  }
+  print('$passes $passes1');
+  // final slice = lib.parse_markdown_ast(utf8.cast<Int8>());
+  // for (var i = 0; i < slice.ref.length; i++) {
+  //   final item = slice.ref.ptr.elementAt(i);
+  //   // final tag = lib.as_tag(item);
+  //   // if (tag.isNotNull()) {
+  //   // print('$tag ${tag.ref.c}');
+  //   // continue;
+  //   // }
+  //   final text = lib.as_text(item);
+  //   if (text.isNotNull()) {
+  //     print('$i ${text.address} ${text.castString()}');
+  //   }
+  // }
+  // lib.free_elements(slice.cast<Slice_CElement>());
 }
 
 extension PointerX on Pointer<dynamic> {

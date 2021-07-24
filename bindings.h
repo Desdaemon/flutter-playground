@@ -1,6 +1,7 @@
 /* Generated with cbindgen:0.19.0 */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum CTag {
   Text,
@@ -21,7 +22,6 @@ typedef enum Tags {
   UnorderedList,
   ListItem,
   Table,
-  TableHead,
   TableRow,
   TableCell,
   TableHeaderCell,
@@ -34,7 +34,7 @@ typedef enum Tags {
   HardBreak,
   Ruler,
   Checkbox,
-  Span,
+  Math,
 } Tags;
 
 typedef enum TextAlign {
@@ -93,9 +93,9 @@ typedef struct CHtmlTag {
   char *href;
   /**
    * for checkbox only
-   * for checkbox only
    */
-  char *checked;
+  bool checked;
+  bool display;
 } CHtmlTag;
 
 /**

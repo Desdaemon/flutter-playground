@@ -4,14 +4,26 @@ use pulldown_cmark::{Event, Parser, Tag};
 use serde::Serialize;
 use std::borrow::BorrowMut;
 
+use crate::math::MathBlock;
+
 #[derive(Clone, Serialize, Debug)]
 #[serde(untagged)]
 pub enum Element {
     Text(String),
     Tag(HtmlTag),
 }
+impl Element {
+    fn done(self) -> Self {
+        match self {
+            Element::Text(_) => self,
+            Element::Tag(tag) => Element::Tag(tag.done()),
+        }
+    }
+}
 #[derive(Clone, Serialize, Debug)]
 pub struct HtmlTag {
+    #[serde(skip)]
+    done: bool,
     pub t: Tags,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub c: Option<Vec<Element>>,
@@ -24,19 +36,28 @@ pub struct HtmlTag {
     // #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     // pub typ: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub checked: Option<&'static str>,
+    // pub checked: Option<&'static str>,
+    pub checked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<bool>,
 }
 impl HtmlTag {
     fn new(tag: Tags) -> Self {
         HtmlTag {
             t: tag,
+            done: false,
             c: Some(vec![]),
             style: None,
             src: None,
             href: None,
             // typ: None,
             checked: None,
+            display: None,
         }
+    }
+    fn done(mut self) -> Self {
+        self.done = true;
+        self
     }
 }
 
@@ -61,8 +82,6 @@ pub enum Tags {
     #[serde(rename = "li")]
     ListItem,
     Table,
-    #[serde(rename = "thead")]
-    TableHead,
     #[serde(rename = "tr")]
     TableRow,
     #[serde(rename = "td")]
@@ -84,6 +103,7 @@ pub enum Tags {
     #[serde(rename = "hr")]
     Ruler,
     Checkbox,
+    Math,
 }
 
 impl From<Tags> for Element {
@@ -105,6 +125,7 @@ pub enum TextAlign {
     Right,
 }
 
+/// Generic over `'b` to allow for borrowing.
 trait Append<T> {
     /// Returns ownership of the item if it cannot append.
     fn append(&mut self, item: T) -> Option<T>;
@@ -114,27 +135,35 @@ impl Append<Element> for Element {
     fn append(&mut self, item: Element) -> Option<Element> {
         match (self, item) {
             (Element::Text(text), Element::Text(item)) => {
-                text.push_str(&item);
+                *text = format!("{}{}", text, item);
                 None
             }
-            (Element::Tag(tag), item) /*if !tag.done*/ => {
+            (Element::Tag(tag), item) if !tag.done => {
                 tag.c.get_or_insert(vec![]).push(item);
                 None
             }
             // Siblings so we cannot merge them directly.
-            (_, tag) => Some(tag)
+            (_, tag) => Some(tag),
         }
     }
 }
 
 impl Append<Element> for Option<Element> {
     fn append(&mut self, item: Element) -> Option<Element> {
-        match self.borrow_mut() {
-            Some(el) => el.append(item),
-            None => {
-                *self = Some(item);
-                None
-            }
+        match (self, item) {
+            (Some(el), item) => el.append(item),
+            (s, item) => match item {
+                Element::Text(_) => {
+                    let mut parent = HtmlTag::new(Tags::Paragraph);
+                    parent.c = Some(vec![item]);
+                    *s = Some(Element::Tag(parent));
+                    None
+                }
+                Element::Tag(_) => {
+                    s.get_or_insert(item);
+                    None
+                }
+            },
         }
     }
 }
@@ -177,7 +206,7 @@ pub fn parse_elements(parser: Parser) -> Vec<Element> {
                     }
                     Tag::TableHead => {
                         in_header = true;
-                        el = Some(Element::from(Tags::TableHead));
+                        el = Some(Element::from(Tags::TableRow));
                     }
                     Tag::TableRow => el = Some(Element::from(Tags::TableRow)),
                     Tag::TableCell => {
@@ -236,10 +265,10 @@ pub fn parse_elements(parser: Parser) -> Vec<Element> {
                 }
                 match el.take() {
                     Some(el) => match ret.last_mut() {
-                        None => ret.push(el),
+                        None => ret.push(el.done()),
                         Some(top) => {
-                            if let Some(sibling) = top.append(el) {
-                                todo!();
+                            if let Some(sibling) = top.append(el.done()) {
+                                ret.push(sibling);
                             }
                         }
                     },
@@ -247,11 +276,11 @@ pub fn parse_elements(parser: Parser) -> Vec<Element> {
                         let top = ret.pop();
                         match (ret.last_mut(), top) {
                             (Some(parent), Some(top)) => {
-                                if let Some(sibling) = parent.append(top) {
-                                    todo!();
+                                if let Some(sibling) = parent.append(top.done()) {
+                                    ret.push(sibling);
                                 }
                             }
-                            (None, Some(top)) => ret.push(top),
+                            (None, Some(top)) => ret.push(top.done()),
                             (None, None) => {} // we're done!
                             (Some(_), None) => unreachable!(),
                         }
@@ -259,7 +288,28 @@ pub fn parse_elements(parser: Parser) -> Vec<Element> {
                 }
             }
             Event::Text(text) => {
-                el.append(Element::Text(text.to_string()));
+                let text = match MathBlock::parse(&text) {
+                    Ok((_, blk)) => {
+                        let mut tag = HtmlTag::new(Tags::Math);
+                        match blk {
+                            MathBlock::Display(text) => {
+                                tag.display = Some(true);
+                                tag.c = Some(vec![Element::Text(text.to_string())])
+                            }
+                            MathBlock::Text(text) => {
+                                tag.display = Some(false);
+                                tag.c = Some(vec![Element::Text(text.to_string())])
+                            }
+                        }
+                        Element::Tag(tag)
+                    }
+                    _ => Element::Text(text.to_string()),
+                };
+                if let Some(el) = el.borrow_mut() {
+                    el.append(text);
+                } else if let Some(top) = ret.last_mut() {
+                    top.append(text);
+                }
             }
             Event::Code(text) => {
                 let mut tag = HtmlTag::new(Tags::Code);
@@ -274,7 +324,7 @@ pub fn parse_elements(parser: Parser) -> Vec<Element> {
             }
             Event::TaskListMarker(checked) => {
                 let mut tag = HtmlTag::new(Tags::Checkbox);
-                tag.checked = Some(if checked { "true" } else { "false" });
+                tag.checked = Some(checked);
                 el.append(Element::Tag(tag));
             }
             // Event::Html(_) => todo!(),

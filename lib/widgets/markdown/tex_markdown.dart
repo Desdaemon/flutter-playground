@@ -27,20 +27,13 @@ class JSONElement extends md.Element {
   static final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
 
   JSONElement(this.json) : super.empty(json['t'] as String) {
+    attributes.addAll({
+      for (final entry in json.entries)
+        if (entry.value is String) entry.key: entry.value as String
+    });
     switch (tag) {
-      case 'ol':
-        attributes['start'] = json['start'].toString();
-        break;
       case 'a':
-        attributes['href'] = json['href'] as String;
         if (isEmpty) _children = [md.Text(json['href'] as String)];
-        break;
-      case 'checkbox':
-        attributes['type'] = 'checkbox';
-        attributes['checked'] = json['value'] as String;
-        break;
-      case 'img':
-        attributes['src'] = json['href'] as String;
         break;
       case 'pre':
         _children = [md.Text((json['c'] as List<dynamic>).join())];
@@ -136,7 +129,7 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
     );
     final List<md.Node> nodes;
-    final st = Stopwatch()..start();
+    // final st = Stopwatch()..start();
     if (widget.nativeParse) {
       final document = md.Document(
         inlineSyntaxes: [MathSyntax.instance],
@@ -146,22 +139,22 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
       final lines = const LineSplitter().convert(widget.data);
       nodes = document.parseLines(lines);
     } else {
-      nodes = parseNodes(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
-      // sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
-      // nodes = [];
-      // for (var i = 0; i < sliceptr.ref.length; ++i) {
-      //   final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
-      //   nodes.add(el);
-      // }
+      // nodes = parseNodes(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
+      sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
+      nodes = [];
+      for (var i = 0; i < sliceptr.ref.length; ++i) {
+        final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
+        nodes.add(el);
+      }
     }
-    final t0 = st.elapsed;
-    final encoded = const JsonEncoder.withIndent("  ").convert(nodes);
+    // final t0 = st.elapsed;
+    // final encoded = const JsonEncoder.withIndent("  ").convert(nodes);
 
-    // final children = mdBuilder.build(nodes);
-    final t1 = st.elapsed - t0;
-    print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
-    // return Column(children: children);
-    return Text(encoded);
+    final children = mdBuilder.build(nodes);
+    // final t1 = st.elapsed - t0;
+    // print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
+    return Column(children: children);
+    // return Text(encoded);
   }
 }
 
