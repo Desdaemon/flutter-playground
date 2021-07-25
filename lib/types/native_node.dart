@@ -2,10 +2,10 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:yata_flutter/bindings.dart';
+import 'package:yata_flutter/bindings/native.dart';
 import 'package:yata_flutter/ffi.dart';
 
-/// A custom implementation of a [Map] and [md.Element] that is immutable and only
+/// A custom implementation of a readonly [Map] and [md.Element] which only
 /// supports a specific number of keys.
 class HtmlTag implements Map<String, String>, md.Element {
   final CHtmlTag inner;
@@ -33,12 +33,12 @@ class HtmlTag implements Map<String, String>, md.Element {
   late final String? style = computeStyle();
   String? computeStyle() {
     switch (inner.style) {
+      case TextAlign.Left:
+        return 'text-align: left';
       case TextAlign.Center:
         return 'text-align: center';
       case TextAlign.Right:
         return 'text-align: right';
-      default:
-        return 'text-align: left';
     }
   }
 
@@ -62,7 +62,7 @@ class HtmlTag implements Map<String, String>, md.Element {
   }
 
   @override
-  late final Iterable<String> keys = ['src', 'href', 'type', 'checked', 'style', 'display'].where(containsKey);
+  late final Iterable<String> keys = const ['src', 'href', 'type', 'checked', 'style', 'display'].where(containsKey);
 
   @override
   late final Iterable<String> values = keys.map((key) => this[key]!);
@@ -149,9 +149,7 @@ class HtmlTag implements Map<String, String>, md.Element {
   }
 
   @override
-  void updateAll(String Function(String key, String value) update) {
-    throwImmutable();
-  }
+  void updateAll(String Function(String key, String value) update) => throwImmutable();
 
   @override
   String? generatedId;
@@ -234,7 +232,7 @@ class Element implements md.Node {
   final Pointer<CElement> inner;
   late final HtmlTag? innerTag = computeTag();
   HtmlTag? computeTag() {
-    final maybeTag = lib.as_tag(inner);
+    final maybeTag = asTag(inner);
     if (maybeTag.address != nullptr.address) return HtmlTag(maybeTag.ref);
   }
 
@@ -244,7 +242,7 @@ class Element implements md.Node {
     if (innerTag != null) {
       return innerTag!.textContent;
     }
-    final ptr = lib.as_text(inner);
+    final ptr = asText(inner);
     return ptr.address == nullptr.address ? '' : ptr.cast<Utf8>().toDartString();
   }
 

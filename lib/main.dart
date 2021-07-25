@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:yata_flutter/types/preferences.dart';
 
 import 'screens/markdown.dart';
 import 'state/dark.dart';
@@ -14,6 +15,9 @@ const boxname = 'markdown';
 const prefname = 'prefs';
 
 Future<void> main() async {
+  Hive.registerAdapter(PreferencesAdapter());
+  Hive.registerAdapter(ThemeTypeAdapter());
+  Hive.registerAdapter(ParseModeAdapter());
   await Hive.initFlutter();
   await Hive.openBox(boxname);
   await Hive.openBox(prefname);

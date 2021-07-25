@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:universal_io/io.dart';
 import 'package:yata_flutter/helpers/markdown.dart';
 import 'package:yata_flutter/widgets/markdown/markdown_bottom_sheet.dart';
 import 'package:yata_flutter/widgets/markdown/tex_markdown.dart';

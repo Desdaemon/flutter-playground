@@ -1,8 +1,9 @@
 use pulldown_cmark::escape::escape_href;
 use pulldown_cmark::Alignment;
-use pulldown_cmark::{Event, Parser, Tag};
+use pulldown_cmark::{Event, Tag};
 use serde::Serialize;
 use std::borrow::BorrowMut;
+use wasm_bindgen::prelude::*;
 
 use crate::math::MathBlock;
 
@@ -20,6 +21,7 @@ impl Element {
         }
     }
 }
+
 #[derive(Clone, Serialize, Debug)]
 pub struct HtmlTag {
     #[serde(skip)]
@@ -33,10 +35,7 @@ pub struct HtmlTag {
     pub src: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
-    // #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    // pub typ: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    // pub checked: Option<&'static str>,
     pub checked: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display: Option<bool>,
@@ -61,6 +60,7 @@ impl HtmlTag {
     }
 }
 
+#[wasm_bindgen]
 #[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
 #[repr(C)]
@@ -112,7 +112,8 @@ impl From<Tags> for Element {
     }
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[wasm_bindgen]
+#[derive(Clone, Copy, Serialize, Debug)]
 #[repr(C)]
 pub enum TextAlign {
     #[serde(rename = "")]
@@ -168,169 +169,172 @@ impl Append<Element> for Option<Element> {
     }
 }
 
-pub fn parse_elements(parser: Parser) -> Vec<Element> {
-    let mut ret = vec![];
-    let mut el: Option<Element> = None;
-    let mut aligns = vec![];
-    let mut column = 0;
-    let mut in_header = false;
-    for event in parser {
-        match event {
-            Event::Start(tag) => {
-                // We always start a tag with an empty element.
-                // When a tag ends, we merge with the top element on the stack.
-                if let Some(el) = el.take() {
-                    ret.push(el);
-                }
-                match tag {
-                    Tag::Paragraph => el = Some(Element::from(Tags::Paragraph)),
-                    Tag::Heading(lvl) => {
-                        el = Some(Element::from(match lvl {
-                            1 => Tags::H1,
-                            2 => Tags::H2,
-                            3 => Tags::H3,
-                            4 => Tags::H4,
-                            5 => Tags::H5,
-                            6 => Tags::H6,
-                            _ => unreachable!(),
-                        }))
+pub struct AstParser;
+impl AstParser {
+    pub fn parse(parser: pulldown_cmark::Parser) -> Vec<Element> {
+        let mut ret = vec![];
+        let mut el: Option<Element> = None;
+        let mut aligns = vec![];
+        let mut column = 0;
+        let mut in_header = false;
+        for event in parser {
+            match event {
+                Event::Start(tag) => {
+                    // We always start a tag with an empty element.
+                    // When a tag ends, we merge with the top element on the stack.
+                    if let Some(el) = el.take() {
+                        ret.push(el);
                     }
-                    Tag::BlockQuote => el = Some(Element::from(Tags::Blockquote)),
-                    Tag::CodeBlock(_) => el = Some(Element::from(Tags::Pre)),
-                    Tag::List(Some(_)) => el = Some(Element::from(Tags::OrderedList)),
-                    Tag::List(None) => el = Some(Element::from(Tags::UnorderedList)),
-                    Tag::Item => el = Some(Element::from(Tags::ListItem)),
-                    Tag::Table(alignments) => {
-                        aligns = alignments;
-                        el = Some(Element::from(Tags::Table));
-                    }
-                    Tag::TableHead => {
-                        in_header = true;
-                        el = Some(Element::from(Tags::TableRow));
-                    }
-                    Tag::TableRow => el = Some(Element::from(Tags::TableRow)),
-                    Tag::TableCell => {
-                        let style = match aligns[column] {
-                            Alignment::None => TextAlign::None,
-                            Alignment::Left => TextAlign::Left,
-                            Alignment::Center => TextAlign::Center,
-                            Alignment::Right => TextAlign::Right,
-                        };
-                        assert!(!aligns.is_empty());
-                        column = (column + 1) % aligns.len();
-                        let mut tag = HtmlTag::new(if in_header {
-                            Tags::TableHeaderCell
-                        } else {
-                            Tags::TableCell
-                        });
-                        tag.style = Some(style);
-                        el = Some(Element::Tag(tag));
-                    }
-                    Tag::Emphasis => el = Some(Element::from(Tags::Emphasis)),
-                    Tag::Strong => el = Some(Element::from(Tags::Strong)),
-                    Tag::Strikethrough => el = Some(Element::from(Tags::Strikethrough)),
-                    Tag::Link(link_t, href, display) => {
-                        match link_t {
-                            _ => {}
+                    match tag {
+                        Tag::Paragraph => el = Some(Element::from(Tags::Paragraph)),
+                        Tag::Heading(lvl) => {
+                            el = Some(Element::from(match lvl {
+                                1 => Tags::H1,
+                                2 => Tags::H2,
+                                3 => Tags::H3,
+                                4 => Tags::H4,
+                                5 => Tags::H5,
+                                6 => Tags::H6,
+                                _ => unreachable!(),
+                            }))
                         }
-                        let mut escaped = String::new();
-                        escape_href(&mut escaped, &href).unwrap();
-                        let mut tag = HtmlTag::new(Tags::Anchor);
-                        tag.c = Some(vec![Element::Text(display.to_string())]);
-                        tag.href = Some(escaped);
-                        el = Some(Element::Tag(tag));
-                    }
-                    Tag::Image(link_t, href, display) => {
-                        match link_t {
-                            _ => {}
+                        Tag::BlockQuote => el = Some(Element::from(Tags::Blockquote)),
+                        Tag::CodeBlock(_) => el = Some(Element::from(Tags::Pre)),
+                        Tag::List(Some(_)) => el = Some(Element::from(Tags::OrderedList)),
+                        Tag::List(None) => el = Some(Element::from(Tags::UnorderedList)),
+                        Tag::Item => el = Some(Element::from(Tags::ListItem)),
+                        Tag::Table(alignments) => {
+                            aligns = alignments;
+                            el = Some(Element::from(Tags::Table));
                         }
-                        let mut escaped = String::new();
-                        escape_href(&mut escaped, &href).unwrap();
-                        let mut tag = HtmlTag::new(Tags::Image);
-                        tag.src = Some(escaped);
-                        tag.c = Some(vec![Element::Text(display.to_string())]);
-                        el = Some(Element::Tag(tag));
-                    }
-                    // Tag::FootnoteDefinition(def) => todo!()
-                    _ => {}
-                };
-            }
-            Event::End(tag) => {
-                match tag {
-                    Tag::FootnoteDefinition(_) => continue,
-                    Tag::TableHead => {
-                        in_header = false;
-                    }
-                    _ => {}
-                }
-                match el.take() {
-                    Some(el) => match ret.last_mut() {
-                        None => ret.push(el.done()),
-                        Some(top) => {
-                            if let Some(sibling) = top.append(el.done()) {
-                                ret.push(sibling);
+                        Tag::TableHead => {
+                            in_header = true;
+                            el = Some(Element::from(Tags::TableRow));
+                        }
+                        Tag::TableRow => el = Some(Element::from(Tags::TableRow)),
+                        Tag::TableCell => {
+                            let style = match aligns[column] {
+                                Alignment::None => TextAlign::None,
+                                Alignment::Left => TextAlign::Left,
+                                Alignment::Center => TextAlign::Center,
+                                Alignment::Right => TextAlign::Right,
+                            };
+                            assert!(!aligns.is_empty());
+                            column = (column + 1) % aligns.len();
+                            let mut tag = HtmlTag::new(if in_header {
+                                Tags::TableHeaderCell
+                            } else {
+                                Tags::TableCell
+                            });
+                            tag.style = Some(style);
+                            el = Some(Element::Tag(tag));
+                        }
+                        Tag::Emphasis => el = Some(Element::from(Tags::Emphasis)),
+                        Tag::Strong => el = Some(Element::from(Tags::Strong)),
+                        Tag::Strikethrough => el = Some(Element::from(Tags::Strikethrough)),
+                        Tag::Link(link_t, href, display) => {
+                            match link_t {
+                                _ => {}
                             }
+                            let mut escaped = String::new();
+                            escape_href(&mut escaped, &href).unwrap();
+                            let mut tag = HtmlTag::new(Tags::Anchor);
+                            tag.c = Some(vec![Element::Text(display.to_string())]);
+                            tag.href = Some(escaped);
+                            el = Some(Element::Tag(tag));
                         }
-                    },
-                    None => {
-                        let top = ret.pop();
-                        match (ret.last_mut(), top) {
-                            (Some(parent), Some(top)) => {
-                                if let Some(sibling) = parent.append(top.done()) {
+                        Tag::Image(link_t, href, display) => {
+                            match link_t {
+                                _ => {}
+                            }
+                            let mut escaped = String::new();
+                            escape_href(&mut escaped, &href).unwrap();
+                            let mut tag = HtmlTag::new(Tags::Image);
+                            tag.src = Some(escaped);
+                            tag.c = Some(vec![Element::Text(display.to_string())]);
+                            el = Some(Element::Tag(tag));
+                        }
+                        // Tag::FootnoteDefinition(def) => todo!()
+                        _ => {}
+                    };
+                }
+                Event::End(tag) => {
+                    match tag {
+                        Tag::FootnoteDefinition(_) => continue,
+                        Tag::TableHead => {
+                            in_header = false;
+                        }
+                        _ => {}
+                    }
+                    match el.take() {
+                        Some(el) => match ret.last_mut() {
+                            None => ret.push(el.done()),
+                            Some(top) => {
+                                if let Some(sibling) = top.append(el.done()) {
                                     ret.push(sibling);
                                 }
                             }
-                            (None, Some(top)) => ret.push(top.done()),
-                            (None, None) => {} // we're done!
-                            (Some(_), None) => unreachable!(),
+                        },
+                        None => {
+                            let top = ret.pop();
+                            match (ret.last_mut(), top) {
+                                (Some(parent), Some(top)) => {
+                                    if let Some(sibling) = parent.append(top.done()) {
+                                        ret.push(sibling);
+                                    }
+                                }
+                                (None, Some(top)) => ret.push(top.done()),
+                                (None, None) => {} // we're done!
+                                (Some(_), None) => unreachable!(),
+                            }
                         }
                     }
                 }
-            }
-            Event::Text(text) => {
-                let text = match MathBlock::parse(&text) {
-                    Ok((_, blk)) => {
-                        let mut tag = HtmlTag::new(Tags::Math);
-                        match blk {
-                            MathBlock::Display(text) => {
-                                tag.display = Some(true);
-                                tag.c = Some(vec![Element::Text(text.to_string())])
+                Event::Text(text) => {
+                    let text = match MathBlock::parse(&text) {
+                        Ok((_, blk)) => {
+                            let mut tag = HtmlTag::new(Tags::Math);
+                            match blk {
+                                MathBlock::Display(text) => {
+                                    tag.display = Some(true);
+                                    tag.c = Some(vec![Element::Text(text.to_string())])
+                                }
+                                MathBlock::Text(text) => {
+                                    tag.display = Some(false);
+                                    tag.c = Some(vec![Element::Text(text.to_string())])
+                                }
                             }
-                            MathBlock::Text(text) => {
-                                tag.display = Some(false);
-                                tag.c = Some(vec![Element::Text(text.to_string())])
-                            }
+                            Element::Tag(tag)
                         }
-                        Element::Tag(tag)
+                        _ => Element::Text(text.to_string()),
+                    };
+                    if let Some(el) = el.borrow_mut() {
+                        el.append(text);
+                    } else if let Some(top) = ret.last_mut() {
+                        top.append(text);
                     }
-                    _ => Element::Text(text.to_string()),
-                };
-                if let Some(el) = el.borrow_mut() {
-                    el.append(text);
-                } else if let Some(top) = ret.last_mut() {
-                    top.append(text);
                 }
+                Event::Code(text) => {
+                    let mut tag = HtmlTag::new(Tags::Code);
+                    tag.c = Some(vec![Element::Text(text.to_string())]);
+                    el.append(Element::Tag(tag));
+                }
+                Event::SoftBreak | Event::HardBreak => {
+                    el.append(Element::Text(String::from("\n")));
+                }
+                Event::Rule => {
+                    el.append(Element::from(Tags::Ruler));
+                }
+                Event::TaskListMarker(checked) => {
+                    let mut tag = HtmlTag::new(Tags::Checkbox);
+                    tag.checked = Some(checked);
+                    el.append(Element::Tag(tag));
+                }
+                // Event::Html(_) => todo!(),
+                // Event::FootnoteReference(_) => todo!(),
+                _ => {}
             }
-            Event::Code(text) => {
-                let mut tag = HtmlTag::new(Tags::Code);
-                tag.c = Some(vec![Element::Text(text.to_string())]);
-                el.append(Element::Tag(tag));
-            }
-            Event::SoftBreak | Event::HardBreak => {
-                el.append(Element::Text(String::from("\n")));
-            }
-            Event::Rule => {
-                el.append(Element::from(Tags::Ruler));
-            }
-            Event::TaskListMarker(checked) => {
-                let mut tag = HtmlTag::new(Tags::Checkbox);
-                tag.checked = Some(checked);
-                el.append(Element::Tag(tag));
-            }
-            // Event::Html(_) => todo!(),
-            // Event::FootnoteReference(_) => todo!(),
-            _ => {}
         }
+        ret
     }
-    ret
 }

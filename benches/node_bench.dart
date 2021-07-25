@@ -1,28 +1,26 @@
 import 'dart:ffi';
-import 'dart:io';
 
 import 'package:ffi/ffi.dart';
-import 'package:yata_flutter/bindings.dart';
-import 'package:yata_flutter/ffi.dart';
+import 'package:universal_io/io.dart';
+import 'package:yata_flutter/bindings/bindings.dart';
 
 void main() {
   final source = File('assets/markdown_reference.md').readAsStringSync();
-  final utf8 = source.toNativeUtf8();
+  // final utf8 = source.toNativeUtf8();
   final st = Stopwatch();
 
   var passes = 0;
   st.start();
   while (st.elapsedMilliseconds <= 5000) {
-    final slice = lib.parse_markdown_ast(utf8.cast<Int8>());
-    lib.free_elements(slice);
+    final slice = parseMarkdownAst(source.toNativeUtf8().cast<Int8>());
+    freeElements(slice);
     passes++;
   }
 
   var passes1 = 0;
   st.reset();
   while (st.elapsedMilliseconds <= 5000) {
-    final json = lib.parse_markdown(utf8.cast<Int8>());
-    lib.free_string(json);
+    parseMarkdown(source);
     passes1++;
   }
   print('$passes $passes1');

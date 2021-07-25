@@ -51,3 +51,6 @@ target
 
 # Symlink to LLVM
 lib/libclang.so
+
+# WASM output
+pkg

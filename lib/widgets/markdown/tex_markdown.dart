@@ -2,7 +2,6 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -14,10 +13,9 @@ import 'package:flutter_math_fork/tex.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yata_flutter/bindings.dart';
+import 'package:yata_flutter/bindings/bindings.dart';
 import 'package:yata_flutter/ffi.dart';
 import 'package:yata_flutter/state/markdown.dart';
-import 'package:yata_flutter/types/native_node.dart' as nat;
 
 /// Allows a Map to pretend to be an [md.Element] without having
 /// to deserialize into a proper element type.
@@ -104,14 +102,14 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    lib.free_elements(sliceptr);
+    freeElements(sliceptr);
   }
 
   @override
   void dispose() {
     super.dispose();
     // freeing a nullptr is a no-op, so this is OK.
-    lib.free_elements(sliceptr);
+    freeElements(sliceptr);
   }
 
   @override
@@ -139,13 +137,13 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
       final lines = const LineSplitter().convert(widget.data);
       nodes = document.parseLines(lines);
     } else {
-      // nodes = parseNodes(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
-      sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
-      nodes = [];
-      for (var i = 0; i < sliceptr.ref.length; ++i) {
-        final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
-        nodes.add(el);
-      }
+      nodes = parseMarkdown(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
+      // sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
+      // nodes = [];
+      // for (var i = 0; i < sliceptr.ref.length; ++i) {
+      //   final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
+      //   nodes.add(el);
+      // }
     }
     // final t0 = st.elapsed;
     // final encoded = const JsonEncoder.withIndent("  ").convert(nodes);
@@ -244,14 +242,14 @@ class MathBuilder extends MarkdownElementBuilder {
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
-    final textMode = element.attributes.containsKey('text');
+    final displayMode = element.attributes['display'] == 'true';
     List<GreenNode>? ast;
     ParseException? exception;
 
     try {
       ast = cache[tex] ??= TexParser(
         tex,
-        textMode ? const TexParserSettings() : const TexParserSettings(displayMode: true),
+        displayMode ? const TexParserSettings(displayMode: true) : const TexParserSettings(),
       ).parseExpression();
     } on ParseException catch (e) {
       ast = null;
@@ -265,26 +263,26 @@ class MathBuilder extends MarkdownElementBuilder {
       child: Math(
         ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
         parseError: exception,
-        mathStyle: textMode ? MathStyle.text : MathStyle.display,
+        mathStyle: displayMode ? MathStyle.text : MathStyle.display,
         textScaleFactor: scale,
         onErrorFallback: (e) {
           return Tooltip(message: e.message, child: Text(tex, style: const TextStyle(color: Colors.red)));
         },
       ),
     );
-    return textMode ? child : Align(child: child);
+    return displayMode ? child : Align(child: child);
   }
 }
 
 class MathSyntax extends md.InlineSyntax {
   static final instance = MathSyntax();
-  MathSyntax() : super(r'\$\$?([^$]+)(\$?)\$');
+  MathSyntax() : super(r'\$(\$?)([^$]+)\$\1');
   @override
   bool onMatch(md.InlineParser parser, Match match) {
-    final elem = md.Element.text('math', match[1]!);
-    final textMode = match[2]?.isEmpty ?? true;
+    final elem = md.Element.text('math', match[2]!);
+    final textMode = match[1]?.isEmpty ?? true;
+    elem.attributes['display'] = textMode ? 'false' : 'true';
     if (textMode) {
-      elem.attributes['text'] = '';
       parser.addNode(elem);
     } else {
       parser.addNode(md.Element('p', [elem]));

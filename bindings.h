@@ -3,8 +3,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/**
+ * Tag for [CElement].
+ */
 typedef enum CTag {
+  /**
+   * [Element::Text]
+   */
   Text,
+  /**
+   * [Element::Tag]
+   */
   Tag,
 } CTag;
 
@@ -57,10 +66,12 @@ typedef struct CElement {
  * Wrapper over Rust's slice type.
  *
  * The main functionality comes from [rust_slice_to_c], a function
- * that convers Rust slices into Slice pointers.
+ * that converts Rust slices into Slice pointers.
  *
  * The accompanying `impl_slice_destructor` macro, or the [free_slice]
  * function can be used to define destructors for a particular type.
+ *
+ * It is highly unsafe to mutate this slice before it is returned to the Rust side.
  */
 typedef struct Slice_CElement {
   uintptr_t length;
@@ -95,6 +106,9 @@ typedef struct CHtmlTag {
    * for checkbox only
    */
   bool checked;
+  /**
+   * for math blocks
+   */
   bool display;
 } CHtmlTag;
 
@@ -116,6 +130,9 @@ char *parse_markdown_xml(const char *ptr);
  */
 struct Slice_CElement *parse_markdown_ast(const char *ptr);
 
+/**
+ * Frees the [Slice] created by [parse_markdown_ast].
+ */
 void free_elements(struct Slice_CElement *ptr);
 
 /**
@@ -124,8 +141,17 @@ void free_elements(struct Slice_CElement *ptr);
  */
 char *parse_markdown_ast_json(const char *ptr);
 
+/**
+ * Common string destructor intended to be called by the Dart side.
+ */
 void free_string(char *ptr);
 
+/**
+ * Exposes the [CElement] as a text node if it is one, or null otherwise.
+ */
 char *as_text(struct CElement *el);
 
+/**
+ * Exposes the [CElement] as a [CHtmlTag] if it is one, or null otherwise.
+ */
 struct CHtmlTag *as_tag(struct CElement *el);
