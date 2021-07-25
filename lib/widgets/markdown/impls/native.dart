@@ -2,10 +2,10 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_playground/bindings/bindings.dart';
+import 'package:flutter_playground/ffi.dart';
+import 'package:flutter_playground/types/native_node.dart' as nat;
 import 'package:markdown/markdown.dart' as md;
-import 'package:yata_flutter/bindings/stub.dart';
-import 'package:yata_flutter/ffi.dart';
-import 'package:yata_flutter/types/native_node.dart' as nat;
 
 mixin FastParse<T extends StatefulWidget> on State<T> {
   Pointer<Slice_CElement> ptr = nullptr;

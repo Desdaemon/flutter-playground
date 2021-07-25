@@ -1,6 +1,6 @@
 main:
 	cargo build --release
-	wasm-pack build
+	wasm-pack build -t web
 	cbindgen --config cbindgen.toml --output bindings.h
 gen-ffi:
 	dart pub get

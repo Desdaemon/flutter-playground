@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter_playground/ffi.dart';
 import 'package:universal_io/io.dart';
-import 'package:yata_flutter/ffi.dart';
 
 /// Sometimes "armeabi-v7a" for 32-bit machines.
 const androidArch = String.fromEnvironment('ANDROID_ARCH', defaultValue: 'arm64-v8a');

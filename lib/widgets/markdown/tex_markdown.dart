@@ -9,11 +9,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_math_fork/tex.dart';
+import 'package:flutter_playground/state/markdown.dart';
+import 'package:flutter_playground/widgets/markdown/impls/impls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yata_flutter/state/markdown.dart';
-import 'package:yata_flutter/widgets/markdown/impls/impls.dart';
 
 class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelegate {
   final String data;
@@ -49,21 +49,6 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
 }
 
 class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
-  // Pointer<Slice_CElement> sliceptr = nullptr;
-
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   freeElements(sliceptr);
-  // }
-
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  //   // freeing a nullptr is a no-op, so this is OK.
-  //   freeElements(sliceptr);
-  // }
-
   @override
   Widget build(BuildContext context) {
     final mdBuilder = MarkdownBuilder(
@@ -90,13 +75,6 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
       nodes = document.parseLines(lines);
     } else {
       nodes = fastParse(widget.data);
-      // nodes = parseMarkdown(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
-      // sliceptr = parseMarkdownAst(widget.data.toNativeUtf8().cast<Int8>());
-      // nodes = [];
-      // for (var i = 0; i < sliceptr.ref.length; ++i) {
-      //   final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
-      //   nodes.add(el);
-      // }
     }
     final t0 = st.elapsed;
     final children = mdBuilder.build(nodes);

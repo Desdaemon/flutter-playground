@@ -13,7 +13,7 @@ void freeElements(dynamic ptr) {
   assert(false, 'No-op on wasm-32');
 }
 
-dynamic wasmParseMarkdownAst(String input) => wasm_parse_markdown_ast(input);
+const wasmParseMarkdownAst = wasm_parse_markdown_ast;
 
 void asTag(dynamic ptr) => throw UnimplementedError();
 void asText(dynamic ptr) => throw UnimplementedError();

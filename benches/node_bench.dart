@@ -2,7 +2,7 @@ import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 import 'package:universal_io/io.dart';
-import 'package:yata_flutter/bindings/bindings.dart';
+import 'package:flutter_playground/bindings/bindings.dart';
 
 void main() {
   final source = File('assets/markdown_reference.md').readAsStringSync();

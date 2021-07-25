@@ -1,4 +1,4 @@
-name: yata_flutter
+name: flutter_playground
 description: A new Flutter project.
 publish_to: "none"
 version: 1.0.0+1
@@ -42,7 +42,6 @@ flutter:
   assets:
     - assets/
     - pkg/flutter_playground.js
-    - pkg/flutter_playground_bg.js
     - pkg/flutter_playground_bg.wasm
   fonts:
     - family: JetBrains Mono

@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_playground/main.dart' show boxname, prefname;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-
-import 'package:yata_flutter/main.dart' show boxname, prefname;
 
 final pScreenMode = StateProvider((_) => ScreenMode.sbs);
 final pLockstep = StateProvider((_) => true);
@@ -126,8 +125,8 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
         if (en.key == active) active: contents else en.key: en.value,
       // if (!state.files.containsKey(active)) active: contents
     });
-    // })
-    // persist(active);
+    // });
+    persist(active);
   }
 }
 

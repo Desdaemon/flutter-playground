@@ -1,11 +1,11 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use flutter_playground::{
-    impls::{ast::AstParser, json::JsonParser, tree_sitter::TreeSitterParser},
+    impls::{ast::AstParser, json::JsonParser},
     math::MathBlock,
 };
 use pulldown_cmark::{Options, Parser};
 use regex::Regex;
-use tree_sitter::Tree;
+// use tree_sitter::Tree;
 
 static SOURCE: &'static str = include_str!("../assets/markdown_reference.md");
 
@@ -13,11 +13,11 @@ fn get_parser() -> Parser<'static> {
     Parser::new_ext(SOURCE, Options::all())
 }
 
-fn get_tree() -> (TreeSitterParser, Option<Tree>) {
-    let mut parser = TreeSitterParser::new();
-    let tree = parser.parse(SOURCE, None, None);
-    (parser, tree)
-}
+// fn get_tree() -> (TreeSitterParser, Option<Tree>) {
+//     let mut parser = TreeSitterParser::new();
+//     let tree = parser.parse(SOURCE, None, None);
+//     (parser, tree)
+// }
 
 fn benchmark_parsers(bench: &mut Criterion) {
     {
@@ -44,13 +44,13 @@ fn benchmark_parsers(bench: &mut Criterion) {
             );
         });
     }
-    bench.bench_function("tree_parser", |c| {
-        c.iter_batched(
-            get_tree,
-            |(mut parser, tree)| parser.parse(SOURCE, tree, None),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    // bench.bench_function("tree_parser", |c| {
+    //     c.iter_batched(
+    //         get_tree,
+    //         |(mut parser, tree)| parser.parse(SOURCE, tree, None),
+    //         criterion::BatchSize::SmallInput,
+    //     )
+    // });
 }
 
 /// The Regex implementation on Rust is limited due to being unable to use backreferences,

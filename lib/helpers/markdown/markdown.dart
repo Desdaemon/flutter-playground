@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yata_flutter/screens/markdown.dart';
+import 'package:flutter_playground/screens/markdown.dart';
 
 mixin MarkdownPlatform on State<MathMarkdown> {
   RestorableTextEditingController get ctl;

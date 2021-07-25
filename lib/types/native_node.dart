@@ -1,9 +1,9 @@
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter_playground/bindings/bindings.dart';
+import 'package:flutter_playground/ffi.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:yata_flutter/bindings/native.dart';
-import 'package:yata_flutter/ffi.dart';
 
 /// A custom implementation of a readonly [Map] and [md.Element] which only
 /// supports a specific number of keys.

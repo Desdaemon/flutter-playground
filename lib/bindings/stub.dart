@@ -1,6 +1,6 @@
 import 'dart:ffi';
 
-import 'package:yata_flutter/ffi.dart';
+import 'package:flutter_playground/ffi.dart';
 
 List<dynamic> parseMarkdown(String input) => throw UnimplementedError();
 Pointer<Slice_CElement> parseMarkdownAst(Pointer<Int8> ptr) => throw UnimplementedError();

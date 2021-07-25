@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_playground/screens/markdown.dart';
+import 'package:flutter_playground/state/markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:yata_flutter/screens/markdown.dart';
-import 'package:yata_flutter/state/markdown.dart';
 
 mixin MarkdownPlatform on State<MathMarkdown> {
   RestorableTextEditingController get ctl;

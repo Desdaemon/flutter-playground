@@ -8,14 +8,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_playground/screens/markdown.dart';
+import 'package:flutter_playground/state/markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:yata_flutter/screens/markdown.dart';
-import 'package:yata_flutter/state/markdown.dart';
 
 mixin MarkdownPlatform on State<MathMarkdown> {
   RestorableTextEditingController get ctl;

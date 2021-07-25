@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_playground/helpers/markdown.dart';
+import 'package:flutter_playground/widgets/markdown/markdown_bottom_sheet.dart';
+import 'package:flutter_playground/widgets/markdown/tex_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:universal_io/io.dart';
-import 'package:yata_flutter/helpers/markdown.dart';
-import 'package:yata_flutter/widgets/markdown/markdown_bottom_sheet.dart';
-import 'package:yata_flutter/widgets/markdown/tex_markdown.dart';
 
 import '../state/markdown.dart';
 import '../widgets/markdown/editor.dart';
@@ -163,8 +163,6 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                 ),
               if (sm.previewing && vertical) const Divider(height: 1),
               if (sm.previewing && !vertical) const VerticalDivider(width: 1),
-              // A caching technique: Flexible as top-level child,
-              // Visibility with maintainState set to true.
               Expanded(
                 flex: sm.previewing ? 1 : 0,
                 child: Align(

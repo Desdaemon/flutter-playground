@@ -28,7 +28,19 @@
 
   <title>flutter_playground</title>
   <link rel="manifest" href="manifest.json">
-  <!-- <script type="module" src="assets/flutter_playground.js"></script> -->
+  <script type="module" defer>
+    import init from './assets/pkg/flutter_playground.js';
+    wasm.init().then(wasm => {
+      for (const key in wasm)
+        Object.defineProperty(window, key, {
+          value: wasm[key],
+          writable: false
+        })
+    })
+    // await wasm.init();
+    // window.wasm_parse_markdown = wasm_parse_markdown;
+    // window.wasm_parse_markdown_ast = wasm_parse_markdown_ast;
+  </script>
 </head>
 <body>
   <!-- This script installs service_worker.js to provide PWA functionality to
@@ -42,5 +54,6 @@
     }
   </script>
   <script src="main.dart.js" type="application/javascript"></script>
+  
 </body>
 </html>
