@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -13,55 +12,8 @@ import 'package:flutter_math_fork/tex.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:yata_flutter/bindings/bindings.dart';
-import 'package:yata_flutter/ffi.dart';
 import 'package:yata_flutter/state/markdown.dart';
-
-/// Allows a Map to pretend to be an [md.Element] without having
-/// to deserialize into a proper element type.
-class JSONElement extends md.Element {
-  final Map<String, dynamic> json;
-  List<md.Node>? _children;
-  static final mathre = RegExp(r'\$\$?([^$]+)(\$?)\$');
-
-  JSONElement(this.json) : super.empty(json['t'] as String) {
-    attributes.addAll({
-      for (final entry in json.entries)
-        if (entry.value is String) entry.key: entry.value as String
-    });
-    switch (tag) {
-      case 'a':
-        if (isEmpty) _children = [md.Text(json['href'] as String)];
-        break;
-      case 'pre':
-        _children = [md.Text((json['c'] as List<dynamic>).join())];
-        break;
-    }
-  }
-
-  static md.Node fromStrOrMap(dynamic json) {
-    if (json is String) {
-      final match = mathre.matchAsPrefix(json);
-      if (match != null) {
-        final output = md.Element.text('math', match[1]!);
-        if (match[2]!.isEmpty) {
-          output.attributes['text'] = '';
-        }
-        return output;
-      }
-      return md.Text(json);
-    }
-    return JSONElement(json as Map<String, dynamic>);
-  }
-
-  @override
-  List<md.Node>? get children => _children ??= (json['c'] as List<dynamic>?)?.map(JSONElement.fromStrOrMap).toList();
-
-  @override
-  bool get isEmpty => (children ?? json['c'] as List<dynamic>?)?.isEmpty ?? true;
-
-  Map<String, dynamic> toJson() => json;
-}
+import 'package:yata_flutter/widgets/markdown/impls/impls.dart';
 
 class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelegate {
   final String data;
@@ -96,21 +48,21 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
   }
 }
 
-class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
-  Pointer<Slice_CElement> sliceptr = nullptr;
+class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
+  // Pointer<Slice_CElement> sliceptr = nullptr;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    freeElements(sliceptr);
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   freeElements(sliceptr);
+  // }
 
-  @override
-  void dispose() {
-    super.dispose();
-    // freeing a nullptr is a no-op, so this is OK.
-    freeElements(sliceptr);
-  }
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   // freeing a nullptr is a no-op, so this is OK.
+  //   freeElements(sliceptr);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +79,7 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
     );
     final List<md.Node> nodes;
-    // final st = Stopwatch()..start();
+    final st = Stopwatch()..start();
     if (widget.nativeParse) {
       final document = md.Document(
         inlineSyntaxes: [MathSyntax.instance],
@@ -137,22 +89,20 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> {
       final lines = const LineSplitter().convert(widget.data);
       nodes = document.parseLines(lines);
     } else {
-      nodes = parseMarkdown(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
-      // sliceptr = lib.parse_markdown_ast(widget.data.toNativeUtf8().cast<Int8>());
+      nodes = fastParse(widget.data);
+      // nodes = parseMarkdown(widget.data).map(JSONElement.fromStrOrMap).toList(growable: false);
+      // sliceptr = parseMarkdownAst(widget.data.toNativeUtf8().cast<Int8>());
       // nodes = [];
       // for (var i = 0; i < sliceptr.ref.length; ++i) {
       //   final el = nat.Element(sliceptr.ref.ptr.elementAt(i));
       //   nodes.add(el);
       // }
     }
-    // final t0 = st.elapsed;
-    // final encoded = const JsonEncoder.withIndent("  ").convert(nodes);
-
+    final t0 = st.elapsed;
     final children = mdBuilder.build(nodes);
-    // final t1 = st.elapsed - t0;
-    // print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
+    final t1 = st.elapsed - t0;
+    print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
     return Column(children: children);
-    // return Text(encoded);
   }
 }
 

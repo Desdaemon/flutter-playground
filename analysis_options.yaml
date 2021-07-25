@@ -3,3 +3,5 @@ analyzer:
   exclude:
     - "**/bindings.dart"
     - "**/*.freezed.dart"
+    - lib/bindings/pkg
+    - lib/ffi.dart

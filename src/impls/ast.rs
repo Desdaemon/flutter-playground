@@ -126,7 +126,6 @@ pub enum TextAlign {
     Right,
 }
 
-/// Generic over `'b` to allow for borrowing.
 trait Append<T> {
     /// Returns ownership of the item if it cannot append.
     fn append(&mut self, item: T) -> Option<T>;
@@ -136,7 +135,7 @@ impl Append<Element> for Element {
     fn append(&mut self, item: Element) -> Option<Element> {
         match (self, item) {
             (Element::Text(text), Element::Text(item)) => {
-                *text = format!("{}{}", text, item);
+                text.push_str(&item);
                 None
             }
             (Element::Tag(tag), item) if !tag.done => {

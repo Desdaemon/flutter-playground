@@ -1,10 +1,11 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use flutter_playground::{
-    impls::{ast::AstParser, json::JsonParser},
+    impls::{ast::AstParser, json::JsonParser, tree_sitter::TreeSitterParser},
     math::MathBlock,
 };
 use pulldown_cmark::{Options, Parser};
 use regex::Regex;
+use tree_sitter::Tree;
 
 static SOURCE: &'static str = include_str!("../assets/markdown_reference.md");
 
@@ -12,28 +13,43 @@ fn get_parser() -> Parser<'static> {
     Parser::new_ext(SOURCE, Options::all())
 }
 
+fn get_tree() -> (TreeSitterParser, Option<Tree>) {
+    let mut parser = TreeSitterParser::new();
+    let tree = parser.parse(SOURCE, None, None);
+    (parser, tree)
+}
+
 fn benchmark_parsers(bench: &mut Criterion) {
-    let mut parsers = bench.benchmark_group("parsers");
-    parsers.bench_function("parse_json", |c| {
+    {
+        let mut parsers = bench.benchmark_group("parsers");
+        parsers.bench_function("parse_json", |c| {
+            c.iter_batched(
+                get_parser,
+                |parser| JsonParser::parse(parser, Some(SOURCE.len())),
+                criterion::BatchSize::SmallInput,
+            );
+        });
+        parsers.bench_function("parse_json_no_size_hint", |c| {
+            c.iter_batched(
+                get_parser,
+                |parser| JsonParser::parse(parser, None),
+                criterion::BatchSize::SmallInput,
+            );
+        });
+        parsers.bench_function("parse_elements", |c| {
+            c.iter_batched(
+                get_parser,
+                |parser| AstParser::parse(parser),
+                criterion::BatchSize::SmallInput,
+            );
+        });
+    }
+    bench.bench_function("tree_parser", |c| {
         c.iter_batched(
-            get_parser,
-            |parser| JsonParser::parse(parser, Some(SOURCE.len())),
+            get_tree,
+            |(mut parser, tree)| parser.parse(SOURCE, tree, None),
             criterion::BatchSize::SmallInput,
-        );
-    });
-    parsers.bench_function("parse_json_no_size_hint", |c| {
-        c.iter_batched(
-            get_parser,
-            |parser| JsonParser::parse(parser, None),
-            criterion::BatchSize::SmallInput,
-        );
-    });
-    parsers.bench_function("parse_elements", |c| {
-        c.iter_batched(
-            get_parser,
-            |parser| AstParser::parse(parser),
-            criterion::BatchSize::SmallInput,
-        );
+        )
     });
 }
 

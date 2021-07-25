@@ -120,14 +120,14 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   void updateActive(String contents) {
     timer.cancel();
     final active = state.active;
-    timer = Timer(const Duration(milliseconds: 300), () {
-      state = state.copyWith(files: {
-        for (final en in state.files.entries)
-          if (en.key == active) active: contents else en.key: en.value,
-        if (!state.files.containsKey(active)) active: contents
-      });
+    // timer = Timer(const Duration(milliseconds: 300), () {
+    state = state.copyWith(files: {
+      for (final en in state.files.entries)
+        if (en.key == active) active: contents else en.key: en.value,
+      // if (!state.files.containsKey(active)) active: contents
     });
-    persist(active);
+    // })
+    // persist(active);
   }
 }
 
