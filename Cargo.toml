@@ -33,3 +33,7 @@ harness = false
 
 [profile.release]
 lto = true
+
+[build]
+# only available on nightly
+profiler = true

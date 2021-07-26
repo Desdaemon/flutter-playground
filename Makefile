@@ -9,6 +9,16 @@ gen-ffi:
 ndk:
 	cargo ndk -t armeabi-v7a -t arm64-v8a -o android/app/src/main/jniLibs build --release
 build: main gen-ffi ndk
+coverage:
+	RUSTFLAGS="-Z instrument-coverage" cargo +nightly build --bins
+	./target/debug/flutter_playground
+	llvm-profdata merge -sparse default.profraw -o flutter_playground.profdata
+	llvm-cov show -Xdemangler=rustfilt target/debug/flutter_playground \
+		--instr-profile=flutter_playground.profdata \
+		--show-line-counts-or-regions \
+		--show-instantiations \
+		--name=parse \
+		--format=html > coverage-report.html
 init:
 	cargo install cargo-ndk wasm-pack
 	rustup target add \
@@ -16,3 +26,6 @@ init:
 		armv7-linux-androideabi \
 		x86_64-linux-android \
 		i686-linux-android
+init-coverage:
+	rustup toolchain install nightly
+	cargo install rustfilt

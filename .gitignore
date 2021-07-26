@@ -54,3 +54,5 @@ lib/libclang.so
 
 # WASM output
 pkg
+*.profraw
+*.profdata

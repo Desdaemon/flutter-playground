@@ -276,16 +276,21 @@ impl AstParser {
                         },
                         None => {
                             let top = ret.pop();
-                            match (ret.last_mut(), top) {
-                                (Some(parent), Some(top)) => {
-                                    if let Some(sibling) = parent.append(top.done()) {
-                                        ret.push(sibling);
-                                    }
+                            if let (Some(parent), Some(top)) = (ret.last_mut(), top) {
+                                if let Some(sibling) = parent.append(top.done()) {
+                                    ret.push(sibling);
                                 }
-                                (None, Some(top)) => ret.push(top.done()),
-                                (None, None) => {} // we're done!
-                                (Some(_), None) => unreachable!(),
                             }
+                            // match (ret.last_mut(), top) {
+                            // (Some(parent), Some(top)) => {
+                            // if let Some(sibling) = parent.append(top.done()) {
+                            // ret.push(sibling);
+                            // }
+                            // }
+                            // (None, Some(top)) => ret.push(top.done()),
+                            // (None, None) => {} // we're done!
+                            // (Some(_), None) => unreachable!(),
+                            // }
                         }
                     }
                 }
