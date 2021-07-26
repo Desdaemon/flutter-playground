@@ -1,4 +1,4 @@
-// #[deny(missing_docs)]
+#[deny(missing_docs)]
 
 /// Exposes the implementations in [impls] to different consumers,
 /// i.e. the C FFI and the WASM module.

@@ -35,12 +35,14 @@ mod tests {
 /// Exposes a Rust slice to FFI consumers as a [Slice].
 ///
 /// This function accepts a boxed slice, which can be obtained via
-/// [Vec::into_boxed_slice](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice)
-/// or [collect](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect)ing
-/// an iterator into one, i.e. `.collect::<Box<_>>()`.
+/// [Vec::into_boxed_slice][1] or [collecting][2] an iterator into one,
+/// i.e. `.collect::<Box<_>>()`.
 ///
 /// Ownership of the slice is handed off to the C side, and must be freed with [free_slice]
 /// to avoid leaking memory.
+///
+/// [1]: <https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice>
+/// [2]: <https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect>
 pub fn rust_slice_to_c<T>(slice: Box<[T]>) -> *mut Slice<T> {
     let slice = Box::leak(slice);
     let ptr = slice.as_mut_ptr();

@@ -1,18 +1,20 @@
 main:
 	cargo build --release
-	wasm-pack build -t web
+	wasm-pack build --release -t no-modules
 	cbindgen --config cbindgen.toml --output bindings.h
-gen-ffi:
+bindings:
 	dart pub get
 	dart run ffigen
-	npx -y dart_js_facade_gen --destination=lib/bindings pkg/flutter_playground.d.ts
+	# Disabled for now, since it is not aware of nullable types which causes
+	# wrong runtime behavior.
+	# npx -y dart_js_facade_gen --destination=lib/bindings pkg/flutter_playground.d.ts
 ndk:
 	cargo ndk -t armeabi-v7a -t arm64-v8a -o android/app/src/main/jniLibs build --release
 build: main gen-ffi ndk
 coverage:
 	RUSTFLAGS="-Z instrument-coverage" cargo +nightly build --bins
 	./target/debug/flutter_playground
-	llvm-profdata merge -sparse default.profraw -o flutter_playground.profdata
+	llvm-profdata merge -sparse default.profraw -o flutter_playground.profdata && \
 	llvm-cov show -Xdemangler=rustfilt target/debug/flutter_playground \
 		--instr-profile=flutter_playground.profdata \
 		--show-line-counts-or-regions \

@@ -3,10 +3,13 @@ use pulldown_cmark::Alignment;
 use pulldown_cmark::{Event, Tag};
 use serde::Serialize;
 use std::borrow::BorrowMut;
-use wasm_bindgen::prelude::*;
 
 use crate::math::MathBlock;
 
+/// Serialized into JS as a `string` or [HtmlTag].
+/// No bindings are generated for this struct, since Dart
+/// does not have a concept of union types and therefore
+/// can only consume this type as a `dynamic`.
 #[derive(Clone, Serialize, Debug)]
 #[serde(untagged)]
 pub enum Element {
@@ -60,7 +63,6 @@ impl HtmlTag {
     }
 }
 
-#[wasm_bindgen]
 #[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
 #[repr(C)]
@@ -112,7 +114,6 @@ impl From<Tags> for Element {
     }
 }
 
-#[wasm_bindgen]
 #[derive(Clone, Copy, Serialize, Debug)]
 #[repr(C)]
 pub enum TextAlign {

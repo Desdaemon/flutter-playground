@@ -3,6 +3,7 @@ use pulldown_cmark::{Options, Parser};
 
 static SOURCE: &'static str = include_str!("../assets/markdown_reference.md");
 
+/// Binary for profiling.
 fn main() {
     let parser = Parser::new_ext(SOURCE, Options::all());
     let _ast = AstParser::parse(parser);

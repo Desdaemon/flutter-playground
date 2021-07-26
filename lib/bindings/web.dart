@@ -9,9 +9,7 @@ List parseMarkdown(String input) {
 
 void parseMarkdownAst(dynamic ptr) => throw UnimplementedError('Not implemented on wasm-32');
 
-void freeElements(dynamic ptr) {
-  assert(false, 'No-op on wasm-32');
-}
+void freeElements(dynamic ptr) {}
 
 const wasmParseMarkdownAst = wasm_parse_markdown_ast;
 

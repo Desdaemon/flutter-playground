@@ -9,23 +9,29 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 /// A web implementation of the FlutterPlayground plugin.
 class FlutterPlaygroundWeb {
-  static void initialize([String source = './assets/pkg/flutter_playground.js']) {
+  static void initialize({
+    String base = './assets/pkg',
+    String name = 'flutter_playground',
+    String namespace = 'wasm_bindgen',
+  }) {
     final head = document.head;
     if (head == null) return;
 
-    if (head.querySelector('#flt-flutter-playground-wasm') != null) return;
+    if (head.querySelector('#flt-$namespace-$name') != null) return;
 
+    // ignore: unsafe_html
+    final import = ScriptElement()..src = '$base/$name.js';
+    head.append(import);
     final script = ScriptElement()
-      ..id = 'flt-flutter-playground-wasm'
-      ..type = 'module'
-      ..async = true
-      ..text = '''
-          import init from '$source';
-          import * as wasm from '$source';
-          await init();
-          Object.assign(window, wasm);
-          ''';
-    head.append(script);
+      ..id = 'flt-$namespace-$name'
+      ..text = """
+      $namespace('$base/${name}_bg.wasm').then(function() {
+        window.$namespace = $namespace
+      })
+      """;
+    import.onLoad.first.then((_) {
+      head.append(script);
+    });
   }
 
   static void registerWith(Registrar registrar) {

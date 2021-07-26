@@ -10,7 +10,9 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_math_fork/tex.dart';
 import 'package:flutter_playground/state/markdown.dart';
-import 'package:flutter_playground/widgets/markdown/impls/impls.dart';
+import 'package:flutter_playground/widgets/markdown/fast_parse/fast_parse.dart'
+    if (dart.library.io) 'fast_parse/fast_parse.native.dart'
+    if (dart.library.html) 'fast_parse/fast_parse.web.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';

@@ -56,3 +56,4 @@ lib/libclang.so
 pkg
 *.profraw
 *.profdata
+coverage
