@@ -20,20 +20,21 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
   final double scale;
   final MarkdownStyleSheet style;
   final bool nativeParse;
+  final ScrollController? scrollController;
   final void Function(String, String?, String)? onTapLink;
 
   @override
   State<StatefulWidget> createState() => _CustomMarkdownBodyState();
 
-  const CustomMarkdownBody(
-    this.data, {
-    Key? key,
-    // this.cache = true,
-    this.scale = 1,
-    this.onTapLink,
-    required this.style,
-    this.nativeParse = true,
-  }) : super(key: key);
+  const CustomMarkdownBody(this.data,
+      {Key? key,
+      // this.cache = true,
+      this.scale = 1,
+      this.onTapLink,
+      required this.style,
+      this.nativeParse = true,
+      this.scrollController})
+      : super(key: key);
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
@@ -62,6 +63,7 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
       bulletBuilder: null,
       builders: {'math': MathBuilder(scale: widget.scale)},
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
+      fitContent: true,
     );
     final List<md.Node> nodes;
     final st = Stopwatch()..start();
@@ -80,19 +82,25 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
     final children = mdBuilder.build(nodes);
     final t1 = st.elapsed - t0;
     print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
-    return Column(children: children);
+    return ListView(controller: widget.scrollController, children: children);
   }
 }
 
 class MarkdownPreview extends StatelessWidget {
   final String expr;
 
-  // final ScrollController? sc;
   final double scale;
 
   /// Disabled by default due to high performance impact
   final bool selectable;
-  const MarkdownPreview({Key? key, required this.expr, this.scale = 1, this.selectable = false}) : super(key: key);
+  final ScrollController? controller;
+  const MarkdownPreview({
+    Key? key,
+    required this.expr,
+    this.scale = 1,
+    this.selectable = false,
+    this.controller,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +120,8 @@ class MarkdownPreview extends StatelessWidget {
         expr,
         scale: scale,
         style: style,
+        scrollController: controller,
         nativeParse: watch(pNativeParsing).state,
-        // cache: watch(pCache).state,
         onTapLink: (text, href, title) async {
           if (href == null) return;
           if (href.startsWith('#')) {
@@ -171,14 +179,31 @@ class MathBuilder extends MarkdownElementBuilder {
   Widget? visitElementAfter(md.Element element, TextStyle? ts) {
     final tex = element.children!.first.textContent;
     final displayMode = element.attributes['display'] == 'true';
+    return MathWidget(tex: tex, displayMode: displayMode, scale: scale);
+  }
+}
+
+class MathWidget extends StatefulWidget {
+  final String? tex;
+  final bool displayMode;
+  final double scale;
+  const MathWidget({Key? key, this.tex, this.displayMode = false, this.scale = 1}) : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _MathWidgetState();
+}
+
+class _MathWidgetState extends State<MathWidget> {
+  static final cache = HashMap<String, List<GreenNode>>();
+
+  @override
+  Widget build(BuildContext context) {
+    final tex = widget.tex;
+    if (tex == null || tex.isEmpty) return Container();
     List<GreenNode>? ast;
     ParseException? exception;
 
     try {
-      ast = cache[tex] ??= TexParser(
-        tex,
-        displayMode ? const TexParserSettings(displayMode: true) : const TexParserSettings(),
-      ).parseExpression();
+      ast = cache[tex] ??= TexParser(tex, TexParserSettings(displayMode: widget.displayMode)).parseExpression();
     } on ParseException catch (e) {
       ast = null;
       cache.remove(tex);
@@ -191,14 +216,14 @@ class MathBuilder extends MarkdownElementBuilder {
       child: Math(
         ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
         parseError: exception,
-        mathStyle: displayMode ? MathStyle.text : MathStyle.display,
-        textScaleFactor: scale,
+        mathStyle: widget.displayMode ? MathStyle.text : MathStyle.display,
+        textScaleFactor: widget.scale,
         onErrorFallback: (e) {
           return Tooltip(message: e.message, child: Text(tex, style: const TextStyle(color: Colors.red)));
         },
       ),
     );
-    return displayMode ? child : Align(child: child);
+    return Container(alignment: widget.displayMode ? Alignment.center : null, child: child);
   }
 }
 

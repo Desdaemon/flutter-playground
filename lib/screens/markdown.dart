@@ -169,23 +169,24 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                   alignment: Alignment.topLeft,
                   child: Visibility(
                     visible: sm.previewing,
-                    child: Scrollbar(
-                      child: Consumer(builder: (bc, watch, _) {
-                        final lines = watch(pActiveFile);
-                        final _scale = watch(pScale).state;
-                        return ListView(
-                          padding: vertical
-                              ? isMobile
-                                  ? const EdgeInsets.fromLTRB(16, 32, 16, 8)
-                                  : const EdgeInsets.fromLTRB(16, 16, 16, 8)
-                              : isMobile
-                                  ? const EdgeInsets.fromLTRB(8, 32, 16, 8)
-                                  : const EdgeInsets.fromLTRB(8, 16, 16, 8),
+                    child: Consumer(builder: (bc, watch, _) {
+                      final lines = watch(pActiveFile);
+                      final _scale = watch(pScale).state;
+                      return Padding(
+                        padding: vertical
+                            ? isMobile
+                                ? const EdgeInsets.fromLTRB(16, 32, 16, 8)
+                                : const EdgeInsets.fromLTRB(16, 16, 16, 8)
+                            : isMobile
+                                ? const EdgeInsets.fromLTRB(8, 32, 16, 8)
+                                : const EdgeInsets.fromLTRB(8, 16, 16, 8),
+                        child: MarkdownPreview(
+                          expr: lines,
+                          scale: _scale,
                           controller: sc,
-                          children: [MarkdownPreview(expr: lines, scale: _scale)],
-                        );
-                      }),
-                    ),
+                        ),
+                      );
+                    }),
                   ),
                 ),
               ),
