@@ -47,6 +47,7 @@ app.*.map.json
 /android/app/src/main/jniLibs
 
 *.html
+tools/*.stamp
 target
 
 # Symlink to LLVM
