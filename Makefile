@@ -10,7 +10,7 @@ bindings:
 	# npx -y dart_js_facade_gen --destination=lib/bindings pkg/flutter_playground.d.ts
 ndk:
 	cargo ndk -t armeabi-v7a -t arm64-v8a -o android/app/src/main/jniLibs build --release
-build: main gen-ffi ndk
+build: main bindings ndk
 coverage:
 	RUSTFLAGS="-Z instrument-coverage" cargo +nightly build --bins
 	./target/debug/flutter_playground
