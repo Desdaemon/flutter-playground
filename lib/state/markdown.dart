@@ -123,7 +123,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
     state = state.copyWith(files: {
       for (final en in state.files.entries)
         if (en.key == active) active: contents else en.key: en.value,
-      // if (!state.files.containsKey(active)) active: contents
+      if (!state.files.containsKey(active)) active: contents
     });
     // });
     persist(active);
