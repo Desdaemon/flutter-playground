@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_playground/helpers/markdown.dart';
 import 'package:flutter_playground/widgets/markdown/markdown_bottom_sheet.dart';
 import 'package:flutter_playground/widgets/markdown/tex_markdown.dart';
@@ -171,8 +172,10 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                     visible: sm.previewing,
                     child: Consumer(builder: (bc, watch, _) {
                       final lines = watch(pActiveFile);
+                      final lockstep = watch(pLockstep).state;
                       final _scale = watch(pScale).state;
                       return Padding(
+                        key: Key(lines),
                         padding: vertical
                             ? isMobile
                                 ? const EdgeInsets.fromLTRB(16, 32, 16, 8)
@@ -181,9 +184,11 @@ class _MathMarkdownState extends IMathMarkdownState with RestorationMixin {
                                 ? const EdgeInsets.fromLTRB(8, 32, 16, 8)
                                 : const EdgeInsets.fromLTRB(8, 16, 16, 8),
                         child: MarkdownPreview(
+                          key: Key(lines),
                           expr: lines,
                           scale: _scale,
                           controller: sc,
+                          lockstep: lockstep,
                         ),
                       );
                     }),

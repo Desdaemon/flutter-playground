@@ -22,6 +22,7 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
   final double scale;
   final MarkdownStyleSheet style;
   final bool nativeParse;
+  final bool lockstep;
   final ScrollController? scrollController;
   final void Function(String, String?, String)? onTapLink;
 
@@ -30,12 +31,12 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
 
   const CustomMarkdownBody(this.data,
       {Key? key,
-      // this.cache = true,
       this.scale = 1,
       this.onTapLink,
       required this.style,
       this.nativeParse = true,
-      this.scrollController})
+      this.scrollController,
+      this.lockstep = true})
       : super(key: key);
 
   @override
@@ -53,6 +54,13 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
 
 class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
   @override
+  void initState() {
+    super.initState();
+    print('initState');
+  }
+
+  List<md.Node> nodes = [];
+  @override
   Widget build(BuildContext context) {
     final mdBuilder = MarkdownBuilder(
       delegate: widget,
@@ -67,8 +75,7 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
       fitContent: true,
     );
-    final List<md.Node> nodes;
-    final st = Stopwatch()..start();
+    // final st = Stopwatch()..start();
     if (widget.nativeParse) {
       final document = md.Document(
         inlineSyntaxes: [MathSyntax.instance],
@@ -80,13 +87,41 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
     } else {
       nodes = fastParse(widget.data);
     }
-    final t0 = st.elapsed;
     final children = mdBuilder.build(nodes);
-    final t1 = st.elapsed - t0;
-    print('${widget.nativeParse ? 'n' : ' '} $t0 $t1 ${st.elapsed} ${MathBuilder.cache.length} items');
-    return ListView(controller: widget.scrollController, children: children);
+    return ListView(
+      controller: widget.scrollController,
+      children: children,
+    );
+    // print('${widget.nativeParse ? 'n' : ' '} ${st.elapsed} ${MathBuilder.cache.length} items');
+    // if (widget.lockstep) {
+    // final children = mdBuilder.build(nodes);
+    // return ListView(
+    // controller: widget.scrollController,
+    // children: [Column(crossAxisAlignment: CrossAxisAlignment.start, children: children)],
+    // );
+    // } else {
+    // return ListView.separated(
+    // controller: widget.scrollController,
+    // separatorBuilder: (_, __) => const SizedBox(height: 4),
+    // itemCount: nodes.length,
+    // itemBuilder: (bc, idx) => Column(
+    // crossAxisAlignment: CrossAxisAlignment.start,
+    // children: mdBuilder.build([nodes[idx]]),
+    // ),
+    // );
+    // }
   }
 }
+
+// class RenderMarkdown extends StatelessWidget {
+// final List<md.Node> nodes;
+// const RenderMarkdown(this.nodes);
+// @override
+// Widget build(BuildContext context) {
+// TODO: implement build
+// throw UnimplementedError();
+// }
+// }
 
 class MarkdownPreview extends StatelessWidget {
   final String expr;
@@ -95,14 +130,11 @@ class MarkdownPreview extends StatelessWidget {
 
   /// Disabled by default due to high performance impact
   final bool selectable;
+  final bool lockstep;
   final ScrollController? controller;
-  const MarkdownPreview({
-    Key? key,
-    required this.expr,
-    this.scale = 1,
-    this.selectable = false,
-    this.controller,
-  }) : super(key: key);
+  const MarkdownPreview(
+      {Key? key, required this.expr, this.scale = 1, this.selectable = false, this.controller, this.lockstep = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +152,7 @@ class MarkdownPreview extends StatelessWidget {
     return Consumer(
       builder: (bc, watch, _) => CustomMarkdownBody(
         expr,
+        lockstep: lockstep,
         scale: scale,
         style: style,
         scrollController: controller,
