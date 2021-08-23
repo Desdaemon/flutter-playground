@@ -28,6 +28,12 @@
 
     <title>flutter_playground</title>
     <link rel="manifest" href="manifest.json" />
+    <script src="assets/pkg/flutter_playground.js"></script>
+    <script>
+      wasm_bindgen("assets/pkg/flutter_playground_bg.wasm").then(function () {
+        window.wasm_bindgen = wasm_bindgen;
+      });
+    </script>
   </head>
   <body>
     <!-- This script installs service_worker.js to provide PWA functionality to

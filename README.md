@@ -11,9 +11,9 @@ flutter run
 ## Areas covered
 - 🎯 Rust-Dart interop (via C FFI) 
   - Exposing Rust functions as [C functions](src/frontends/ffi.rs)
-  - Using `cbindgen` and `ffigen` to create [Dart bindings](lib/bindings.dart)
+  - Using `cbindgen` and `ffigen` to create [Dart bindings](lib/ffi.dart)
 - ![WASM Icon](assets/wasm-small.png) Rust-Dart interop (via WASM)
-  - Exposing Rust functions as a WASM module
+  - Exposing Rust functions as a [WASM module](src/frontends/wasm.rs)
   - Using `dart_js_facade_gen` to create Dart bindings
 - [State management](lib/state/markdown.dart) with Riverpod
 - [State persistence](lib/state/dark.dart) with Hive
