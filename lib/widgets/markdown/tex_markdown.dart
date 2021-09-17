@@ -17,7 +17,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
-class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelegate {
+class CustomMarkdownBody extends StatefulWidget
+    implements MarkdownBuilderDelegate {
   final String data;
   final double scale;
   final MarkdownStyleSheet style;
@@ -29,20 +30,23 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
   @override
   State<StatefulWidget> createState() => _CustomMarkdownBodyState();
 
-  const CustomMarkdownBody(this.data,
-      {Key? key,
-      this.scale = 1,
-      this.onTapLink,
-      required this.style,
-      this.nativeParse = true,
-      this.scrollController,
-      this.lockstep = true})
-      : super(key: key);
+  const CustomMarkdownBody(
+    this.data, {
+    Key? key,
+    this.scale = 1,
+    this.onTapLink,
+    required this.style,
+    this.nativeParse = true,
+    this.scrollController,
+    this.lockstep = true,
+  }) : super(key: key);
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
     final output = TapGestureRecognizer();
-    if (onTapLink != null) output.onTap = () => onTapLink!.call(text, href, title);
+    if (onTapLink != null) {
+      output.onTap = () => onTapLink!.call(text, href, title);
+    }
     return output;
   }
 
@@ -52,13 +56,8 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
   }
 }
 
-class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
-  @override
-  void initState() {
-    super.initState();
-    print('initState');
-  }
-
+class _CustomMarkdownBodyState extends State<CustomMarkdownBody>
+    with FastParse {
   List<md.Node> nodes = [];
   @override
   Widget build(BuildContext context) {
@@ -68,8 +67,9 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
       selectable: false,
       imageDirectory: null,
       imageBuilder: null,
-      checkboxBuilder: (val) =>
-          val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
+      checkboxBuilder: (val) => val
+          ? const Icon(Icons.check_box, size: 12)
+          : const Icon(Icons.check_box_outline_blank, size: 12),
       bulletBuilder: null,
       builders: {'math': MathBuilder(scale: widget.scale)},
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
@@ -87,41 +87,30 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
     } else {
       nodes = fastParse(widget.data);
     }
-    final children = mdBuilder.build(nodes);
-    return ListView(
-      controller: widget.scrollController,
-      children: children,
-    );
-    // print('${widget.nativeParse ? 'n' : ' '} ${st.elapsed} ${MathBuilder.cache.length} items');
-    // if (widget.lockstep) {
-    // final children = mdBuilder.build(nodes);
-    // return ListView(
-    // controller: widget.scrollController,
-    // children: [Column(crossAxisAlignment: CrossAxisAlignment.start, children: children)],
-    // );
-    // } else {
-    // return ListView.separated(
-    // controller: widget.scrollController,
-    // separatorBuilder: (_, __) => const SizedBox(height: 4),
-    // itemCount: nodes.length,
-    // itemBuilder: (bc, idx) => Column(
-    // crossAxisAlignment: CrossAxisAlignment.start,
-    // children: mdBuilder.build([nodes[idx]]),
-    // ),
-    // );
-    // }
+    if (widget.lockstep) {
+      final children = mdBuilder.build(nodes);
+      return ListView(
+        controller: widget.scrollController,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          )
+        ],
+      );
+    } else {
+      return ListView.separated(
+        controller: widget.scrollController,
+        separatorBuilder: (_, __) => const SizedBox(height: 4),
+        itemCount: nodes.length,
+        itemBuilder: (bc, idx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: mdBuilder.build([nodes[idx]]),
+        ),
+      );
+    }
   }
 }
-
-// class RenderMarkdown extends StatelessWidget {
-// final List<md.Node> nodes;
-// const RenderMarkdown(this.nodes);
-// @override
-// Widget build(BuildContext context) {
-// TODO: implement build
-// throw UnimplementedError();
-// }
-// }
 
 class MarkdownPreview extends StatelessWidget {
   final String expr;
@@ -132,9 +121,14 @@ class MarkdownPreview extends StatelessWidget {
   final bool selectable;
   final bool lockstep;
   final ScrollController? controller;
-  const MarkdownPreview(
-      {Key? key, required this.expr, this.scale = 1, this.selectable = false, this.controller, this.lockstep = false})
-      : super(key: key);
+  const MarkdownPreview({
+    Key? key,
+    required this.expr,
+    this.scale = 1,
+    this.selectable = false,
+    this.controller,
+    this.lockstep = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -142,12 +136,18 @@ class MarkdownPreview extends StatelessWidget {
     final style = MarkdownStyleSheet.fromTheme(theme).copyWith(
       blockquoteDecoration: BoxDecoration(
         color: theme.cardColor,
-        border: Border(left: BorderSide(color: theme.colorScheme.secondary, width: 4)),
+        border: Border(
+          left: BorderSide(color: theme.colorScheme.secondary, width: 4),
+        ),
       ),
       textScaleFactor: scale,
       blockSpacing: 12 * scale,
-      listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
-      code: const TextStyle(fontFamily: 'JetBrains Mono', backgroundColor: Colors.transparent),
+      listBullet:
+          TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
+      code: const TextStyle(
+        fontFamily: 'JetBrains Mono',
+        backgroundColor: Colors.transparent,
+      ),
     );
     return Consumer(
       builder: (bc, watch, _) => CustomMarkdownBody(
@@ -160,11 +160,13 @@ class MarkdownPreview extends StatelessWidget {
         onTapLink: (text, href, title) async {
           if (href == null) return;
           if (href.startsWith('#')) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Header links are not supported'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.orangeAccent,
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Header links are not supported'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.orangeAccent,
+              ),
+            );
             return;
           }
           if (await canLaunch(href)) {
@@ -193,11 +195,13 @@ class MarkdownPreview extends StatelessWidget {
             );
             if (answer ?? false) launch(href);
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('$text could not be opened'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: theme.errorColor,
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$text could not be opened'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: theme.errorColor,
+              ),
+            );
           }
         },
       ),
@@ -222,7 +226,12 @@ class MathWidget extends StatefulWidget {
   final String? tex;
   final bool displayMode;
   final double scale;
-  const MathWidget({Key? key, this.tex, this.displayMode = false, this.scale = 1}) : super(key: key);
+  const MathWidget({
+    Key? key,
+    this.tex,
+    this.displayMode = false,
+    this.scale = 1,
+  }) : super(key: key);
   @override
   State<StatefulWidget> createState() => _MathWidgetState();
 }
@@ -238,7 +247,9 @@ class _MathWidgetState extends State<MathWidget> {
     ParseException? exception;
 
     try {
-      ast = cache[tex] ??= TexParser(tex, TexParserSettings(displayMode: widget.displayMode)).parseExpression();
+      ast = cache[tex] ??=
+          TexParser(tex, TexParserSettings(displayMode: widget.displayMode))
+              .parseExpression();
     } on ParseException catch (e) {
       ast = null;
       cache.remove(tex);
@@ -249,16 +260,24 @@ class _MathWidgetState extends State<MathWidget> {
 
     final child = SingleChildScrollView(
       child: Math(
-        ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
+        ast: ast != null
+            ? SyntaxTree(greenRoot: EquationRowNode(children: ast))
+            : null,
         parseError: exception,
         mathStyle: widget.displayMode ? MathStyle.text : MathStyle.display,
         textScaleFactor: widget.scale,
         onErrorFallback: (e) {
-          return Tooltip(message: e.message, child: Text(tex, style: const TextStyle(color: Colors.red)));
+          return Tooltip(
+            message: e.message,
+            child: Text(tex, style: const TextStyle(color: Colors.red)),
+          );
         },
       ),
     );
-    return Container(alignment: widget.displayMode ? Alignment.center : null, child: child);
+    return Container(
+      alignment: widget.displayMode ? Alignment.center : null,
+      child: child,
+    );
   }
 }
 

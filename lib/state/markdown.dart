@@ -7,26 +7,30 @@ import 'package:hive/hive.dart';
 
 final pScreenMode = StateProvider((_) => ScreenMode.sbs);
 final pLockstep = StateProvider((_) => true);
-final pNativeParsing = StateProvider((_) => false);
+final pNativeParsing = StateProvider((_) => true);
 final pScale = StateProvider((_) => 1.0);
 final pIndents = StateProvider((_) => 2);
 final pTicker = StateProvider((_) => '');
 final pCache = StateProvider((_) => true);
 
 /// The directory of files and its interim contents.
-final pFiles =
-    StateNotifierProvider<MarkdownStore, MarkdownState>((_) => MarkdownStore(boxname: boxname, prefname: prefname));
+final pFiles = StateNotifierProvider<MarkdownStore, MarkdownState>(
+  (_) => MarkdownStore(boxname: boxname, prefname: prefname),
+);
 
 /// The path to the file being edited.
 final pActivePath = Provider((ref) => ref.watch(pFiles).active);
 
 /// The contents of the active file.
-final pActiveFile = Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
+final pActiveFile =
+    Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
 final pFileList = Provider((ref) => ref.watch(pFiles).files.keys);
-final pIsPreviewing = Provider((ref) => ref.watch(pScreenMode).state.previewing);
+final pIsPreviewing =
+    Provider((ref) => ref.watch(pScreenMode).state.previewing);
 
 /// Scalable fontsize.
-final pFontSize = Provider.family((ref, double size) => ref.watch(pScale).state * size);
+final pFontSize =
+    Provider.family((ref, double size) => ref.watch(pScale).state * size);
 
 @immutable
 class MarkdownState {
@@ -38,9 +42,12 @@ class MarkdownState {
 }
 
 class MarkdownStore extends StateNotifier<MarkdownState> {
-  MarkdownStore(
-      {this.boxname = 'markdown', this.boxid = 'markdown', this.untitled = 'Untitled', this.prefname = 'prefs'})
-      : super(const MarkdownState({}, 'Untitled'));
+  MarkdownStore({
+    this.boxname = 'markdown',
+    this.boxid = 'markdown',
+    this.untitled = 'Untitled',
+    this.prefname = 'prefs',
+  }) : super(const MarkdownState({}, 'Untitled'));
   final String boxname;
   final String boxid;
   final String prefname;
@@ -74,21 +81,26 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
 
   /// Sets the [path] for [contents] without making it active.
   void operator []=(String path, String contents) {
-    state = state.copyWith(files: {
-      for (final en in state.files.entries)
-        if (en.key == path) path: contents else en.key: en.value,
-      if (!state.files.containsKey(path)) path: contents
-    });
+    state = state.copyWith(
+      files: {
+        for (final en in state.files.entries)
+          if (en.key == path) path: contents else en.key: en.value,
+        if (!state.files.containsKey(path)) path: contents
+      },
+    );
     persist(path);
   }
 
   /// Sets the [contents] of [path] and makes it the active file.
   void activate(String path, String contents) {
-    state = MarkdownState({
-      for (final en in state.files.entries)
-        if (en.key == path) path: contents else en.key: en.value,
-      if (!state.files.containsKey(path)) path: contents
-    }, path);
+    state = MarkdownState(
+      {
+        for (final en in state.files.entries)
+          if (en.key == path) path: contents else en.key: en.value,
+        if (!state.files.containsKey(path)) path: contents
+      },
+      path,
+    );
     persist(path);
   }
 
@@ -102,10 +114,13 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
       final idx = paths.indexOf(file);
       newpath = idx > 0 && paths.length > 1 ? paths[idx - 1] : untitled;
     }
-    state = MarkdownState({
-      for (final en in state.files.entries)
-        if (en.key != file) en.key: en.value
-    }, newpath);
+    state = MarkdownState(
+      {
+        for (final en in state.files.entries)
+          if (en.key != file) en.key: en.value
+      },
+      newpath,
+    );
     Hive.box(boxname).delete(file);
     return state.files[state.active] ?? '';
   }
@@ -120,11 +135,13 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
     timer.cancel();
     final active = state.active;
     timer = Timer(const Duration(milliseconds: 200), () {
-      state = state.copyWith(files: {
-        for (final en in state.files.entries)
-          if (en.key == active) active: contents else en.key: en.value,
-        if (!state.files.containsKey(active)) active: contents
-      });
+      state = state.copyWith(
+        files: {
+          for (final en in state.files.entries)
+            if (en.key == active) active: contents else en.key: en.value,
+          if (!state.files.containsKey(active)) active: contents
+        },
+      );
     });
     persist(active);
   }
