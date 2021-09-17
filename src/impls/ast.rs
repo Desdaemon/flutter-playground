@@ -282,16 +282,6 @@ impl AstParser {
                                     ret.push(sibling);
                                 }
                             }
-                            // match (ret.last_mut(), top) {
-                            // (Some(parent), Some(top)) => {
-                            // if let Some(sibling) = parent.append(top.done()) {
-                            // ret.push(sibling);
-                            // }
-                            // }
-                            // (None, Some(top)) => ret.push(top.done()),
-                            // (None, None) => {} // we're done!
-                            // (Some(_), None) => unreachable!(),
-                            // }
                         }
                     }
                 }
