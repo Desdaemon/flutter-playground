@@ -17,8 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
-class CustomMarkdownBody extends StatefulWidget
-    implements MarkdownBuilderDelegate {
+class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelegate {
   final String data;
   final double scale;
   final MarkdownStyleSheet style;
@@ -56,9 +55,9 @@ class CustomMarkdownBody extends StatefulWidget
   }
 }
 
-class _CustomMarkdownBodyState extends State<CustomMarkdownBody>
-    with FastParse {
+class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
   List<md.Node> nodes = [];
+
   @override
   Widget build(BuildContext context) {
     final mdBuilder = MarkdownBuilder(
@@ -67,9 +66,9 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody>
       selectable: false,
       imageDirectory: null,
       imageBuilder: null,
-      checkboxBuilder: (val) => val
-          ? const Icon(Icons.check_box, size: 12)
-          : const Icon(Icons.check_box_outline_blank, size: 12),
+      checkboxBuilder: null,
+      // checkboxBuilder: (val) =>
+      //     val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
       bulletBuilder: null,
       builders: {'math': MathBuilder(scale: widget.scale)},
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
@@ -91,17 +90,12 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody>
       final children = mdBuilder.build(nodes);
       return ListView(
         controller: widget.scrollController,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
-          )
-        ],
+        children: [Column(crossAxisAlignment: CrossAxisAlignment.start, children: children)],
       );
     } else {
       return ListView.separated(
         controller: widget.scrollController,
-        separatorBuilder: (_, __) => const SizedBox(height: 4),
+        separatorBuilder: (_, __) => const SizedBox(height: 6),
         itemCount: nodes.length,
         itemBuilder: (bc, idx) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,8 +136,7 @@ class MarkdownPreview extends StatelessWidget {
       ),
       textScaleFactor: scale,
       blockSpacing: 12 * scale,
-      listBullet:
-          TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
+      listBullet: TextStyle(fontSize: theme.textTheme.bodyText2!.fontSize! * scale),
       code: const TextStyle(
         fontFamily: 'JetBrains Mono',
         backgroundColor: Colors.transparent,
@@ -247,36 +240,29 @@ class _MathWidgetState extends State<MathWidget> {
     ParseException? exception;
 
     try {
-      ast = cache[tex] ??=
-          TexParser(tex, TexParserSettings(displayMode: widget.displayMode))
-              .parseExpression();
+      ast = cache[tex] ??= TexParser(tex, TexParserSettings(displayMode: widget.displayMode)).parseExpression();
     } on ParseException catch (e) {
       ast = null;
       cache.remove(tex);
       exception = e;
-    } catch (e) {
-      rethrow;
     }
 
-    final child = SingleChildScrollView(
-      child: Math(
-        ast: ast != null
-            ? SyntaxTree(greenRoot: EquationRowNode(children: ast))
-            : null,
-        parseError: exception,
-        mathStyle: widget.displayMode ? MathStyle.text : MathStyle.display,
-        textScaleFactor: widget.scale,
-        onErrorFallback: (e) {
-          return Tooltip(
-            message: e.message,
-            child: Text(tex, style: const TextStyle(color: Colors.red)),
-          );
-        },
-      ),
-    );
     return Container(
       alignment: widget.displayMode ? Alignment.center : null,
-      child: child,
+      child: SingleChildScrollView(
+        child: Math(
+          ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
+          parseError: exception,
+          mathStyle: widget.displayMode ? MathStyle.text : MathStyle.display,
+          textScaleFactor: widget.scale,
+          onErrorFallback: (e) {
+            return Tooltip(
+              message: e.message,
+              child: Text(tex, style: const TextStyle(color: Colors.red)),
+            );
+          },
+        ),
+      ),
     );
   }
 }

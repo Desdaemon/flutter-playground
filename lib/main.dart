@@ -21,24 +21,21 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox(boxname);
   await Hive.openBox(prefname);
-  runApp(const RootRestorationScope(restorationId: 'root', child: ProviderScope(child: MarkdownApp())));
+  runApp(const ProviderScope(child: MarkdownApp()));
 }
 
-class MarkdownApp extends StatelessWidget {
+class MarkdownApp extends ConsumerWidget {
   const MarkdownApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer(
-      builder: (_, watch, child) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData.from(colorScheme: ayuLight, textTheme: Typography.englishLike2018),
-        darkTheme: ThemeData.from(colorScheme: ayuDark, textTheme: Typography.englishLike2018),
-        themeMode: watch(darkTheme),
-        home: child,
-        restorationScopeId: 'root',
-      ),
-      child: const MathMarkdown(restorationId: 'MathMarkdown'),
+  Widget build(BuildContext context, ScopedReader watch) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.from(colorScheme: ayuLight, textTheme: Typography.englishLike2018),
+      darkTheme: ThemeData.from(colorScheme: ayuDark, textTheme: Typography.englishLike2018),
+      themeMode: watch(darkTheme),
+      home: const MathMarkdown(restorationId: 'MathMarkdown'),
+      restorationScopeId: 'root',
     );
   }
 }

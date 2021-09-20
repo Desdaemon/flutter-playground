@@ -29,10 +29,12 @@ class MarkdownRust {
     );
   }
 
-  late final _parse_markdown_ptr =
-      _lookup<ffi.NativeFunction<_c_parse_markdown>>('parse_markdown');
-  late final _dart_parse_markdown _parse_markdown =
-      _parse_markdown_ptr.asFunction<_dart_parse_markdown>();
+  late final _parse_markdownPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Int8> Function(
+              ffi.Pointer<ffi.Int8>)>>('parse_markdown');
+  late final _parse_markdown = _parse_markdownPtr
+      .asFunction<ffi.Pointer<ffi.Int8> Function(ffi.Pointer<ffi.Int8>)>();
 
   /// Parses a Markdown string and returns HTML.
   /// The returned pointer should be freed by [free_string].
@@ -44,10 +46,12 @@ class MarkdownRust {
     );
   }
 
-  late final _parse_markdown_xml_ptr =
-      _lookup<ffi.NativeFunction<_c_parse_markdown_xml>>('parse_markdown_xml');
-  late final _dart_parse_markdown_xml _parse_markdown_xml =
-      _parse_markdown_xml_ptr.asFunction<_dart_parse_markdown_xml>();
+  late final _parse_markdown_xmlPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Int8> Function(
+              ffi.Pointer<ffi.Int8>)>>('parse_markdown_xml');
+  late final _parse_markdown_xml = _parse_markdown_xmlPtr
+      .asFunction<ffi.Pointer<ffi.Int8> Function(ffi.Pointer<ffi.Int8>)>();
 
   /// Parses a Markdown string and returns a list of [CElement]s.
   /// The returned pointer should be freed by [free_elements].
@@ -59,10 +63,12 @@ class MarkdownRust {
     );
   }
 
-  late final _parse_markdown_ast_ptr =
-      _lookup<ffi.NativeFunction<_c_parse_markdown_ast>>('parse_markdown_ast');
-  late final _dart_parse_markdown_ast _parse_markdown_ast =
-      _parse_markdown_ast_ptr.asFunction<_dart_parse_markdown_ast>();
+  late final _parse_markdown_astPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<Slice_CElement> Function(
+              ffi.Pointer<ffi.Int8>)>>('parse_markdown_ast');
+  late final _parse_markdown_ast = _parse_markdown_astPtr.asFunction<
+      ffi.Pointer<Slice_CElement> Function(ffi.Pointer<ffi.Int8>)>();
 
   /// Frees the [Slice] created by [parse_markdown_ast].
   void free_elements(
@@ -73,10 +79,11 @@ class MarkdownRust {
     );
   }
 
-  late final _free_elements_ptr =
-      _lookup<ffi.NativeFunction<_c_free_elements>>('free_elements');
-  late final _dart_free_elements _free_elements =
-      _free_elements_ptr.asFunction<_dart_free_elements>();
+  late final _free_elementsPtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<Slice_CElement>)>>(
+      'free_elements');
+  late final _free_elements = _free_elementsPtr
+      .asFunction<void Function(ffi.Pointer<Slice_CElement>)>();
 
   /// Similar to [parse_markdown], but uses the algorithm from [parse_markdown_ast].
   /// The returned pointer should be freed by [free_string].
@@ -88,11 +95,12 @@ class MarkdownRust {
     );
   }
 
-  late final _parse_markdown_ast_json_ptr =
-      _lookup<ffi.NativeFunction<_c_parse_markdown_ast_json>>(
-          'parse_markdown_ast_json');
-  late final _dart_parse_markdown_ast_json _parse_markdown_ast_json =
-      _parse_markdown_ast_json_ptr.asFunction<_dart_parse_markdown_ast_json>();
+  late final _parse_markdown_ast_jsonPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Int8> Function(
+              ffi.Pointer<ffi.Int8>)>>('parse_markdown_ast_json');
+  late final _parse_markdown_ast_json = _parse_markdown_ast_jsonPtr
+      .asFunction<ffi.Pointer<ffi.Int8> Function(ffi.Pointer<ffi.Int8>)>();
 
   /// Common string destructor intended to be called by the Dart side.
   void free_string(
@@ -103,10 +111,11 @@ class MarkdownRust {
     );
   }
 
-  late final _free_string_ptr =
-      _lookup<ffi.NativeFunction<_c_free_string>>('free_string');
-  late final _dart_free_string _free_string =
-      _free_string_ptr.asFunction<_dart_free_string>();
+  late final _free_stringPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Int8>)>>(
+          'free_string');
+  late final _free_string =
+      _free_stringPtr.asFunction<void Function(ffi.Pointer<ffi.Int8>)>();
 
   /// Exposes the [CElement] as a text node if it is one, or null otherwise.
   ffi.Pointer<ffi.Int8> as_text(
@@ -117,8 +126,11 @@ class MarkdownRust {
     );
   }
 
-  late final _as_text_ptr = _lookup<ffi.NativeFunction<_c_as_text>>('as_text');
-  late final _dart_as_text _as_text = _as_text_ptr.asFunction<_dart_as_text>();
+  late final _as_textPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Int8> Function(ffi.Pointer<CElement>)>>('as_text');
+  late final _as_text = _as_textPtr
+      .asFunction<ffi.Pointer<ffi.Int8> Function(ffi.Pointer<CElement>)>();
 
   /// Exposes the [CElement] as a [CHtmlTag] if it is one, or null otherwise.
   ffi.Pointer<CHtmlTag> as_tag(
@@ -129,8 +141,11 @@ class MarkdownRust {
     );
   }
 
-  late final _as_tag_ptr = _lookup<ffi.NativeFunction<_c_as_tag>>('as_tag');
-  late final _dart_as_tag _as_tag = _as_tag_ptr.asFunction<_dart_as_tag>();
+  late final _as_tagPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<CHtmlTag> Function(ffi.Pointer<CElement>)>>('as_tag');
+  late final _as_tag = _as_tagPtr
+      .asFunction<ffi.Pointer<CHtmlTag> Function(ffi.Pointer<CElement>)>();
 }
 
 class __fsid_t extends ffi.Struct {
@@ -202,11 +217,13 @@ class CElement extends ffi.Struct {
 ///
 /// It is highly unsafe to mutate this slice before it is returned to the Rust side.
 class Slice_CElement extends ffi.Struct {
-  @ffi.Uint64()
+  @uintptr_t()
   external int length;
 
   external ffi.Pointer<CElement> ptr;
 }
+
+typedef uintptr_t = ffi.Uint64;
 
 /// FFI-compatible adapter for [HtmlTag].
 class CHtmlTag extends ffi.Struct {
@@ -454,72 +471,8 @@ const int WINT_MIN = 0;
 
 const int WINT_MAX = 4294967295;
 
-const int true_1 = 1;
+const int true1 = 1;
 
-const int false_1 = 0;
+const int false1 = 0;
 
 const int __bool_true_false_are_defined = 1;
-
-typedef _c_parse_markdown = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _dart_parse_markdown = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _c_parse_markdown_xml = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _dart_parse_markdown_xml = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _c_parse_markdown_ast = ffi.Pointer<Slice_CElement> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _dart_parse_markdown_ast = ffi.Pointer<Slice_CElement> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _c_free_elements = ffi.Void Function(
-  ffi.Pointer<Slice_CElement> ptr,
-);
-
-typedef _dart_free_elements = void Function(
-  ffi.Pointer<Slice_CElement> ptr,
-);
-
-typedef _c_parse_markdown_ast_json = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _dart_parse_markdown_ast_json = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _c_free_string = ffi.Void Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _dart_free_string = void Function(
-  ffi.Pointer<ffi.Int8> ptr,
-);
-
-typedef _c_as_text = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<CElement> el,
-);
-
-typedef _dart_as_text = ffi.Pointer<ffi.Int8> Function(
-  ffi.Pointer<CElement> el,
-);
-
-typedef _c_as_tag = ffi.Pointer<CHtmlTag> Function(
-  ffi.Pointer<CElement> el,
-);
-
-typedef _dart_as_tag = ffi.Pointer<CHtmlTag> Function(
-  ffi.Pointer<CElement> el,
-);

@@ -159,7 +159,8 @@ class PairRemover extends TextInputFormatter {
     final pairRight = n.substring(sn.start).characters.take(1);
     if (pairs[pairLeft] == pairRight.toString()) {
       return newValue.copyWith(
-          text: '${n.substring(0, sn.start)}${n.substring(sn.start).characters.skip(1).toString()}');
+        text: '${n.substring(0, sn.start)}${n.substring(sn.start).characters.skip(1).toString()}',
+      );
     }
     return newValue;
   }

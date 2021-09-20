@@ -5,6 +5,12 @@ import 'package:flutter_playground/main.dart' show boxname, prefname;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
+extension BooleanStateController on StateController<bool> {
+  void toggle() {
+    state = !state;
+  }
+}
+
 final pScreenMode = StateProvider((_) => ScreenMode.sbs);
 final pLockstep = StateProvider((_) => true);
 final pNativeParsing = StateProvider((_) => true);
@@ -22,15 +28,12 @@ final pFiles = StateNotifierProvider<MarkdownStore, MarkdownState>(
 final pActivePath = Provider((ref) => ref.watch(pFiles).active);
 
 /// The contents of the active file.
-final pActiveFile =
-    Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
+final pActiveFile = Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
 final pFileList = Provider((ref) => ref.watch(pFiles).files.keys);
-final pIsPreviewing =
-    Provider((ref) => ref.watch(pScreenMode).state.previewing);
+final pIsPreviewing = Provider((ref) => ref.watch(pScreenMode).state.previewing);
 
 /// Scalable fontsize.
-final pFontSize =
-    Provider.family((ref, double size) => ref.watch(pScale).state * size);
+final pFontSize = Provider.family((ref, double size) => ref.watch(pScale).state * size);
 
 @immutable
 class MarkdownState {

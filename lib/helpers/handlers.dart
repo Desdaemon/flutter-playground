@@ -32,6 +32,8 @@ abstract class KeyHandler {
     required TextSelection sel,
     required String pre,
     required String post,
+
+    /// `text, base, extent`
     required TextValueSetter setValue,
   }) {
     if (qualify(event, sel, pre, post)) return handle(event, sel, pre, post, setValue);
@@ -158,10 +160,10 @@ class SingleHandler extends KeyHandler {
 
   @override
   bool qualify(RawKeyEvent event, TextSelection sel, String pre, String post) =>
-      (!ctrl || ctrl && event.isControlPressed) &&
-      (!alt || alt && event.isAltPressed) &&
-      (!shift || shift && event.isShiftPressed) &&
-      (!meta || meta && event.isMetaPressed) &&
+      (!ctrl || event.isControlPressed) &&
+      (!alt || event.isAltPressed) &&
+      (!shift || event.isShiftPressed) &&
+      (!meta || event.isMetaPressed) &&
       (mayHandle?.call() ?? true) &&
       (every ? keys.every : keys.any)(event.isKeyPressed);
 }

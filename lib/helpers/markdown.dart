@@ -15,19 +15,21 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
   ScrollController get editorSc;
 
   static const scaleStep = 0.1;
+  static final newline = '\n'.characters;
+  static final spaces = ' '.characters;
+
   int untitledIdx = 1;
   Characters _indent = ''.characters;
 
   late TextSelection sel;
   late CharacterRange iter;
 
-  final newline = '\n'.characters;
-
   void increaseFontSize() => context.read(pScale).state += scaleStep;
   void decreaseFontSize() => context.read(pScale).state -= scaleStep;
   void increaseIndent() => context.read(pIndents).state++;
   void decreaseIndent() {
-    if (context.read(pIndents).state > 0) context.read(pIndents).state--;
+    final e = context.read(pIndents);
+    if (e.state > 0) e.state--;
   }
 
   void onScroll() {
@@ -70,7 +72,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
   }
 
   Future<void> changeIndent() async {
-    final int? result = await showDialog(
+    showDialog<int?>(
       context: context,
       builder: (bc) => SimpleDialog(
         title: const Text('Indent size (in spaces)'),
@@ -83,16 +85,17 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
           growable: false,
         ),
       ),
-    );
-    if (result != null) {
-      context.read(pIndents).state = result;
-    }
+    ).then((result) {
+      if (result != null) context.read(pIndents).state = result;
+    });
   }
 
   Future<void> openCheatsheet() async {
     // _export(await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode), 'markdown_reference');
     context.read(pFiles.notifier).activate(
-        'markdown_reference.md', await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode));
+          'markdown_reference.md',
+          await rootBundle.loadString('assets/markdown_reference.md', cache: !kDebugMode),
+        );
   }
 
   /// Initializes and/or updates [_indent] only if their lengths mismatch.
@@ -118,10 +121,11 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
 
   void _updateActive(String output, int start, int end) {
     ctl.value.value = TextEditingValue(
-        text: output,
-        selection: sel.isNormalized
-            ? TextSelection(baseOffset: start, extentOffset: end)
-            : TextSelection(baseOffset: end, extentOffset: start));
+      text: output,
+      selection: sel.isNormalized
+          ? TextSelection(baseOffset: start, extentOffset: end)
+          : TextSelection(baseOffset: end, extentOffset: start),
+    );
     context.read(pFiles.notifier).updateActive(output);
   }
 
@@ -131,7 +135,11 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
     final inner = iter.currentCharacters.split(newline).map((e) => _indent.followedBy(e).join());
     final lines = inner.length;
     final innerOut = inner.join('\n');
-    _updateActive('${iter.stringBefore}$innerOut${iter.stringAfter}', sel.start + nIndents, sel.end + nIndents * lines);
+    _updateActive(
+      '${iter.stringBefore}$innerOut${iter.stringAfter}',
+      sel.start + nIndents,
+      sel.end + nIndents * lines,
+    );
   }
 
   void dedent() {
@@ -144,7 +152,7 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
         firstlineback ??= -nIndents;
         combinedback -= nIndents;
         return line.skip(nIndents).join();
-      } else if (line.startsWith(' '.characters)) {
+      } else if (line.startsWith(spaces)) {
         firstlineback ??= -1;
         combinedback--;
         return line.skip(1).join();
@@ -153,10 +161,19 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
         return line.join();
       }
     }).join('\n');
-    _updateActive('${iter.stringBefore}$inner${iter.stringAfter}', sel.start + firstlineback!, sel.end + combinedback);
+    _updateActive(
+      '${iter.stringBefore}$inner${iter.stringAfter}',
+      sel.start + firstlineback!,
+      sel.end + combinedback,
+    );
   }
 
-  bool wrap(String left, {String? right, bool unwrap = true, bool dryRun = false}) {
+  bool wrap(
+    String left, {
+    String? right,
+    bool unwrap = true,
+    bool dryRun = false,
+  }) {
     right ??= left;
     sel = ctl.value.selection;
     final txt = ctl.value.text;
@@ -169,7 +186,11 @@ abstract class IMathMarkdownState extends State<MathMarkdown> with MarkdownPlatf
     if (dryRun) return mayUnwrap;
     final pre = sel.textBefore(txt);
     final inner = sel.textInside(txt);
-    _updateActive('$pre$left$inner$right$post', sel.start + left.length, sel.end + left.length);
+    _updateActive(
+      '$pre$left$inner$right$post',
+      sel.start + left.length,
+      sel.end + left.length,
+    );
     return false;
   }
 
