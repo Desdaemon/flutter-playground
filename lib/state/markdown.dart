@@ -1,39 +1,40 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_playground/main.dart' show boxname, prefname;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
 extension BooleanStateController on StateController<bool> {
-  void toggle() {
-    state = !state;
-  }
+  void toggle() => state = !state;
 }
 
-final pScreenMode = StateProvider((_) => ScreenMode.sbs);
-final pLockstep = StateProvider((_) => true);
-final pNativeParsing = StateProvider((_) => true);
-final pScale = StateProvider((_) => 1.0);
-final pIndents = StateProvider((_) => 2);
-final pTicker = StateProvider((_) => '');
-final pCache = StateProvider((_) => true);
+final pScreenMode = StateProvider((_) => ScreenMode.sbs, name: 'ScreenMode');
+final pLockstep = StateProvider((_) => false, name: 'Lockstep');
+final pNativeParsing = StateProvider((_) => true, name: 'NativeParsing');
+final pScale = StateProvider((_) => 1.0, name: 'Scale');
+final pIndents = StateProvider((_) => 2, name: 'Indents');
+// final pTicker = StateProvider((_) => '', name: 'Ticker');
+// final pCache = StateProvider((_) => true, name: 'Cache');
 
 /// The directory of files and its interim contents.
-final pFiles = StateNotifierProvider<MarkdownStore, MarkdownState>(
-  (_) => MarkdownStore(boxname: boxname, prefname: prefname),
-);
+final pFiles = StateNotifierProvider<MarkdownStore, MarkdownState>((_) => MarkdownStore(), name: 'Files');
 
 /// The path to the file being edited.
-final pActivePath = Provider((ref) => ref.watch(pFiles).active);
+final pActivePath = Provider((ref) => ref.watch(pFiles).active, name: 'ActivePath');
 
 /// The contents of the active file.
-final pActiveFile = Provider((ref) => ref.watch(pFiles).files[ref.watch(pActivePath)] ?? '');
-final pFileList = Provider((ref) => ref.watch(pFiles).files.keys);
-final pIsPreviewing = Provider((ref) => ref.watch(pScreenMode).state.previewing);
+final pActiveFile = Provider(
+  (ref) {
+    final files = ref.watch(pFiles);
+    return files.files[files.active] ?? '';
+  },
+  name: 'ActiveFile',
+);
+final pFileList = Provider((ref) => ref.watch(pFiles).files.keys, name: 'FileList');
+final pIsPreviewing = Provider((ref) => ref.watch(pScreenMode).state.previewing, name: 'IsPreviewing');
 
 /// Scalable fontsize.
-final pFontSize = Provider.family((ref, double size) => ref.watch(pScale).state * size);
+final pFontSize = Provider.family((ref, double size) => ref.watch(pScale).state * size, name: 'FontSize');
 
 @immutable
 class MarkdownState {
@@ -42,6 +43,11 @@ class MarkdownState {
   const MarkdownState(this.files, this.active);
   MarkdownState copyWith({Map<String, String?>? files, String? active}) =>
       MarkdownState(files ?? this.files, active ?? this.active);
+
+  @override
+  String toString() {
+    return 'MarkdownState(active: ${active.characters.take(20).toString()}, files: <${files.length} entries>)';
+  }
 }
 
 class MarkdownStore extends StateNotifier<MarkdownState> {
@@ -66,7 +72,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
       firstrun = false;
       // Since we only store String? in this box, it is safe to perform this cast.
       final left = Hive.box(boxname).toMap().cast<String, String?>();
-      final right = Hive.box('prefs').get(activepathid) as String?;
+      final right = Hive.box(prefname).get(activepathid) as String?;
       super.state = MarkdownState(left, right ?? super.state.active);
     }
     return super.state;
@@ -129,9 +135,7 @@ class MarkdownStore extends StateNotifier<MarkdownState> {
   }
 
   /// Sets [path] to be the active file.
-  void focus(String path) {
-    state = state.copyWith(active: path);
-  }
+  void focus(String path) => state = state.copyWith(active: path);
 
   /// Sets the contents of the current active file.
   void updateActive(String contents) {
@@ -157,25 +161,13 @@ extension ScreenModeX on ScreenMode {
 
   bool get editing => this == ScreenMode.edit || this == ScreenMode.sbs;
   bool get previewing => this == ScreenMode.preview || this == ScreenMode.sbs;
-  Icon get icon {
-    switch (this) {
-      case ScreenMode.edit:
-        return const Icon(Icons.edit, key: ValueKey('edit'));
-      case ScreenMode.preview:
-        return const Icon(Icons.visibility, key: ValueKey('preview'));
-      case ScreenMode.sbs:
-        return const Icon(Icons.vertical_split, key: ValueKey('sbs'));
-    }
-  }
+  static const icons = {
+    ScreenMode.edit: Icon(Icons.edit, key: ValueKey('edit')),
+    ScreenMode.preview: Icon(Icons.visibility, key: ValueKey('preview')),
+    ScreenMode.sbs: Icon(Icons.vertical_split, key: ValueKey('sbs'))
+  };
+  Icon get icon => icons[this]!;
 
-  String get description {
-    switch (this) {
-      case ScreenMode.edit:
-        return 'Edit';
-      case ScreenMode.preview:
-        return 'Preview';
-      case ScreenMode.sbs:
-        return 'Side-by-side';
-    }
-  }
+  static const descriptions = {ScreenMode.edit: 'Edit', ScreenMode.preview: 'Preview', ScreenMode.sbs: 'Side-by-side'};
+  String get description => descriptions[this]!;
 }

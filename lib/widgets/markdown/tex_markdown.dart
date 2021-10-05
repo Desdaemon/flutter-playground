@@ -58,23 +58,28 @@ class CustomMarkdownBody extends StatefulWidget implements MarkdownBuilderDelega
 class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse {
   List<md.Node> nodes = [];
 
+  late final MarkdownBuilder mdBuilder;
+
   @override
-  Widget build(BuildContext context) {
-    final mdBuilder = MarkdownBuilder(
+  void initState() {
+    super.initState();
+    mdBuilder = MarkdownBuilder(
       delegate: widget,
       styleSheet: widget.style,
       selectable: false,
       imageDirectory: null,
       imageBuilder: null,
-      checkboxBuilder: null,
-      // checkboxBuilder: (val) =>
-      //     val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
+      checkboxBuilder: (val) =>
+          val ? const Icon(Icons.check_box, size: 12) : const Icon(Icons.check_box_outline_blank, size: 12),
       bulletBuilder: null,
       builders: {'math': MathBuilder(scale: widget.scale)},
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
       fitContent: true,
     );
-    // final st = Stopwatch()..start();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     if (widget.nativeParse) {
       final document = md.Document(
         inlineSyntaxes: [MathSyntax.instance],
@@ -95,7 +100,7 @@ class _CustomMarkdownBodyState extends State<CustomMarkdownBody> with FastParse 
     } else {
       return ListView.separated(
         controller: widget.scrollController,
-        separatorBuilder: (_, __) => const SizedBox(height: 6),
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemCount: nodes.length,
         itemBuilder: (bc, idx) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,9 +252,10 @@ class _MathWidgetState extends State<MathWidget> {
       exception = e;
     }
 
-    return Container(
-      alignment: widget.displayMode ? Alignment.center : null,
+    return Align(
+      alignment: widget.displayMode ? Alignment.center : Alignment.centerLeft,
       child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Math(
           ast: ast != null ? SyntaxTree(greenRoot: EquationRowNode(children: ast)) : null,
           parseError: exception,
@@ -268,8 +274,9 @@ class _MathWidgetState extends State<MathWidget> {
 }
 
 class MathSyntax extends md.InlineSyntax {
-  static final instance = MathSyntax();
-  MathSyntax() : super(r'\$(\$?)([^$]+)\$\1');
+  static final instance = MathSyntax._();
+  factory MathSyntax() => instance;
+  MathSyntax._() : super(r'\$(\$?)([^$]+)\$\1');
   @override
   bool onMatch(md.InlineParser parser, Match match) {
     final elem = md.Element.text('math', match[2]!);

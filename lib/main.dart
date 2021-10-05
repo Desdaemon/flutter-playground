@@ -14,6 +14,21 @@ import 'styles/color_schemes.dart';
 const boxname = 'markdown';
 const prefname = 'prefs';
 
+class Logger extends ProviderObserver {
+  const Logger();
+  @override
+  void didUpdateProvider(ProviderBase provider, Object? newValue) {
+    if (!kDebugMode) return;
+    dynamic value = newValue;
+    if (newValue is StateController<dynamic>) {
+      value = newValue.state;
+    } else if (newValue is String) {
+      value = newValue.length < 80 ? newValue : '${newValue.characters.take(70).toString()} (${newValue.length}C)';
+    }
+    debugPrint('[${DateTime.now()}] ${provider.name ?? provider.runtimeType}(${provider.argument ?? ''}): $value');
+  }
+}
+
 Future<void> main() async {
   Hive.registerAdapter(PreferencesAdapter());
   Hive.registerAdapter(ThemeTypeAdapter());
@@ -21,7 +36,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox(boxname);
   await Hive.openBox(prefname);
-  runApp(const ProviderScope(child: MarkdownApp()));
+  runApp(const ProviderScope(observers: [Logger()], child: MarkdownApp()));
 }
 
 class MarkdownApp extends ConsumerWidget {

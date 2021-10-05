@@ -80,25 +80,25 @@ class MarkdownBottomSheet extends StatelessWidget {
               IconButton(icon: const Icon(Icons.folder_open), tooltip: 'Open', onPressed: onOpen),
               IconButton(icon: const Icon(Icons.save), tooltip: 'Save', onPressed: onSave),
               IconButton(icon: const Icon(Icons.print), onPressed: onExport, tooltip: 'Export to HTML'),
-              Consumer(
-                builder: (bc, watch, _) {
-                  final ls = watch(pLockstep).state;
-                  return IconButton(
-                    icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
-                    onPressed: bc.read(pLockstep.notifier).toggle,
-                    tooltip: 'Lockstep',
-                  );
-                },
-              ),
+              // Consumer(
+              // builder: (bc, watch, _) {
+              // final ls = watch(pLockstep).state;
+              // return IconButton(
+              // icon: ls ? const Icon(Icons.lock) : const Icon(Icons.lock_open),
+              // onPressed: bc.read(pLockstep.notifier).toggle,
+              // tooltip: 'Lockstep',
+              // );
+              // },
+              // ),
               IconButton(icon: const Icon(Icons.add), onPressed: onUpfont, tooltip: 'Increase Font Size'),
               IconButton(icon: const Icon(Icons.remove), onPressed: onDownfont, tooltip: 'Decrease Font Size'),
               IconButton(icon: const Icon(Icons.help), tooltip: 'Cheat Sheet', onPressed: onOpenCheatsheet),
-              Consumer(
-                builder: (bc, watch, _) => IconButton(
-                  onPressed: bc.read(darkTheme.notifier).next,
-                  icon: iconOf(watch(darkTheme)),
-                ),
-              ),
+              // Consumer(
+              // builder: (bc, watch, _) => IconButton(
+              // onPressed: bc.read(darkTheme.notifier).next,
+              // icon: iconOf(watch(darkTheme)),
+              // ),
+              // ),
             ],
           ),
         ),
